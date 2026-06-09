@@ -10,6 +10,7 @@ import {
   AlertCircleIcon,
   Loader2Icon,
   ServerIcon,
+  RefreshCwIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,12 +34,14 @@ type ProviderOption = {
   icon: React.ElementType;
 };
 
+type ModelOption = { id: string; name: string };
+
 const PROVIDERS: ProviderOption[] = [
-  { id: 'openai', label: 'OpenAI', description: 'GPT-4o, GPT-4.1, o3', icon: BotIcon },
-  { id: 'anthropic', label: 'Anthropic', description: 'Claude Sonnet, Opus, Haiku', icon: BotIcon },
-  { id: 'google', label: 'Google AI', description: 'Gemini 2.5 Pro/Flash', icon: GlobeIcon },
-  { id: 'openrouter', label: 'OpenRouter', description: 'Access 100+ models via one API', icon: ServerIcon },
-  { id: 'ollama', label: 'Ollama', description: 'Run models locally', icon: BotIcon },
+  { id: 'openai',     label: 'OpenAI',      description: 'GPT-4o, GPT-4.1, o3',           icon: BotIcon    },
+  { id: 'anthropic',  label: 'Anthropic',   description: 'Claude Sonnet, Opus, Haiku',     icon: BotIcon    },
+  { id: 'google',     label: 'Google AI',   description: 'Gemini 2.5 Pro/Flash',           icon: GlobeIcon  },
+  { id: 'openrouter', label: 'OpenRouter',  description: '300+ models via one API key',    icon: ServerIcon },
+  { id: 'ollama',     label: 'Ollama',      description: 'Run models locally',             icon: BotIcon    },
 ];
 
 export function SettingsClient({
@@ -49,24 +52,70 @@ export function SettingsClient({
   username: string;
 }) {
   const [provider, setProvider] = React.useState<AIProvider>(initialConfig?.provider ?? 'openai');
-  const [model, setModel] = React.useState(initialConfig?.model ?? 'gpt-4o-mini');
-  const [apiKey, setApiKey] = React.useState('');
-  const [baseUrl, setBaseUrl] = React.useState(initialConfig?.baseUrl ?? '');
+  const [model, setModel]       = React.useState(initialConfig?.model ?? 'gpt-4o-mini');
+  const [apiKey, setApiKey]     = React.useState('');
+  const [baseUrl, setBaseUrl]   = React.useState(initialConfig?.baseUrl ?? '');
   const [hasExistingKey, setHasExistingKey] = React.useState(!!initialConfig?.apiKeyEncrypted);
-  const [saving, setSaving] = React.useState(false);
+  const [saving, setSaving]     = React.useState(false);
   const [saveResult, setSaveResult] = React.useState<{ success: boolean; message: string } | null>(null);
 
-  const models = PROVIDER_MODELS[provider];
-  const needsApiKey = provider !== 'ollama';
-  const keyLabel = PROVIDER_KEY_LABELS[provider];
+  // Dynamic model list
+  const [dynamicModels, setDynamicModels] = React.useState<ModelOption[] | null>(null);
+  const [modelsLoading, setModelsLoading] = React.useState(false);
+  const [modelsError, setModelsError]     = React.useState<string | null>(null);
 
-  // Reset model when provider changes
-  React.useEffect(() => {
-    const newModels = PROVIDER_MODELS[provider];
-    if (!newModels.find((m) => m.id === model)) {
-      setModel(newModels[0].id);
+  const fallbackModels = PROVIDER_MODELS[provider];
+  const displayModels  = dynamicModels ?? fallbackModels;
+  const needsApiKey    = provider !== 'ollama';
+  const keyLabel       = PROVIDER_KEY_LABELS[provider];
+  const canFetchModels = provider !== 'ollama' && (hasExistingKey || !!apiKey);
+
+  async function fetchModels(targetProvider: AIProvider = provider, keyOverride?: string) {
+    if (targetProvider === 'ollama') return;
+    setModelsLoading(true);
+    setModelsError(null);
+    try {
+      const res = await fetch('/api/ai/models', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: targetProvider,
+          apiKey: keyOverride || undefined,
+        }),
+      });
+      const data = await res.json() as ModelOption[] | { error: string };
+      if (!res.ok || 'error' in data) {
+        throw new Error('error' in data ? data.error : 'Failed to load models');
+      }
+      const models = data as ModelOption[];
+      setDynamicModels(models);
+      // Keep current model if it exists in the new list; else default to first
+      if (models.length > 0 && !models.find((m) => m.id === model)) {
+        setModel(models[0].id);
+      }
+    } catch (err) {
+      setModelsError(err instanceof Error ? err.message : 'Could not load live models.');
+      setDynamicModels(null);
+    } finally {
+      setModelsLoading(false);
     }
-  }, [provider, model]);
+  }
+
+  // Auto-fetch when switching providers (only if a key exists already)
+  React.useEffect(() => {
+    setDynamicModels(null);
+    setModelsError(null);
+    if (provider !== 'ollama' && hasExistingKey) {
+      fetchModels(provider);
+    } else {
+      // Reset model to first option of the new provider's fallback list
+      const first = PROVIDER_MODELS[provider][0]?.id;
+      if (first && !PROVIDER_MODELS[provider].find((m) => m.id === model)) {
+        setModel(first);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [provider]);
 
   async function handleSave() {
     setSaving(true);
@@ -82,11 +131,16 @@ export function SettingsClient({
     const result = await updateAIConfig(config);
 
     if (result.success) {
-      setHasExistingKey(!!apiKey || !!initialConfig?.apiKeyEncrypted);
+      const nowHasKey = !!apiKey || !!initialConfig?.apiKeyEncrypted;
+      setHasExistingKey(nowHasKey);
+      // If the user just entered a new key, refresh the model list with it
+      if (apiKey) {
+        fetchModels(provider, apiKey);
+      }
       setApiKey('');
-      setSaveResult({ success: true, message: 'Settings saved successfully!' });
+      setSaveResult({ success: true, message: 'Settings saved.' });
     } else {
-      setSaveResult({ success: false, message: result.error ?? 'Failed to save settings' });
+      setSaveResult({ success: false, message: result.error ?? 'Failed to save settings.' });
     }
 
     setSaving(false);
@@ -113,7 +167,8 @@ export function SettingsClient({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Provider Selection */}
+
+          {/* Provider selection */}
           <div className="space-y-2">
             <Label>Provider</Label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -125,7 +180,7 @@ export function SettingsClient({
                     'flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 text-center transition-colors',
                     provider === p.id
                       ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-muted hover:border-muted-foreground/30'
+                      : 'border-muted hover:border-muted-foreground/30',
                   )}
                 >
                   <p.icon className="size-5" />
@@ -137,28 +192,72 @@ export function SettingsClient({
 
           <Separator />
 
-          {/* Model Selection */}
+          {/* Model selection */}
           <div className="space-y-2">
-            <Label htmlFor="model">Model</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="model">Model</Label>
+              {provider !== 'ollama' && (
+                <button
+                  type="button"
+                  onClick={() => fetchModels(provider, apiKey || undefined)}
+                  disabled={modelsLoading || !canFetchModels}
+                  className={cn(
+                    'flex items-center gap-1 text-xs text-muted-foreground transition-colors',
+                    canFetchModels
+                      ? 'hover:text-foreground cursor-pointer'
+                      : 'opacity-40 cursor-not-allowed',
+                  )}
+                  title={canFetchModels ? 'Refresh model list from provider' : 'Save an API key first'}
+                >
+                  {modelsLoading ? (
+                    <Loader2Icon className="size-3 animate-spin" />
+                  ) : (
+                    <RefreshCwIcon className="size-3" />
+                  )}
+                  {modelsLoading ? 'Loading…' : dynamicModels ? 'Refresh' : 'Load live models'}
+                </button>
+              )}
+            </div>
+
+            {modelsError && (
+              <p className="text-xs text-amber-500 flex items-center gap-1">
+                <AlertCircleIcon className="size-3 shrink-0" />
+                {modelsError} Showing defaults.
+              </p>
+            )}
+
             <select
               id="model"
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              disabled={modelsLoading}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-50"
             >
-              {models.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
+              {modelsLoading ? (
+                <option value={model}>{model} (loading…)</option>
+              ) : (
+                displayModels.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))
+              )}
             </select>
+
+            {dynamicModels && (
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <CheckCircle2Icon className="size-3" />
+                {dynamicModels.length} models loaded live from {PROVIDER_LABELS[provider]}
+              </p>
+            )}
+
             <p className="text-xs text-muted-foreground">
-              Or type a custom model ID below
+              Or type a custom model ID directly:
             </p>
             <Input
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              placeholder="Model ID"
+              placeholder="e.g. gpt-4o-mini"
               className="text-sm"
             />
           </div>
@@ -174,19 +273,11 @@ export function SettingsClient({
               </Label>
               {hasExistingKey && !apiKey ? (
                 <div className="flex items-center gap-2">
-                  <Input
-                    type="password"
-                    value="••••••••••••••••"
-                    disabled
-                    className="flex-1"
-                  />
+                  <Input type="password" value="••••••••••••••••" disabled className="flex-1" />
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      setHasExistingKey(false);
-                      setApiKey('');
-                    }}
+                    onClick={() => { setHasExistingKey(false); setApiKey(''); }}
                   >
                     Replace
                   </Button>
@@ -202,12 +293,17 @@ export function SettingsClient({
                 />
               )}
               <p className="text-xs text-muted-foreground">
-                Your key is stored securely and never sent to third parties. Environment variable: {keyLabel}
+                Stored securely in your profile. Env fallback: <span className="font-mono">{keyLabel}</span>
               </p>
+              {!hasExistingKey && !apiKey && provider !== 'ollama' && (
+                <p className="text-xs text-muted-foreground/70 italic">
+                  Enter your key and save to enable live model loading.
+                </p>
+              )}
             </div>
           )}
 
-          {/* Base URL (for OpenRouter/Ollama) */}
+          {/* Base URL (OpenRouter / Ollama) */}
           {(provider === 'openrouter' || provider === 'ollama') && (
             <div className="space-y-2">
               <Label htmlFor="baseUrl" className="flex items-center gap-1.5">
@@ -233,19 +329,13 @@ export function SettingsClient({
             </div>
           )}
 
-          {/* Save Button */}
+          {/* Save */}
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} disabled={saving} className="gap-2">
               {saving ? (
-                <>
-                  <Loader2Icon className="size-4 animate-spin" />
-                  Saving...
-                </>
+                <><Loader2Icon className="size-4 animate-spin" /> Saving…</>
               ) : (
-                <>
-                  <SaveIcon className="size-4" />
-                  Save Settings
-                </>
+                <><SaveIcon className="size-4" /> Save Settings</>
               )}
             </Button>
 
@@ -253,7 +343,7 @@ export function SettingsClient({
               <div
                 className={cn(
                   'flex items-center gap-1.5 text-sm',
-                  saveResult.success ? 'text-green-600' : 'text-destructive'
+                  saveResult.success ? 'text-green-600' : 'text-destructive',
                 )}
               >
                 {saveResult.success ? (
@@ -268,7 +358,7 @@ export function SettingsClient({
         </CardContent>
       </Card>
 
-      {/* Profile Info */}
+      {/* Profile info */}
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>

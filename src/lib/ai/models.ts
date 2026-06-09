@@ -77,7 +77,7 @@ export function getEmbeddingModel(): EmbeddingModel {
 
 // ---------- API Key Decoding ----------
 
-function decodeApiKey(encrypted?: string): string | undefined {
+export function decodeApiKey(encrypted?: string): string | undefined {
   if (!encrypted) return undefined;
   try {
     return Buffer.from(encrypted, 'base64').toString('utf-8');

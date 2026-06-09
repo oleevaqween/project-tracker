@@ -160,7 +160,7 @@ export function CreateLegacyProjectDialog() {
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="lp-category">Category</Label>
-                <Select value={category} onValueChange={setCategory}>
+                <Select value={category} onValueChange={(val) => setCategory(val ?? '')}>
                   <SelectTrigger id="lp-category" className="w-full">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
@@ -177,7 +177,7 @@ export function CreateLegacyProjectDialog() {
                   <BriefcaseIcon className="size-3.5 text-muted-foreground" />
                   Portfolio
                 </Label>
-                <Select value={portfolioId} onValueChange={setPortfolioId}>
+                <Select value={portfolioId} onValueChange={(val) => setPortfolioId(val ?? '')}>
                   <SelectTrigger id="lp-portfolio" className="w-full">
                     <SelectValue placeholder="No portfolio" />
                   </SelectTrigger>

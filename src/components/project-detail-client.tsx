@@ -82,6 +82,7 @@ import { RisksTab } from '@/components/tabs/risks-tab';
 import { ChangeRequestsTab } from '@/components/tabs/change-requests-tab';
 import { LessonsLearnedTab } from '@/components/tabs/lessons-learned-tab';
 import { CharterTab } from '@/components/tabs/charter-tab';
+import { LegacySummaryTab } from '@/components/tabs/legacy-summary-tab';
 import { DomainHealthDashboard } from '@/components/domain-health-dashboard';
 import { computeDomainHealth } from '@/lib/domain-health';
 import {
@@ -1109,57 +1110,64 @@ export function ProjectDetailClient({
         </div>
       </motion.div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="overview">
-        <TabsList className="h-auto flex-wrap gap-1 bg-muted/60 p-1 rounded-xl w-fit">
-          <TabsTrigger value="overview" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Overview</TabsTrigger>
-          <TabsTrigger value="charter" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Charter</TabsTrigger>
-          <TabsTrigger value="tasks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Tasks</TabsTrigger>
-          <TabsTrigger value="notes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Notes</TabsTrigger>
-          <TabsTrigger value="stakeholders" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Stakeholders</TabsTrigger>
-          <TabsTrigger value="risks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Risks</TabsTrigger>
-          <TabsTrigger value="changes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Changes</TabsTrigger>
-          <TabsTrigger value="lessons" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Lessons</TabsTrigger>
-        </TabsList>
+      {/* Tabs — legacy projects get a simplified summary view */}
+      {project.isLegacy ? (
+        <LegacySummaryTab
+          projectId={project.id}
+          summary={project.legacySummary as Parameters<typeof LegacySummaryTab>[0]['summary']}
+        />
+      ) : (
+        <Tabs defaultValue="overview">
+          <TabsList className="h-auto flex-wrap gap-1 bg-muted/60 p-1 rounded-xl w-fit">
+            <TabsTrigger value="overview" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Overview</TabsTrigger>
+            <TabsTrigger value="charter" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Charter</TabsTrigger>
+            <TabsTrigger value="tasks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Tasks</TabsTrigger>
+            <TabsTrigger value="notes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Notes</TabsTrigger>
+            <TabsTrigger value="stakeholders" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Stakeholders</TabsTrigger>
+            <TabsTrigger value="risks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Risks</TabsTrigger>
+            <TabsTrigger value="changes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Changes</TabsTrigger>
+            <TabsTrigger value="lessons" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Lessons</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="overview" className="mt-4">
-          <OverviewTab
-            project={project}
-            tasks={initialTasks}
-            risks={initialRisks}
-            stakeholders={initialStakeholders}
-            changeRequests={initialChangeRequests}
-          />
-        </TabsContent>
+          <TabsContent value="overview" className="mt-4">
+            <OverviewTab
+              project={project}
+              tasks={initialTasks}
+              risks={initialRisks}
+              stakeholders={initialStakeholders}
+              changeRequests={initialChangeRequests}
+            />
+          </TabsContent>
 
-        <TabsContent value="charter" className="mt-4">
-          <CharterTab project={project} />
-        </TabsContent>
+          <TabsContent value="charter" className="mt-4">
+            <CharterTab project={project} />
+          </TabsContent>
 
-        <TabsContent value="tasks" className="mt-4">
-          <TasksTab projectId={project.id} initialTasks={initialTasks} />
-        </TabsContent>
+          <TabsContent value="tasks" className="mt-4">
+            <TasksTab projectId={project.id} initialTasks={initialTasks} />
+          </TabsContent>
 
-        <TabsContent value="notes" className="mt-4">
-          <NotesTab projectId={project.id} initialNotes={initialNotes} />
-        </TabsContent>
+          <TabsContent value="notes" className="mt-4">
+            <NotesTab projectId={project.id} initialNotes={initialNotes} />
+          </TabsContent>
 
-        <TabsContent value="stakeholders" className="mt-4">
-          <StakeholdersTab projectId={project.id} initialStakeholders={initialStakeholders} />
-        </TabsContent>
+          <TabsContent value="stakeholders" className="mt-4">
+            <StakeholdersTab projectId={project.id} initialStakeholders={initialStakeholders} />
+          </TabsContent>
 
-        <TabsContent value="risks" className="mt-4">
-          <RisksTab projectId={project.id} initialRisks={initialRisks} />
-        </TabsContent>
+          <TabsContent value="risks" className="mt-4">
+            <RisksTab projectId={project.id} initialRisks={initialRisks} />
+          </TabsContent>
 
-        <TabsContent value="changes" className="mt-4">
-          <ChangeRequestsTab projectId={project.id} initialChangeRequests={initialChangeRequests} />
-        </TabsContent>
+          <TabsContent value="changes" className="mt-4">
+            <ChangeRequestsTab projectId={project.id} initialChangeRequests={initialChangeRequests} />
+          </TabsContent>
 
-        <TabsContent value="lessons" className="mt-4">
-          <LessonsLearnedTab projectId={project.id} initialLessons={initialLessonsLearned} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="lessons" className="mt-4">
+            <LessonsLearnedTab projectId={project.id} initialLessons={initialLessonsLearned} />
+          </TabsContent>
+        </Tabs>
+      )}
 
       {/* Edit dialog */}
       <EditProjectDialog project={project} open={editOpen} onOpenChange={setEditOpen} />

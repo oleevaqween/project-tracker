@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { profiles, projects, tasks } from '@/db/schema';
 import { CreateProjectDialog } from '@/components/create-project-dialog';
+import { CreateLegacyProjectDialog } from '@/components/create-legacy-project-dialog';
 import { ProjectGrid } from '@/components/project-grid';
 import { PMBOKGuide } from '@/components/pmbok';
 
@@ -68,7 +69,10 @@ export default async function ProjectsPage() {
                 : `${userProjects.length} project${userProjects.length !== 1 ? 's' : ''} in your portfolio.`}
             </p>
           </div>
-          <CreateProjectDialog />
+          <div className="flex items-center gap-2">
+            <CreateLegacyProjectDialog />
+            <CreateProjectDialog />
+          </div>
         </div>
 
         <PMBOKGuide context="projects" />

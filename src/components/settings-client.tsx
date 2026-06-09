@@ -43,11 +43,9 @@ const PROVIDERS: ProviderOption[] = [
 
 export function SettingsClient({
   aiConfig: initialConfig,
-  displayName: initialDisplayName,
   username,
 }: {
   aiConfig: AIConfig | null;
-  displayName: string;
   username: string;
 }) {
   const [provider, setProvider] = React.useState<AIProvider>(initialConfig?.provider ?? 'openai');
@@ -280,10 +278,6 @@ export function SettingsClient({
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Username</span>
             <span className="font-medium">{username}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Display Name</span>
-            <span className="font-medium">{initialDisplayName || 'Not set'}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">AI Provider</span>

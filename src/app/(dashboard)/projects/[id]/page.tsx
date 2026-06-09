@@ -33,36 +33,25 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   if (!project) notFound();
 
-  const projectTasks = await db
-    .select()
-    .from(tasks)
-    .where(eq(tasks.projectId, id))
-    .orderBy(tasks.orderIndex);
+  // Legacy projects don't use PMBOK data — skip the heavy queries
+  let projectTasks: (typeof tasks.$inferSelect)[] = [];
+  let projectNotes: (typeof notes.$inferSelect)[] = [];
+  let projectStakeholders: (typeof stakeholders.$inferSelect)[] = [];
+  let projectRisks: (typeof risks.$inferSelect)[] = [];
+  let projectChangeRequests: (typeof changeRequests.$inferSelect)[] = [];
+  let projectLessonsLearned: (typeof lessonsLearned.$inferSelect)[] = [];
 
-  const projectNotes = await db
-    .select()
-    .from(notes)
-    .where(eq(notes.projectId, id));
-
-  const projectStakeholders = await db
-    .select()
-    .from(stakeholders)
-    .where(eq(stakeholders.projectId, id));
-
-  const projectRisks = await db
-    .select()
-    .from(risks)
-    .where(eq(risks.projectId, id));
-
-  const projectChangeRequests = await db
-    .select()
-    .from(changeRequests)
-    .where(eq(changeRequests.projectId, id));
-
-  const projectLessonsLearned = await db
-    .select()
-    .from(lessonsLearned)
-    .where(eq(lessonsLearned.projectId, id));
+  if (!project.isLegacy) {
+    [projectTasks, projectNotes, projectStakeholders, projectRisks, projectChangeRequests, projectLessonsLearned] =
+      await Promise.all([
+        db.select().from(tasks).where(eq(tasks.projectId, id)).orderBy(tasks.orderIndex),
+        db.select().from(notes).where(eq(notes.projectId, id)),
+        db.select().from(stakeholders).where(eq(stakeholders.projectId, id)),
+        db.select().from(risks).where(eq(risks.projectId, id)),
+        db.select().from(changeRequests).where(eq(changeRequests.projectId, id)),
+        db.select().from(lessonsLearned).where(eq(lessonsLearned.projectId, id)),
+      ]);
+  }
 
   return (
     <>

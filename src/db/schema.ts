@@ -52,6 +52,17 @@ export const projects = pgTable('projects', {
   progressPercent: integer('progress_percent').default(0), // manually set; AI can update from task data
   coverImage: text('cover_image'), // Supabase Storage URL
   isPublic: boolean('is_public').default(false), // portfolio visibility
+  isLegacy: boolean('is_legacy').notNull().default(false),
+  legacySummary: jsonb('legacy_summary').$type<{
+    clientOrg?: string;
+    yourRole?: string;
+    outcome?: string;
+    deliverables?: string;
+    skills?: string;
+    teamSize?: string;
+    methodology?: string;
+    lessons?: string;
+  }>(),
   charter: jsonb('charter').$type<{
     projectPurpose?: string;
     objectives?: string;

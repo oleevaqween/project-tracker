@@ -70,7 +70,7 @@ const navItems = [
   },
 ];
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ username, ...props }: React.ComponentProps<typeof Sidebar> & { username?: string }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -137,7 +137,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <NavUser />
+        <NavUser username={username ?? ''} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

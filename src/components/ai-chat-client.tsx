@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import {
@@ -199,7 +200,7 @@ export function AiChatClient({
               To use AI Chat, you need to add your API key in Settings. Choose from OpenAI, Anthropic,
               Google, OpenRouter, or use a local Ollama instance.
             </p>
-            <Button variant="outline" className="gap-2" render={<a href="/settings" />}>
+            <Button variant="outline" className="gap-2" nativeButton={false} render={<Link href="/settings" />}>
               <SettingsIcon className="size-4" />
               Go to Settings
             </Button>

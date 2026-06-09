@@ -41,7 +41,6 @@ export default async function SettingsPage() {
 
       <SettingsClient
         aiConfig={aiConfig}
-        displayName={profile.displayName ?? ''}
         username={profile.username}
       />
     </>

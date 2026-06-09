@@ -95,3 +95,37 @@ export async function updateProjectStatus(id: number, status: string) {
 export async function updateFocusArea(id: number, currentFocusArea: string) {
   return updateProject(id, { currentFocusArea });
 }
+
+type LegacySummary = NonNullable<typeof projects.$inferSelect['legacySummary']>;
+
+export async function createLegacyProject(data: {
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  portfolioId?: number | null;
+  startDate?: Date | null;
+  completedDate?: Date | null;
+  legacySummary?: LegacySummary;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const [project] = await db
+    .insert(projects)
+    .values({
+      ...data,
+      userId: user.id,
+      isLegacy: true,
+      status: 'completed',
+      updatedAt: new Date(),
+    } as ProjectInsert)
+    .returning();
+
+  revalidatePath('/projects');
+  return project;
+}
+
+export async function updateLegacySummary(id: number, legacySummary: LegacySummary) {
+  return updateProject(id, { legacySummary });
+}

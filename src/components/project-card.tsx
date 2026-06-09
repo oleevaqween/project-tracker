@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { CalendarIcon, CoinsIcon, ListTodoIcon } from 'lucide-react';
+import { CalendarIcon, CoinsIcon, ListTodoIcon, ArchiveIcon } from 'lucide-react';
 import { StatusBadge, formatDate, formatBudget } from '@/lib/project-helpers';
 import { FocusAreaStepper } from '@/components/focus-area-stepper';
 import { StaggerItem } from '@/components/motion';
@@ -70,9 +70,17 @@ export function ProjectCard({ project, taskCount }: ProjectCardProps) {
               {/* Header */}
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-sm leading-snug line-clamp-1 group-hover:text-primary transition-colors duration-200">
-                    {project.name}
-                  </h3>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h3 className="font-semibold text-sm leading-snug line-clamp-1 group-hover:text-primary transition-colors duration-200">
+                      {project.name}
+                    </h3>
+                    {project.isLegacy && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400 shrink-0">
+                        <ArchiveIcon className="size-2.5" />
+                        Legacy
+                      </span>
+                    )}
+                  </div>
                   {project.description && (
                     <p className="mt-0.5 text-xs text-muted-foreground/70 line-clamp-2 leading-relaxed">
                       {project.description}

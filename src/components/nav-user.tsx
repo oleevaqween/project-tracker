@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { User } from '@supabase/supabase-js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -27,28 +25,10 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-function userInitials(user: User): string {
-  const name = user.user_metadata?.full_name as string | undefined;
-  if (name) {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-  }
-  return (user.email?.[0] ?? 'U').toUpperCase();
-}
 
-export function NavUser() {
+export function NavUser({ username }: { username: string }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-  }, []);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -57,12 +37,7 @@ export function NavUser() {
     router.refresh();
   }
 
-  const displayName =
-    (user?.user_metadata?.full_name as string | undefined) ??
-    user?.email?.split('@')[0] ??
-    'User';
-  const email = user?.email ?? '';
-  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
+  const initial = username ? username[0].toUpperCase() : 'U';
 
   return (
     <SidebarMenu>
@@ -74,14 +49,10 @@ export function NavUser() {
             }
           >
             <Avatar className="size-8 rounded-lg">
-              <AvatarImage src={avatarUrl} alt={displayName} />
-              <AvatarFallback className="rounded-lg">
-                {user ? userInitials(user) : '…'}
-              </AvatarFallback>
+              <AvatarFallback className="rounded-lg">{initial}</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{displayName}</span>
-              <span className="truncate text-xs text-muted-foreground">{email}</span>
+              <span className="truncate font-medium">@{username}</span>
             </div>
             <ChevronsUpDownIcon className="ml-auto size-4" />
           </DropdownMenuTrigger>
@@ -96,14 +67,10 @@ export function NavUser() {
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5">
                   <Avatar className="size-8 rounded-lg">
-                    <AvatarImage src={avatarUrl} alt={displayName} />
-                    <AvatarFallback className="rounded-lg">
-                      {user ? userInitials(user) : '…'}
-                    </AvatarFallback>
+                    <AvatarFallback className="rounded-lg">{initial}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{displayName}</span>
-                    <span className="truncate text-xs text-muted-foreground">{email}</span>
+                    <span className="truncate font-medium">@{username}</span>
                   </div>
                 </div>
               </DropdownMenuLabel>

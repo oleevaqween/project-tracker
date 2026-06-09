@@ -317,7 +317,7 @@ export function TasksClient({ allTasks, projects }: TasksClientProps) {
             </p>
           </div>
           {tasks.length === 0 && (
-            <Button variant="outline" size="sm" render={<Link href="/projects" />}>
+            <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/projects" />}>
               Go to Projects
             </Button>
           )}

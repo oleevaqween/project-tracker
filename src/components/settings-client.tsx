@@ -295,7 +295,7 @@ export function SettingsClient({
               <p className="text-xs text-muted-foreground">
                 Stored securely in your profile. Env fallback: <span className="font-mono">{keyLabel}</span>
               </p>
-              {!hasExistingKey && !apiKey && provider !== 'ollama' && (
+              {!hasExistingKey && !apiKey && (
                 <p className="text-xs text-muted-foreground/70 italic">
                   Enter your key and save to enable live model loading.
                 </p>

@@ -74,7 +74,7 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
           <div>
             <h1 className="text-2xl font-black tracking-tight text-foreground">Portfolios</h1>
             <p className="text-sm text-muted-foreground/70 mt-0.5">
-              Group projects by client or organisation — aligned with PMBOK 8 Portfolio Management.
+              Group projects by client or organisation, aligned with PMBOK 8 Portfolio Management.
             </p>
           </div>
           <Button onClick={() => setCreating(true)} className="gap-2">

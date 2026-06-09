@@ -110,7 +110,7 @@ const FOCUS_AREA_CHECKLIST: Record<string, string[]> = {
   planning: ['Project Management Plan complete', 'WBS and task list created', 'Risk Register populated', 'Schedule baseline set', 'Stakeholders engaged'],
   executing: ['Deliverables are being produced', 'Team coordinated on active tasks', 'Change requests being logged', 'Stakeholder communications ongoing'],
   monitoring_controlling: ['All deliverables validated against acceptance criteria', 'All change requests resolved', 'Performance metrics reported', 'Risks monitored and closed'],
-  closing: ['Project is complete — no further advancement'],
+  closing: ['Project is complete. No further advancement.'],
 };
 
 // ---------- Edit Project Dialog ----------

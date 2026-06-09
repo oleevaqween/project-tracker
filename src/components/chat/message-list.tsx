@@ -141,7 +141,7 @@ export function MessageList({
                     <div key={i} className="mt-2 rounded-lg border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/20 p-3 text-xs">
                       <div className="flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-400 mb-2">
                         <Icon className="size-3.5" />
-                        {label} — Confirm action?
+                        {label}: Confirm action?
                       </div>
                       <div className="mb-3 space-y-1 text-muted-foreground">
                         {Object.entries(inputObj).map(([k, v]) => (
@@ -246,7 +246,7 @@ function formatToolResult(result: unknown): string {
     const p = obj.project as Record<string, unknown>;
     const t = obj.taskStats as Record<string, unknown>;
     const r = obj.riskStats as Record<string, unknown>;
-    return `${p?.name} — ${t?.total ?? 0} tasks, ${r?.total ?? 0} risks`;
+    return `${p?.name}: ${t?.total ?? 0} tasks, ${r?.total ?? 0} risks`;
   }
   return 'Result received';
 }

@@ -92,7 +92,7 @@ export function LegacySummaryTab({ projectId, summary }: LegacySummaryTabProps) 
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-muted-foreground">
-            A snapshot of this project — captured outside the PMBOK framework.
+            A snapshot of this project, captured outside the PMBOK framework.
           </p>
         </div>
         {!editing ? (

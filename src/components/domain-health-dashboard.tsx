@@ -68,7 +68,7 @@ export function DomainHealthDashboard({ health }: { health: DomainHealthResult }
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold">Domain Health</h3>
-          <p className="text-xs text-muted-foreground">PMBOK 8 — 7 Performance Domains</p>
+          <p className="text-xs text-muted-foreground">PMBOK 8 · 7 Performance Domains</p>
         </div>
         <div className={cn('flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border', overallCfg.bg, overallCfg.text)}>
           <span className={cn('h-1.5 w-1.5 rounded-full', overallCfg.dot)} />

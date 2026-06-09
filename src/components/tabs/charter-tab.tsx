@@ -114,7 +114,7 @@ export function CharterTab({ project }: { project: Project }) {
             <h2 className="text-lg font-semibold">Project Charter</h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            PMBOK 8 Governance domain — Develop Project Charter process
+            PMBOK 8 Governance domain: Develop Project Charter process
           </p>
         </div>
         <div className="flex gap-2 shrink-0">

@@ -199,7 +199,7 @@ export function TasksClient({ allTasks, projects }: TasksClientProps) {
             <h1 className="text-2xl font-black tracking-tight text-foreground">Tasks</h1>
             <p className="text-sm text-muted-foreground">
               {tasks.length} task{tasks.length !== 1 ? 's' : ''} across {projects.length} project
-              {projects.length !== 1 ? 's' : ''} — {completionRate}% complete
+              {projects.length !== 1 ? 's' : ''}, {completionRate}% complete
             </p>
           </div>
         </div>

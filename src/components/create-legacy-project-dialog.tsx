@@ -126,7 +126,7 @@ export function CreateLegacyProjectDialog() {
           </DialogTitle>
           <DialogDescription>
             Record a past project you completed before using this app. No PMBOK
-            framework required — just fill in what you remember.
+            framework required. Just fill in what you remember.
           </DialogDescription>
         </DialogHeader>
 

@@ -30,7 +30,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     domainColor: 'bg-violet-500/15 text-violet-400',
     title: 'PMBOK 8 Portfolio Overview',
     description:
-      'PMBOK 8th Edition shifts from prescriptive process groups to outcome-focused Performance Domains. Your dashboard gives you a holistic portfolio view — track value delivery across all 8 domains, not just schedule and cost.',
+      'PMBOK 8th Edition shifts from prescriptive process groups to outcome-focused Performance Domains. Your dashboard gives you a holistic portfolio view. Track value delivery across all 8 domains, not just schedule and cost.',
     concepts: [
       {
         term: 'Performance Domains',
@@ -40,12 +40,12 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
       {
         term: 'Value Delivery',
         definition:
-          "PMBOK 8's core principle — projects succeed when they deliver intended outcomes and business value, not simply when they come in on time and on budget.",
+          "PMBOK 8's core principle: projects succeed when they deliver intended outcomes and business value, not simply when they come in on time and on budget.",
       },
       {
         term: 'Portfolio Health',
         definition:
-          "The aggregate measure of all active projects' performance — completion rates, risk exposure, and alignment to strategic objectives.",
+          "The aggregate measure of all active projects' performance: completion rates, risk exposure, and alignment to strategic objectives.",
       },
     ],
     actions: [
@@ -60,12 +60,12 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     domainColor: 'bg-blue-500/15 text-blue-400',
     title: 'Managing Projects with PMBOK 8',
     description:
-      'PMBOK 8 replaces Process Groups with Focus Areas that reflect your project\'s maturity. A project moves through Initiating → Planning → Executing → Monitoring & Controlling → Closing at its own pace — you can iterate between areas as needed.',
+      'PMBOK 8 replaces Process Groups with Focus Areas that reflect your project\'s maturity. A project moves through Initiating → Planning → Executing → Monitoring & Controlling → Closing at its own pace, and you can iterate between areas as needed.',
     concepts: [
       {
         term: 'Focus Area',
         definition:
-          'The current phase of your project. Unlike the old Process Groups, focus areas can overlap and repeat — a project in Executing still does continuous Monitoring & Controlling.',
+          'The current phase of your project. Unlike the old Process Groups, focus areas can overlap and repeat. A project in Executing still does continuous Monitoring & Controlling.',
       },
       {
         term: 'Project Charter',
@@ -75,21 +75,21 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
       {
         term: 'Tailoring',
         definition:
-          'PMBOK 8 requires adapting the methodology to each project\'s unique context — team size, industry, risk profile, and organizational culture. There is no single "right" way.',
+          'PMBOK 8 requires adapting the methodology to each project\'s unique context, including team size, industry, risk profile, and organizational culture. There is no single "right" way.',
       },
     ],
     actions: [
       'Write a clear business case and measurable success criteria for each new project',
       'Set the focus area to reflect your actual current phase, not your planned phase',
       'Add all key stakeholders to the Stakeholders tab before starting execution',
-      'Establish a budget baseline before tracking actuals — changes must go through change control',
+      'Establish a budget baseline before tracking actuals; changes must go through change control',
     ],
     phaseGuide: {
       initiating: {
         title: 'Initiating Phase',
         actions: [
           'Document the business case: what problem does this project solve and for whom?',
-          "Define high-level scope boundaries — what is OUT of scope is as important as what's in scope",
+          "Define high-level scope boundaries. What is OUT of scope is as important as what's in scope",
           'Identify your project sponsor and all key stakeholders before doing any work',
           'Establish measurable success criteria (specific, time-bound, and agreed by sponsor)',
           'Get formal authorization (signed charter or explicit sponsor approval) before proceeding to planning',
@@ -98,19 +98,19 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
       planning: {
         title: 'Planning Phase',
         actions: [
-          'Create a Work Breakdown Structure (WBS) — decompose all deliverables into work package tasks',
+          'Create a Work Breakdown Structure (WBS): decompose all deliverables into work package tasks',
           'Estimate effort in hours for each task (not just duration) to expose true workload',
           'Identify all stakeholders and assess their power, interest, and engagement strategy',
           'Conduct risk identification: brainstorm at least 10 risks covering scope, schedule, cost, and quality',
-          'Lock the schedule, scope, and budget baseline before execution — all changes require a change request',
+          'Lock the schedule, scope, and budget baseline before execution; all changes require a change request',
         ],
       },
       executing: {
         title: 'Executing Phase',
         actions: [
-          'Update task statuses daily — a Kanban board with stale data leads to bad decisions',
+          'Update task statuses daily. A Kanban board with stale data leads to bad decisions',
           'Track actual hours vs. estimates to identify effort variances early',
-          "Manage stakeholder expectations proactively — don't wait for issues to escalate",
+          "Manage stakeholder expectations proactively. Don't wait for issues to escalate",
           'Submit all scope changes through a formal change request before acting on them',
           'Conduct quality reviews against the acceptance criteria defined during planning',
         ],
@@ -120,7 +120,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
         actions: [
           'Calculate Schedule Performance Index (SPI) = completed tasks ÷ planned tasks for this period',
           'Review all open risks weekly; update probability and impact ratings as conditions change',
-          'Process pending change requests — approve, reject, or defer with documented justification',
+          'Process pending change requests: approve, reject, or defer with documented justification',
           'Compare actual costs vs. the budget baseline; escalate any variance exceeding 10%',
           'Prepare a concise status report covering progress, risks, issues, and forecast for stakeholders',
         ],
@@ -129,7 +129,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
         title: 'Closing Phase',
         actions: [
           'Obtain formal written acceptance from the project sponsor or customer for all deliverables',
-          'Facilitate a lessons learned session — capture what worked, what failed, and recommendations',
+          'Facilitate a lessons learned session; capture what worked, what failed, and recommendations',
           'Archive all project documents: charter, management plans, baselines, and change logs',
           'Formally release team members; recognize and celebrate their contributions',
           'Close out all vendor contracts and verify all invoices are settled before archiving',
@@ -142,7 +142,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     domainColor: 'bg-amber-500/15 text-amber-400',
     title: 'Work Breakdown & Task Management',
     description:
-      "Tasks represent work packages from your Work Breakdown Structure (WBS) — PMBOK 8's primary scope management tool. Each task should be small enough to independently estimate, assign to one owner, and track to completion.",
+      "Tasks represent work packages from your Work Breakdown Structure (WBS), PMBOK 8's primary scope management tool. Each task should be small enough to independently estimate, assign to one owner, and track to completion.",
     concepts: [
       {
         term: 'Work Package',
@@ -167,8 +167,8 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     ],
     actions: [
       'Use WBS codes (1.1, 1.2.1) to trace each task to a project deliverable',
-      'Estimate effort hours for every task — a zero estimate means unplanned scope risk',
-      'Assign each task to exactly one owner — shared ownership means no ownership',
+      'Estimate effort hours for every task; a zero estimate means unplanned scope risk',
+      'Assign each task to exactly one owner; shared ownership means no ownership',
       'Break tasks > 40 hours into smaller work packages for tighter tracking',
       'Link predecessor tasks to surface dependencies and reveal your critical path',
     ],
@@ -178,7 +178,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     domainColor: 'bg-emerald-500/15 text-emerald-400',
     title: 'Measurement Performance Domain',
     description:
-      "PMBOK 8's Measurement Domain requires objective performance data to distinguish healthy projects from ones silently heading toward failure. These metrics go beyond task completion — they tell you whether projects will deliver their intended outcomes.",
+      "PMBOK 8's Measurement Domain requires objective performance data to distinguish healthy projects from ones silently heading toward failure. These metrics go beyond task completion. They tell you whether projects will deliver their intended outcomes.",
     concepts: [
       {
         term: 'Schedule Performance Index (SPI)',
@@ -198,11 +198,11 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
       {
         term: 'Risk Exposure',
         definition:
-          'Probability × Impact summed across all open risks. Rising aggregate exposure — even if individual risks are unchanged — requires review of your risk response plans.',
+          'Probability × Impact summed across all open risks. Rising aggregate exposure, even if individual risks are unchanged, requires review of your risk response plans.',
       },
     ],
     actions: [
-      'Review velocity trends weekly — a 2-week consecutive decline demands investigation',
+      'Review velocity trends weekly; a 2-week consecutive decline demands investigation',
       'Flag any project with SPI < 0.85 for a formal corrective action plan within 48 hours',
       'Compare risk counts across projects to prioritize which projects need management attention',
       'Use focus area distribution to identify projects stuck in the same phase too long',
@@ -213,7 +213,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     domainColor: 'bg-purple-500/15 text-purple-400',
     title: 'Organizational Process Assets',
     description:
-      "PMBOK 8 calls accumulated organizational knowledge 'Organizational Process Assets' (OPAs). Your knowledge base stores these assets — making them searchable and reusable across projects to reduce rework and improve quality over time.",
+      "PMBOK 8 calls accumulated organizational knowledge 'Organizational Process Assets' (OPAs). Your knowledge base stores these assets, making them searchable and reusable across projects to reduce rework and improve quality over time.",
     concepts: [
       {
         term: 'Organizational Process Assets (OPAs)',
@@ -223,7 +223,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
       {
         term: 'Lessons Learned Register',
         definition:
-          "A formal record of knowledge gained during a project — what worked, what didn't, and recommendations. Required at project close. Stored here for use on future similar projects.",
+          "A formal record of knowledge gained during a project: what worked, what didn't, and recommendations. Required at project close. Stored here for use on future similar projects.",
       },
       {
         term: 'Historical Information',
@@ -244,7 +244,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     domainColor: 'bg-rose-500/15 text-rose-400',
     title: 'AI-Powered Project Intelligence',
     description:
-      "Your AI assistant understands PMBOK 8 methodology and your project context. Use it to navigate the Uncertainty Performance Domain — identifying risks, developing response strategies, and making data-driven project decisions.",
+      "Your AI assistant understands PMBOK 8 methodology and your project context. Use it to navigate the Uncertainty Performance Domain, identifying risks, developing response strategies, and making data-driven project decisions.",
     concepts: [
       {
         term: 'Uncertainty Performance Domain',
@@ -280,11 +280,11 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
       {
         term: 'Issue vs. Risk',
         definition:
-          'A risk is uncertain — it might happen. An issue has already occurred and requires immediate resolution. Track both separately. An unmanaged risk becomes an issue.',
+          'A risk is uncertain; it might happen. An issue has already occurred and requires immediate resolution. Track both separately. An unmanaged risk becomes an issue.',
       },
     ],
     actions: [
-      "Keep task statuses current — a stale board is the #1 source of poor project decisions",
+      "Keep task statuses current; a stale board is the #1 source of poor project decisions",
       'Submit all scope changes as change requests before executing them',
       'Update stakeholder engagement levels after each key milestone or deliverable',
       'Review and re-score open risks weekly during executing and monitoring phases',
@@ -385,7 +385,7 @@ export function PMBOKGuide({ context, focusArea, className }: PMBOKGuideProps) {
                 <div className="flex items-center gap-2 mb-2.5">
                   <ZapIcon className="size-3 text-primary/70" />
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    {phaseGuide ? `${phaseGuide.title} — Action Items` : 'Recommended Actions'}
+                    {phaseGuide ? `${phaseGuide.title}: Action Items` : 'Recommended Actions'}
                   </p>
                 </div>
                 <ul className="space-y-2">

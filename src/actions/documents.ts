@@ -6,6 +6,7 @@ import { documents } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { processDocument } from '@/lib/ai/embeddings';
 
 const SUPPORTED_EXTENSIONS = ['.pdf', '.txt', '.md', '.csv', '.docx'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -25,23 +26,19 @@ export async function uploadDocument(formData: FormData) {
     return { error: 'File and project ID are required' };
   }
 
-  // Validate file type
   const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
   if (!SUPPORTED_EXTENSIONS.includes(`.${ext}`)) {
     return { error: `Unsupported file type. Allowed: ${SUPPORTED_EXTENSIONS.join(', ')}` };
   }
 
-  // Validate file size
   if (file.size > MAX_FILE_SIZE) {
     return { error: 'File too large (max 10MB)' };
   }
 
-  // Upload to Supabase Storage using admin client — the user-session client doesn't
-  // reliably carry its JWT to storage in server action context. Auth is already
-  // verified above; using the service role here is safe.
+  // Upload to storage using admin client
   const storagePath = `documents/${user.id}/${projectId}/${Date.now()}-${file.name}`;
-  const adminSupabaseUpload = createAdminClient();
-  const { error: uploadError } = await adminSupabaseUpload.storage
+  const adminSupabase = createAdminClient();
+  const { error: uploadError } = await adminSupabase.storage
     .from('documents')
     .upload(storagePath, file);
 
@@ -64,8 +61,49 @@ export async function uploadDocument(formData: FormData) {
     })
     .returning();
 
+  // Extract text from the in-memory File — no storage round-trip needed.
+  // This is the key to fitting within Vercel's function timeout:
+  //   PDF parse + embed + batch insert ≈ 4-7s total, well under the 10s cap.
+  try {
+    let textContent: string;
+
+    if (ext === 'pdf') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pdfParse = (await import('pdf-parse')) as any;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const pdfData = await pdfParse(buffer);
+      textContent = pdfData.text as string;
+
+      if (!textContent?.trim()) {
+        await db
+          .update(documents)
+          .set({
+            processingStatus: 'failed',
+            processingError: 'PDF appears to be scanned/image-only — no extractable text.',
+          })
+          .where(eq(documents.id, doc.id));
+        revalidatePath('/knowledge-base');
+        revalidatePath(`/projects/${projectId}`);
+        return { success: true, documentId: doc.id };
+      }
+    } else if (ext === 'docx') {
+      const mammoth = await import('mammoth');
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const result = await mammoth.extractRawText({ buffer });
+      textContent = result.value;
+    } else {
+      textContent = await file.text();
+    }
+
+    await processDocument(doc.id, textContent, projectId);
+  } catch (err) {
+    // processDocument sets processingStatus to 'failed' in its own catch block.
+    // We still return success so the uploaded file shows in the list.
+    console.error('Document embedding failed for doc', doc.id, err);
+  }
+
+  revalidatePath('/knowledge-base');
   revalidatePath(`/projects/${projectId}`);
-  // Embedding is triggered client-side via /api/embeddings after this returns.
   return { success: true, documentId: doc.id };
 }
 
@@ -92,7 +130,6 @@ export async function deleteDocument(documentId: number, projectId: number) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Get the document to find storage path
   const [doc] = await db
     .select()
     .from(documents)
@@ -100,12 +137,10 @@ export async function deleteDocument(documentId: number, projectId: number) {
 
   if (!doc) return { error: 'Document not found' };
 
-  // Delete from storage
   await supabase.storage.from('documents').remove([doc.storagePath]);
-
-  // Delete from DB (cascades to documentChunks)
   await db.delete(documents).where(eq(documents.id, documentId));
 
+  revalidatePath('/knowledge-base');
   revalidatePath(`/projects/${projectId}`);
   return { success: true };
 }

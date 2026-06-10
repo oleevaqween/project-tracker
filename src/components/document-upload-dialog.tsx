@@ -39,7 +39,6 @@ export function DocumentUploadDialog({
   const [selectedProjectId, setSelectedProjectId] = React.useState<string>('');
   const [file, setFile] = React.useState<File | null>(null);
   const [uploading, setUploading] = React.useState(false);
-  const [processing, setProcessing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [dragOver, setDragOver] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -84,20 +83,8 @@ export function DocumentUploadDialog({
         return;
       }
 
-      // Move to processing stage — await the embedding call so we know the outcome.
-      setUploading(false);
-      setProcessing(true);
-
-      try {
-        await fetch('/api/embeddings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ documentId: result.documentId }),
-        });
-      } catch {
-        // Network error — the document was uploaded; status will show in the list.
-      }
-
+      // uploadDocument now handles text extraction and embedding inline —
+      // no separate API call needed. Close and refresh.
       setFile(null);
       setSelectedProjectId('');
       onSuccess();
@@ -105,7 +92,6 @@ export function DocumentUploadDialog({
       setError('Upload failed. Please try again.');
     } finally {
       setUploading(false);
-      setProcessing(false);
     }
   }
 
@@ -113,7 +99,6 @@ export function DocumentUploadDialog({
     setFile(null);
     setSelectedProjectId('');
     setError(null);
-    setProcessing(false);
   }
 
   return (
@@ -214,18 +199,13 @@ export function DocumentUploadDialog({
           <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
           <Button
             onClick={handleUpload}
-            disabled={!file || !selectedProjectId || uploading || processing}
+            disabled={!file || !selectedProjectId || uploading}
             className="gap-2"
           >
             {uploading ? (
               <>
                 <Loader2Icon className="size-4 animate-spin" />
                 Uploading...
-              </>
-            ) : processing ? (
-              <>
-                <Loader2Icon className="size-4 animate-spin" />
-                Processing...
               </>
             ) : (
               <>

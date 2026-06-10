@@ -1,7 +1,41 @@
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { chatSessions } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { chatSessions, chatMessages } from '@/db/schema';
+import { eq, and, asc } from 'drizzle-orm';
+
+// GET /api/chat/sessions/[id] — Load session messages as UIMessage array
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Verify ownership
+  const [session] = await db
+    .select()
+    .from(chatSessions)
+    .where(and(eq(chatSessions.id, parseInt(id)), eq(chatSessions.userId, user.id)))
+    .limit(1);
+  if (!session) return Response.json({ error: 'Not found' }, { status: 404 });
+
+  const msgs = await db
+    .select()
+    .from(chatMessages)
+    .where(eq(chatMessages.sessionId, parseInt(id)))
+    .orderBy(asc(chatMessages.createdAt));
+
+  // Convert to UIMessage format expected by useChat
+  const uiMessages = msgs.map((m) => ({
+    id: String(m.id),
+    role: m.role as 'user' | 'assistant',
+    parts: [{ type: 'text' as const, text: m.content }],
+  }));
+
+  return Response.json(uiMessages);
+}
 
 // PATCH /api/chat/sessions/[id] — Update session title
 export async function PATCH(

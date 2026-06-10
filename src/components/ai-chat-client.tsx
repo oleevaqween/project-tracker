@@ -128,11 +128,19 @@ export function AiChatClient({
     }
   }
 
-  function handleSelectSession(sessionId: number) {
+  async function handleSelectSession(sessionId: number) {
     setActiveSessionId(sessionId);
     setMessages([]);
-    // Messages will be loaded via the chat API
     setSidebarOpen(false);
+    try {
+      const res = await fetch(`/api/chat/sessions/${sessionId}`);
+      if (res.ok) {
+        const msgs = await res.json();
+        if (Array.isArray(msgs)) setMessages(msgs);
+      }
+    } catch {
+      // leave messages empty — user can still continue the session
+    }
   }
 
   const configLabel = getConfigLabel(aiConfig);

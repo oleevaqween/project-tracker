@@ -6,8 +6,6 @@ import { documents } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { after } from 'next/server';
-import { processDocument } from '@/lib/ai/embeddings';
 
 const SUPPORTED_EXTENSIONS = ['.pdf', '.txt', '.md', '.csv', '.docx'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -66,58 +64,8 @@ export async function uploadDocument(formData: FormData) {
     })
     .returning();
 
-  // Process embeddings after the response is returned — runs in the same process,
-  // no auth round-trip needed.
-  after(async () => {
-    try {
-      const adminSupabase = createAdminClient();
-      const { data: fileData, error: dlErr } = await adminSupabase.storage
-        .from('documents')
-        .download(doc.storagePath);
-
-      if (dlErr || !fileData) {
-        console.error('Background embedding: storage download failed', dlErr);
-        await db.update(documents)
-          .set({ processingStatus: 'failed', processingError: 'Storage download failed' })
-          .where(eq(documents.id, doc.id));
-        return;
-      }
-
-      let textContent: string;
-      const buffer = Buffer.from(await fileData.arrayBuffer());
-      if (ext === 'pdf') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pdfParse = (await import('pdf-parse')) as any;
-        const pdfData = await pdfParse(buffer);
-        textContent = pdfData.text ?? '';
-        if (!textContent.trim()) {
-          await db.update(documents)
-            .set({ processingStatus: 'failed', processingError: 'Scanned/image-only PDF — no extractable text' })
-            .where(eq(documents.id, doc.id));
-          return;
-        }
-      } else if (ext === 'docx') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mammoth = (await import('mammoth')) as any;
-        const result = await mammoth.extractRawText({ buffer });
-        textContent = result.value ?? '';
-        if (!textContent.trim()) {
-          await db.update(documents)
-            .set({ processingStatus: 'failed', processingError: 'DOCX appears to be empty or image-only' })
-            .where(eq(documents.id, doc.id));
-          return;
-        }
-      } else {
-        textContent = await fileData.text();
-      }
-
-      await processDocument(doc.id, textContent, projectId);
-    } catch (err) {
-      console.error('Background embedding failed for doc', doc.id, err);
-    }
-  });
-
   revalidatePath(`/projects/${projectId}`);
+  // Embedding is triggered client-side via /api/embeddings after this returns.
   return { success: true, documentId: doc.id };
 }
 

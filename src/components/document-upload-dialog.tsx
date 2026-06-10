@@ -79,12 +79,23 @@ export function DocumentUploadDialog({
 
       if (result.error) {
         setError(result.error);
-      } else {
-        setFile(null);
-        setSelectedProjectId('');
-        onSuccess();
+        setUploading(false);
+        return;
       }
-    } catch (err) {
+
+      // Trigger embedding processing via the dedicated route (maxDuration = 300s).
+      // Fire-and-forget — the route handles status updates in the DB.
+      fetch('/api/embeddings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId: result.documentId }),
+        keepalive: true,
+      }).catch(console.error);
+
+      setFile(null);
+      setSelectedProjectId('');
+      onSuccess();
+    } catch {
       setError('Upload failed. Please try again.');
     } finally {
       setUploading(false);

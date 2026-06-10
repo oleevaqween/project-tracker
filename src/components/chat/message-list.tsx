@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import type { UIMessage, ChatStatus } from 'ai';
-import { isToolUIPart } from 'ai';
+import { isToolUIPart, getToolName } from 'ai';
 import { BotIcon, UserIcon, Loader2Icon, CheckIcon, XIcon, ShieldAlertIcon, CheckSquareIcon, BookOpenIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -117,22 +117,24 @@ export function MessageList({
               }
 
               if (isToolUIPart(part)) {
+                // In AI SDK v6, toolName is encoded in part.type as 'tool-{name}'.
+                // toolCallId, state, input, output, errorText are flat on the part.
                 const toolPart = part as typeof part & {
-                  toolName: string;
                   toolCallId: string;
                   state: string;
                   input?: unknown;
                   output?: unknown;
                   errorText?: string;
                 };
+                const toolName = getToolName(part);
 
-                const isWriteTool = WRITE_TOOLS.has(toolPart.toolName);
+                const isWriteTool = WRITE_TOOLS.has(toolName);
                 const isPending = toolPart.state === 'input-available' && isWriteTool;
                 const isConfirming = pendingToolCallId === toolPart.toolCallId;
                 const isDone = toolPart.state === 'output-available';
                 const isError = toolPart.state === 'output-error';
-                const Icon = TOOL_ICONS[toolPart.toolName] ?? CheckSquareIcon;
-                const label = TOOL_LABELS[toolPart.toolName] ?? formatToolName(toolPart.toolName);
+                const Icon = TOOL_ICONS[toolName] ?? CheckSquareIcon;
+                const label = TOOL_LABELS[toolName] ?? formatToolName(toolName);
 
                 if (isPending) {
                   // Show confirmation card
@@ -158,7 +160,7 @@ export function MessageList({
                           size="sm"
                           className="h-7 gap-1.5 text-xs"
                           disabled={isConfirming}
-                          onClick={() => onToolConfirm?.(toolPart.toolCallId, toolPart.toolName, toolPart.input)}
+                          onClick={() => onToolConfirm?.(toolPart.toolCallId, toolName, toolPart.input)}
                         >
                           {isConfirming ? <Loader2Icon className="size-3 animate-spin" /> : <CheckIcon className="size-3" />}
                           Confirm
@@ -168,7 +170,7 @@ export function MessageList({
                           variant="outline"
                           className="h-7 gap-1.5 text-xs"
                           disabled={isConfirming}
-                          onClick={() => onToolReject?.(toolPart.toolCallId, toolPart.toolName)}
+                          onClick={() => onToolReject?.(toolPart.toolCallId, toolName)}
                         >
                           <XIcon className="size-3" />
                           Reject

@@ -35,12 +35,14 @@ export async function uploadDocument(formData: FormData) {
     return { error: 'File too large (max 10MB)' };
   }
 
-  // Upload to storage using admin client
+  // Upload to storage using admin client.
+  // Use application/octet-stream so the bucket's MIME allowlist never blocks
+  // any supported format (PDF, DOCX, TXT, MD, CSV).
   const storagePath = `documents/${user.id}/${projectId}/${Date.now()}-${file.name}`;
   const adminSupabase = createAdminClient();
   const { error: uploadError } = await adminSupabase.storage
     .from('documents')
-    .upload(storagePath, file);
+    .upload(storagePath, file, { contentType: 'application/octet-stream' });
 
   if (uploadError) {
     console.error('Storage upload error:', uploadError);
@@ -61,18 +63,18 @@ export async function uploadDocument(formData: FormData) {
     })
     .returning();
 
-  // Extract text from the in-memory File — no storage round-trip needed.
-  // This is the key to fitting within Vercel's function timeout:
-  //   PDF parse + embed + batch insert ≈ 4-7s total, well under the 10s cap.
+  // Extract text from the in-memory File (no storage round-trip) and embed.
+  // PDF parse + embed + batch insert ≈ 4-7s — within Vercel Hobby's 10s cap.
   try {
     let textContent: string;
 
     if (ext === 'pdf') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfParse = (await import('pdf-parse')) as any;
+      // pdf-parse v2 uses a PDFParse class, not a default-function export.
+      const { PDFParse } = await import('pdf-parse');
       const buffer = Buffer.from(await file.arrayBuffer());
-      const pdfData = await pdfParse(buffer);
-      textContent = pdfData.text as string;
+      const parser = new PDFParse({ data: buffer });
+      const textResult = await parser.getText();
+      textContent = textResult.text;
 
       if (!textContent?.trim()) {
         await db
@@ -97,9 +99,17 @@ export async function uploadDocument(formData: FormData) {
 
     await processDocument(doc.id, textContent, projectId);
   } catch (err) {
-    // processDocument sets processingStatus to 'failed' in its own catch block.
-    // We still return success so the uploaded file shows in the list.
-    console.error('Document embedding failed for doc', doc.id, err);
+    // Surface the real error so the user sees 'failed' + message, not 'pending'.
+    const errorMessage = err instanceof Error ? err.message : 'Processing failed';
+    console.error('Document embedding failed for doc', doc.id, errorMessage);
+    try {
+      await db
+        .update(documents)
+        .set({ processingStatus: 'failed', processingError: errorMessage })
+        .where(eq(documents.id, doc.id));
+    } catch {
+      // DB update failed — not much we can do
+    }
   }
 
   revalidatePath('/knowledge-base');

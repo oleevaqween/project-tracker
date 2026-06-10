@@ -50,11 +50,11 @@ export async function POST(req: NextRequest) {
     const ext = doc.fileType.toLowerCase();
 
     if (ext === 'pdf') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfParse = (await import('pdf-parse')) as any;
+      const { PDFParse } = await import('pdf-parse');
       const buffer = Buffer.from(await fileData.arrayBuffer());
-      const pdfData = await pdfParse(buffer);
-      textContent = pdfData.text;
+      const parser = new PDFParse({ data: buffer });
+      const textResult = await parser.getText();
+      textContent = textResult.text;
 
       if (!textContent?.trim()) {
         await db.update(documents)

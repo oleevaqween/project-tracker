@@ -5,7 +5,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbLink } from '@/components/ui/breadcrumb';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { profiles, projects, tasks, notes, stakeholders, risks, changeRequests, lessonsLearned } from '@/db/schema';
+import { profiles, projects, tasks, notes, stakeholders, risks, changeRequests, lessonsLearned, issues } from '@/db/schema';
 import { ProjectDetailClient } from '@/components/project-detail-client';
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -40,9 +40,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   let projectRisks: (typeof risks.$inferSelect)[] = [];
   let projectChangeRequests: (typeof changeRequests.$inferSelect)[] = [];
   let projectLessonsLearned: (typeof lessonsLearned.$inferSelect)[] = [];
+  let projectIssues: (typeof issues.$inferSelect)[] = [];
 
   if (!project.isLegacy) {
-    [projectTasks, projectNotes, projectStakeholders, projectRisks, projectChangeRequests, projectLessonsLearned] =
+    [projectTasks, projectNotes, projectStakeholders, projectRisks, projectChangeRequests, projectLessonsLearned, projectIssues] =
       await Promise.all([
         db.select().from(tasks).where(eq(tasks.projectId, id)).orderBy(tasks.orderIndex),
         db.select().from(notes).where(eq(notes.projectId, id)),
@@ -50,6 +51,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         db.select().from(risks).where(eq(risks.projectId, id)),
         db.select().from(changeRequests).where(eq(changeRequests.projectId, id)),
         db.select().from(lessonsLearned).where(eq(lessonsLearned.projectId, id)),
+        db.select().from(issues).where(eq(issues.projectId, id)).orderBy(issues.createdAt),
       ]);
   }
 
@@ -75,7 +77,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         </Breadcrumb>
       </header>
 
-      <ProjectDetailClient project={project} initialTasks={projectTasks} initialNotes={projectNotes} initialStakeholders={projectStakeholders} initialRisks={projectRisks} initialChangeRequests={projectChangeRequests} initialLessonsLearned={projectLessonsLearned} />
+      <ProjectDetailClient project={project} initialTasks={projectTasks} initialNotes={projectNotes} initialStakeholders={projectStakeholders} initialRisks={projectRisks} initialChangeRequests={projectChangeRequests} initialLessonsLearned={projectLessonsLearned} initialIssues={projectIssues} />
     </>
   );
 }

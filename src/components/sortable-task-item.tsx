@@ -10,6 +10,7 @@ import {
   CircleIcon,
   MoreHorizontalIcon,
   TrashIcon,
+  PencilIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,25 +24,16 @@ import {
 import { cn } from '@/lib/utils';
 import { getTaskStatusMeta, getTaskPriorityMeta, formatDate } from '@/lib/project-helpers';
 
-export type Task = {
-  id: number;
-  title: string;
-  description: string | null;
-  status: string;
-  priority: string | null;
-  dueDate: Date | null;
-  estimatedHours: string | null;
-  orderIndex: number | null;
-  completedDate: Date | null;
-};
+export type Task = typeof import('@/db/schema').tasks.$inferSelect;
 
 interface SortableTaskItemProps {
   task: Task;
   onStatusChange: (id: number, status: string) => void;
   onDelete: (id: number) => void;
+  onEdit?: (task: Task) => void;
 }
 
-export function SortableTaskItem({ task, onStatusChange, onDelete }: SortableTaskItemProps) {
+export function SortableTaskItem({ task, onStatusChange, onDelete, onEdit }: SortableTaskItemProps) {
   const {
     attributes,
     listeners,
@@ -117,6 +109,12 @@ export function SortableTaskItem({ task, onStatusChange, onDelete }: SortableTas
           <MoreHorizontalIcon className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {onEdit && (
+            <DropdownMenuItem onClick={() => onEdit(task)}>
+              <PencilIcon className="mr-2 size-4" /> Edit Task
+            </DropdownMenuItem>
+          )}
+          {onEdit && <DropdownMenuSeparator />}
           <DropdownMenuItem onClick={() => onStatusChange(task.id, 'in_progress')}>
             <ClockIcon className="mr-2 size-4" /> Mark In Progress
           </DropdownMenuItem>

@@ -131,7 +131,7 @@ export function ProjectCard({ project, taskCount }: ProjectCardProps) {
                 {project.budget && (
                   <span className="flex items-center gap-1">
                     <CoinsIcon className="size-3" />
-                    {formatBudget(project.budget)}
+                    {formatBudget(project.budget, project.currency)}
                   </span>
                 )}
                 {project.startDate && (

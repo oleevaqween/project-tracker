@@ -65,6 +65,9 @@ import {
   FocusAreaBadge,
   formatDate,
   formatBudget,
+  CURRENCIES,
+  parseBudgetInput,
+  formatBudgetInput,
   TASK_STATUSES,
   TASK_PRIORITIES,
   PROJECT_STATUSES,
@@ -84,6 +87,7 @@ import { LessonsLearnedTab } from '@/components/tabs/lessons-learned-tab';
 import { CharterTab } from '@/components/tabs/charter-tab';
 import { LegacySummaryTab } from '@/components/tabs/legacy-summary-tab';
 import { ReportsTab } from '@/components/tabs/reports-tab';
+import { IssuesTab } from '@/components/tabs/issues-tab';
 import { DomainHealthDashboard } from '@/components/domain-health-dashboard';
 import { computeDomainHealth } from '@/lib/domain-health';
 import {
@@ -103,6 +107,7 @@ type Stakeholder = typeof import('@/db/schema').stakeholders.$inferSelect;
 type Risk = typeof import('@/db/schema').risks.$inferSelect;
 type ChangeRequest = typeof import('@/db/schema').changeRequests.$inferSelect;
 type Lesson = typeof import('@/db/schema').lessonsLearned.$inferSelect;
+type Issue = typeof import('@/db/schema').issues.$inferSelect;
 
 // FOCUS_AREAS order for advancement
 const FOCUS_AREA_SEQUENCE = ['initiating', 'planning', 'executing', 'monitoring_controlling', 'closing'];
@@ -122,6 +127,7 @@ const editProjectSchema = z.object({
   status: z.string(),
   currentFocusArea: z.string(),
   category: z.string().optional(),
+  currency: z.string(),
   budget: z.string().optional(),
   startDate: z.string().optional(),
   targetEndDate: z.string().optional(),
@@ -148,6 +154,7 @@ function EditProjectDialog({
       status: project.status,
       currentFocusArea: project.currentFocusArea ?? 'initiating',
       category: project.category ?? '',
+      currency: project.currency ?? 'USD',
       budget: project.budget ?? '',
       startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
       targetEndDate: project.targetEndDate ? new Date(project.targetEndDate).toISOString().split('T')[0] : '',
@@ -162,6 +169,7 @@ function EditProjectDialog({
       status: project.status,
       currentFocusArea: project.currentFocusArea ?? 'initiating',
       category: project.category ?? '',
+      currency: project.currency ?? 'USD',
       budget: project.budget ?? '',
       startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
       targetEndDate: project.targetEndDate ? new Date(project.targetEndDate).toISOString().split('T')[0] : '',
@@ -177,7 +185,8 @@ function EditProjectDialog({
           status: data.status,
           currentFocusArea: data.currentFocusArea || null,
           category: data.category || null,
-          budget: data.budget || null,
+          currency: data.currency || 'USD',
+          budget: data.budget ? parseBudgetInput(data.budget) : null,
           startDate: data.startDate ? new Date(data.startDate) : null,
           targetEndDate: data.targetEndDate ? new Date(data.targetEndDate) : null,
         });
@@ -254,13 +263,46 @@ function EditProjectDialog({
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="budget" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Budget ($)</FormLabel>
-                <FormControl><Input type="number" placeholder="0" min="0" step="0.01" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+            <div className="grid grid-cols-[140px_1fr] gap-3">
+              <FormField control={form.control} name="currency" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Currency</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {CURRENCIES.map((c) => <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="budget" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Budget</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="0"
+                      {...field}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9.]/g, '');
+                        field.onChange(raw);
+                        e.target.value = raw;
+                      }}
+                      onBlur={(e) => {
+                        const formatted = formatBudgetInput(e.target.value);
+                        field.onChange(parseBudgetInput(e.target.value));
+                        e.target.value = formatted;
+                        field.onBlur();
+                      }}
+                      defaultValue={field.value ? formatBudgetInput(field.value) : ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="startDate" render={({ field }) => (
                 <FormItem>
@@ -427,16 +469,242 @@ function CreateTaskDialog({
   );
 }
 
+// ---------- Edit Task Dialog (EVM + details) ----------
+
+const editTaskSchema = z.object({
+  title: z.string().min(1, 'Task title is required').max(500),
+  description: z.string().optional(),
+  status: z.string(),
+  priority: z.string(),
+  dueDate: z.string().optional(),
+  estimatedHours: z.string().optional(),
+  estimatedCost: z.string().optional(),
+  actualHours: z.string().optional(),
+  actualCost: z.string().optional(),
+  percentComplete: z.number().min(0).max(100),
+});
+
+type EditTaskForm = z.infer<typeof editTaskSchema>;
+
+function EditTaskDialog({
+  projectId,
+  task,
+  open,
+  onOpenChange,
+  onTaskUpdated,
+}: {
+  projectId: number;
+  task: Task | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onTaskUpdated: (task: Task) => void;
+}) {
+  const [isPending, startTransition] = React.useTransition();
+
+  const form = useForm<EditTaskForm>({
+    resolver: zodResolver(editTaskSchema),
+    defaultValues: {
+      title: task?.title ?? '',
+      description: task?.description ?? '',
+      status: task?.status ?? 'todo',
+      priority: task?.priority ?? 'medium',
+      dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      estimatedHours: task?.estimatedHours ?? '',
+      estimatedCost: task?.estimatedCost ?? '',
+      actualHours: task?.actualHours ?? '',
+      actualCost: task?.actualCost ?? '',
+      percentComplete: task?.percentComplete ?? 0,
+    },
+  });
+
+  React.useEffect(() => {
+    form.reset({
+      title: task?.title ?? '',
+      description: task?.description ?? '',
+      status: task?.status ?? 'todo',
+      priority: task?.priority ?? 'medium',
+      dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      estimatedHours: task?.estimatedHours ?? '',
+      estimatedCost: task?.estimatedCost ?? '',
+      actualHours: task?.actualHours ?? '',
+      actualCost: task?.actualCost ?? '',
+      percentComplete: task?.percentComplete ?? 0,
+    });
+  }, [task, form]);
+
+  function onSubmit(data: EditTaskForm) {
+    if (!task) return;
+    startTransition(async () => {
+      try {
+        const updated = await updateTask(task.id, projectId, {
+          title: data.title,
+          description: data.description || null,
+          status: data.status,
+          priority: data.priority,
+          dueDate: data.dueDate ? new Date(data.dueDate) : null,
+          estimatedHours: data.estimatedHours || null,
+          estimatedCost: data.estimatedCost || null,
+          actualHours: data.actualHours || null,
+          actualCost: data.actualCost || null,
+          percentComplete: data.percentComplete,
+        });
+        toast.success('Task updated');
+        onTaskUpdated(updated);
+        onOpenChange(false);
+      } catch (error) {
+        toast.error('Failed to update task');
+        console.error(error);
+      }
+    });
+  }
+
+  const percentComplete = form.watch('percentComplete');
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Task</DialogTitle>
+          <DialogDescription>Update task details and record actuals for EVM tracking.</DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <FormField control={form.control} name="title" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title *</FormLabel>
+                <FormControl><Input {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl><Textarea className="min-h-[60px] resize-none" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField control={form.control} name="status" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {TASK_STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="priority" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Priority</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {TASK_PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="dueDate" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Due Date</FormLabel>
+                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* % Complete slider */}
+            <FormField control={form.control} name="percentComplete" render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>% Complete</FormLabel>
+                  <span className="text-sm font-semibold tabular-nums text-primary">{percentComplete}%</span>
+                </div>
+                <FormControl>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={field.value}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    className="w-full accent-primary"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Planned (estimate) */}
+            <div className="rounded-lg border p-3 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Planned (Estimates)</p>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="estimatedHours" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Est. Hours</FormLabel>
+                    <FormControl><Input type="number" placeholder="0" min="0" step="0.5" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="estimatedCost" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Est. Cost ($)</FormLabel>
+                    <FormControl><Input type="number" placeholder="0" min="0" step="0.01" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+            </div>
+
+            {/* Actuals (EVM) */}
+            <div className="rounded-lg border p-3 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actuals (EVM)</p>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="actualHours" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Actual Hours</FormLabel>
+                    <FormControl><Input type="number" placeholder="0" min="0" step="0.5" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="actualCost" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Actual Cost ($)</FormLabel>
+                    <FormControl><Input type="number" placeholder="0" min="0" step="0.01" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+            </div>
+
+            <DialogFooter showCloseButton>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ---------- Task Item ----------
 
 function TaskItem({
   task,
   onStatusChange,
   onDelete,
+  onEdit,
 }: {
   task: Task;
   onStatusChange: (id: number, status: string) => void;
   onDelete: (id: number) => void;
+  onEdit: (task: Task) => void;
 }) {
   const statusMeta = getTaskStatusMeta(task.status);
   const priorityMeta = getTaskPriorityMeta(task.priority);
@@ -489,6 +757,10 @@ function TaskItem({
           <MoreHorizontalIcon className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => onEdit(task)}>
+            <PencilIcon className="mr-2 size-4" /> Edit Task
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onStatusChange(task.id, 'in_progress')}>
             <ClockIcon className="mr-2 size-4" /> Mark In Progress
           </DropdownMenuItem>
@@ -553,7 +825,7 @@ function OverviewTab({
             {project.budget && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Budget</span>
-                <span>{formatBudget(project.budget)}</span>
+                <span>{formatBudget(project.budget, project.currency)}</span>
               </div>
             )}
             <div className="flex justify-between">
@@ -654,11 +926,13 @@ function WbsTreeNode({
   depth = 0,
   onStatusChange,
   onDelete,
+  onEdit,
 }: {
   node: TaskNode;
   depth?: number;
   onStatusChange: (id: number, status: string) => void;
   onDelete: (id: number) => void;
+  onEdit: (task: Task) => void;
 }) {
   const [expanded, setExpanded] = React.useState(true);
   const statusMeta = getTaskStatusMeta(node.status);
@@ -729,6 +1003,10 @@ function WbsTreeNode({
             <MoreHorizontalIcon className="size-3.5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(node)}>
+              <PencilIcon className="mr-2 size-4" /> Edit Task
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onStatusChange(node.id, 'in_progress')}>
               <ClockIcon className="mr-2 size-4" /> Mark In Progress
             </DropdownMenuItem>
@@ -750,6 +1028,7 @@ function WbsTreeNode({
           depth={depth + 1}
           onStatusChange={onStatusChange}
           onDelete={onDelete}
+          onEdit={onEdit}
         />
       ))}
     </div>
@@ -761,6 +1040,7 @@ function WbsTreeNode({
 function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks: Task[] }) {
   const [tasks, setTasks] = React.useState<Task[]>(initialTasks);
   const [showCreate, setShowCreate] = React.useState(false);
+  const [editingTask, setEditingTask] = React.useState<Task | null>(null);
   const [viewMode, setViewMode] = React.useState<'kanban' | 'wbs'>('kanban');
 
   const sensors = useSensors(
@@ -794,6 +1074,11 @@ function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks
 
   function handleTaskCreated(task: Task) {
     setTasks((prev) => [...prev, task]);
+  }
+
+  function handleTaskUpdated(task: Task) {
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)));
+    setEditingTask(null);
   }
 
   function handleDragEnd(event: { active: { id: number | string }; over: { id: number | string } | null }) {
@@ -885,6 +1170,7 @@ function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks
                 node={node}
                 onStatusChange={handleStatusChange}
                 onDelete={handleDelete}
+                onEdit={setEditingTask}
               />
             ))
           )}
@@ -918,6 +1204,7 @@ function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks
                         task={task}
                         onStatusChange={handleStatusChange}
                         onDelete={handleDelete}
+                        onEdit={setEditingTask}
                       />
                     ))
                   )}
@@ -934,6 +1221,14 @@ function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks
         open={showCreate}
         onOpenChange={setShowCreate}
         onTaskCreated={handleTaskCreated}
+      />
+
+      <EditTaskDialog
+        projectId={projectId}
+        task={editingTask}
+        open={!!editingTask}
+        onOpenChange={(open) => { if (!open) setEditingTask(null); }}
+        onTaskUpdated={handleTaskUpdated}
       />
     </div>
   );
@@ -1029,6 +1324,7 @@ export function ProjectDetailClient({
   initialRisks,
   initialChangeRequests,
   initialLessonsLearned,
+  initialIssues,
 }: {
   project: Project;
   initialTasks: Task[];
@@ -1037,6 +1333,7 @@ export function ProjectDetailClient({
   initialRisks: Risk[];
   initialChangeRequests: ChangeRequest[];
   initialLessonsLearned: Lesson[];
+  initialIssues: Issue[];
 }) {
   const router = useRouter();
   const [project, setProject] = React.useState(initialProject);
@@ -1128,6 +1425,7 @@ export function ProjectDetailClient({
             <TabsTrigger value="risks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Risks</TabsTrigger>
             <TabsTrigger value="changes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Changes</TabsTrigger>
             <TabsTrigger value="lessons" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Lessons</TabsTrigger>
+            <TabsTrigger value="issues" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Issues</TabsTrigger>
             <TabsTrigger value="reports" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Reports</TabsTrigger>
           </TabsList>
 
@@ -1169,6 +1467,10 @@ export function ProjectDetailClient({
             <LessonsLearnedTab projectId={project.id} initialLessons={initialLessonsLearned} />
           </TabsContent>
 
+          <TabsContent value="issues" className="mt-4">
+            <IssuesTab projectId={project.id} initialIssues={initialIssues} />
+          </TabsContent>
+
           <TabsContent value="reports" className="mt-4">
             <ReportsTab
               projectId={project.id}
@@ -1179,7 +1481,7 @@ export function ProjectDetailClient({
                 stakeholders: initialStakeholders,
                 changeRequests: initialChangeRequests,
                 lessonsLearned: initialLessonsLearned,
-                issues: [],
+                issues: initialIssues,
               }}
             />
           </TabsContent>

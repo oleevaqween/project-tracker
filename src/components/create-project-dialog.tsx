@@ -34,7 +34,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { PROJECT_STATUSES, FOCUS_AREAS } from '@/lib/project-helpers';
+import { PROJECT_STATUSES, FOCUS_AREAS, CURRENCIES, parseBudgetInput, formatBudgetInput } from '@/lib/project-helpers';
 import { toast } from 'sonner';
 
 const createProjectSchema = z.object({
@@ -43,6 +43,7 @@ const createProjectSchema = z.object({
   status: z.string(),
   currentFocusArea: z.string(),
   category: z.string().optional(),
+  currency: z.string(),
   budget: z.string().optional(),
   startDate: z.string().optional(),
   targetEndDate: z.string().optional(),
@@ -75,6 +76,7 @@ export function CreateProjectDialog() {
       status: 'planning',
       currentFocusArea: 'initiating',
       category: '',
+      currency: 'USD',
       budget: '',
       startDate: '',
       targetEndDate: '',
@@ -91,7 +93,8 @@ export function CreateProjectDialog() {
           status: data.status,
           currentFocusArea: data.currentFocusArea,
           category: data.category || null,
-          budget: data.budget || null,
+          currency: data.currency || 'USD',
+          budget: data.budget ? parseBudgetInput(data.budget) : null,
           startDate: data.startDate ? new Date(data.startDate) : null,
           targetEndDate: data.targetEndDate ? new Date(data.targetEndDate) : null,
           portfolioId: data.portfolioId ? Number(data.portfolioId) : null,
@@ -251,19 +254,62 @@ export function CreateProjectDialog() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="budget"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Budget ($)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" min="0" step="0.01" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-[140px_1fr] gap-3">
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="USD" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CURRENCIES.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="budget"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Budget</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0"
+                        {...field}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^0-9.]/g, '');
+                          field.onChange(raw);
+                          e.target.value = raw;
+                        }}
+                        onBlur={(e) => {
+                          const formatted = formatBudgetInput(e.target.value);
+                          field.onChange(parseBudgetInput(e.target.value));
+                          e.target.value = formatted;
+                          field.onBlur();
+                        }}
+                        defaultValue={field.value ? formatBudgetInput(field.value) : ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

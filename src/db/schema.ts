@@ -49,6 +49,7 @@ export const projects = pgTable('projects', {
   targetEndDate: timestamp('target_end_date'),
   completedDate: timestamp('completed_date'),
   budget: numeric('budget', { precision: 12, scale: 2 }),
+  currency: varchar('currency', { length: 3 }).default('USD'), // USD | NGN | EUR | GBP
   budgetSpent: numeric('budget_spent', { precision: 12, scale: 2 }),
   baselineStartDate: timestamp('baseline_start_date'),
   baselineEndDate: timestamp('baseline_end_date'),

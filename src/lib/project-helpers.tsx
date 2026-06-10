@@ -72,7 +72,32 @@ export function formatDate(date: Date | string | null): string {
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(date));
 }
 
-export function formatBudget(budget: string | null): string {
+export const CURRENCIES = [
+  { code: 'USD', label: 'USD ($)' },
+  { code: 'NGN', label: 'NGN (₦)' },
+  { code: 'EUR', label: 'EUR (€)' },
+  { code: 'GBP', label: 'GBP (£)' },
+] as const;
+
+export type CurrencyCode = typeof CURRENCIES[number]['code'];
+
+export function formatBudget(budget: string | null, currency: string | null = 'USD'): string {
   if (!budget) return '—';
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(budget));
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency ?? 'USD',
+    maximumFractionDigits: 0,
+  }).format(Number(budget));
+}
+
+export function parseBudgetInput(value: string): string {
+  return value.replace(/[^0-9.]/g, '');
+}
+
+export function formatBudgetInput(value: string): string {
+  const clean = value.replace(/[^0-9.]/g, '');
+  if (!clean) return clean;
+  const [integer, decimal] = clean.split('.');
+  const formatted = parseInt(integer || '0', 10).toLocaleString('en-US');
+  return decimal !== undefined ? `${formatted}.${decimal}` : formatted;
 }

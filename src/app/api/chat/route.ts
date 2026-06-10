@@ -102,7 +102,7 @@ export async function POST(request: Request) {
 
   // Get project context if projectId is provided
   let projectContext:
-    | { name: string; status: string; focusArea: string | null; description: string | null; progressPercent: number | null }
+    | { id: number; name: string; status: string; focusArea: string | null; description: string | null; progressPercent: number | null }
     | undefined;
 
   if (projectId) {
@@ -113,6 +113,7 @@ export async function POST(request: Request) {
 
     if (project && project.userId === user.id) {
       projectContext = {
+        id: project.id,
         name: project.name,
         status: project.status,
         focusArea: project.currentFocusArea,

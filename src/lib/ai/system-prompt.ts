@@ -20,6 +20,7 @@ Key Principles:
 export function buildSystemPrompt(
   aiConfig: AIConfig | null,
   projectContext?: {
+    id: number;
     name: string;
     status: string;
     focusArea: string | null;
@@ -53,6 +54,7 @@ ${PMBOK_CONTEXT}
 ## Current Project Context
 
 - **Project**: ${projectContext.name}
+- **Project ID**: ${projectContext.id} (use this numeric ID when calling getProjectSummary, searchKnowledgeBase, listTasks, listRisks, createTask, createRisk, or logLessonLearned)
 - **Status**: ${projectContext.status}
 - **Focus Area**: ${projectContext.focusArea ?? 'Not set'}
 - **Progress**: ${projectContext.progressPercent ?? 0}%
@@ -76,8 +78,8 @@ ${PMBOK_CONTEXT}
 ## Available Tools
 
 You have access to these tools:
-- **searchKnowledgeBase** — Search uploaded documents for relevant information (use when the user asks about documented content)
-- **getProjectSummary** — Get a comprehensive project overview with task/risk/stakeholder stats
+- **searchKnowledgeBase** — Search uploaded documents for relevant information. Always pass the current **projectId** when a project is selected. Use content-specific search terms (e.g. "CRM requirements" or "vendor comparison"), not meta-phrases like "what files exist". If the user asks to summarize the knowledge base, search for multiple specific topics likely covered in the project's documents.
+- **getProjectSummary** — Get a comprehensive project overview with task/risk/stakeholder stats. Always use the **Project ID** from context above.
 - **listTasks** — List tasks with optional filtering by status and priority
 - **listRisks** — List risks for a project
 - **createTask** — Create a new task (requires confirmation)

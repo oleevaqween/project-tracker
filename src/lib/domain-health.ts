@@ -24,7 +24,7 @@ type Task = { status: string; dueDate: Date | null; wbsCode: string | null; esti
 type Risk = { riskScore: number | null; responseType: string | null; status: string | null };
 type Stakeholder = { engagementStrategy: string | null; communicationPlan: string | null; engagementLevel: string | null; desiredEngagementLevel: string | null };
 type ChangeRequest = { status: string | null };
-type Project = { budget: string | null; progressPercent: number | null; charter: unknown; description: string | null };
+type Project = { budget: string | null; currency: string | null; progressPercent: number | null; charter: unknown; description: string | null };
 
 export function computeDomainHealth(
   project: Project,
@@ -85,7 +85,7 @@ export function computeDomainHealth(
     financeScore += project.budget ? 50 : 0;
   }
   const financeDetail = project.budget
-    ? `Budget: $${Number(project.budget).toLocaleString()} · ${tasksWithCost.length}/${tasks.length} tasks costed`
+    ? `Budget: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: project.currency ?? 'USD', maximumFractionDigits: 0 }).format(Number(project.budget))} · ${tasksWithCost.length}/${tasks.length} tasks costed`
     : 'No budget set';
 
   // Risk: risks documented, critical risks mitigated

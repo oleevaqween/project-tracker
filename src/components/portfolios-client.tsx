@@ -38,6 +38,8 @@ const COLOR_MAP: Record<string, { bg: string; border: string; text: string; shad
 
 const COLORS = Object.keys(COLOR_MAP);
 
+type ProjectOption = { id: number; name: string; status: string; portfolioId: number | null };
+
 export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClientProps) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
@@ -45,6 +47,24 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('amber');
   const [saving, setSaving] = useState(false);
+  const [availableProjects, setAvailableProjects] = useState<ProjectOption[]>([]);
+  const [selectedProjectIds, setSelectedProjectIds] = useState<Set<number>>(new Set());
+
+  function openCreating() {
+    setCreating(true);
+    fetch('/api/projects')
+      .then((r) => r.json())
+      .then((data: ProjectOption[]) => setAvailableProjects(Array.isArray(data) ? data : []))
+      .catch(() => setAvailableProjects([]));
+  }
+
+  function toggleProject(id: number) {
+    setSelectedProjectIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -54,10 +74,16 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
       const res = await fetch('/api/portfolios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), description: description.trim() || null, color }),
+        body: JSON.stringify({
+          name: name.trim(),
+          description: description.trim() || null,
+          color,
+          projectIds: Array.from(selectedProjectIds),
+        }),
       });
       if (!res.ok) throw new Error('Failed to create portfolio');
-      setName(''); setDescription(''); setColor('amber'); setCreating(false);
+      setName(''); setDescription(''); setColor('amber');
+      setSelectedProjectIds(new Set()); setCreating(false);
       toast.success(`Portfolio "${name.trim()}" created`);
       router.refresh();
     } catch {
@@ -77,7 +103,7 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
               Group projects by client or organisation, aligned with PMBOK 8 Portfolio Management.
             </p>
           </div>
-          <Button onClick={() => setCreating(true)} className="gap-2">
+          <Button onClick={openCreating} className="gap-2">
             <PlusIcon className="size-4" />
             New Portfolio
           </Button>
@@ -122,6 +148,27 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
                       />
                     ))}
                   </div>
+                  {availableProjects.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Link projects (optional)</p>
+                      <div className="max-h-40 overflow-y-auto flex flex-col gap-1 rounded-md border border-border p-2 bg-background/50">
+                        {availableProjects.map((p) => (
+                          <label key={p.id} className="flex items-center gap-2 cursor-pointer rounded px-2 py-1 hover:bg-muted/50 transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={selectedProjectIds.has(p.id)}
+                              onChange={() => toggleProject(p.id)}
+                              className="rounded"
+                            />
+                            <span className="text-sm flex-1 truncate">{p.name}</span>
+                            {p.portfolioId && (
+                              <span className="text-[10px] text-muted-foreground shrink-0">in portfolio</span>
+                            )}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <Button type="submit" disabled={!name.trim() || saving}>
                       {saving ? 'Creating…' : 'Create Portfolio'}
@@ -146,7 +193,7 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
                 Create a portfolio to group projects by client or company.
               </p>
             </div>
-            <Button onClick={() => setCreating(true)} className="gap-2 mt-2">
+            <Button onClick={openCreating} className="gap-2 mt-2">
               <PlusIcon className="size-4" /> Create your first portfolio
             </Button>
           </div>

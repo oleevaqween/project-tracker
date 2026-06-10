@@ -139,10 +139,12 @@ function EditProjectDialog({
   project,
   open,
   onOpenChange,
+  onProjectUpdated,
 }: {
   project: Project;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onProjectUpdated: (project: Project) => void;
 }) {
   const [isPending, startTransition] = React.useTransition();
 
@@ -179,7 +181,7 @@ function EditProjectDialog({
   function onSubmit(data: EditProjectForm) {
     startTransition(async () => {
       try {
-        await updateProject(project.id, {
+        const updated = await updateProject(project.id, {
           name: data.name,
           description: data.description || null,
           status: data.status,
@@ -191,6 +193,7 @@ function EditProjectDialog({
           targetEndDate: data.targetEndDate ? new Date(data.targetEndDate) : null,
         });
         toast.success('Project updated');
+        onProjectUpdated(updated);
         onOpenChange(false);
       } catch (error) {
         toast.error('Failed to update project');
@@ -1489,7 +1492,7 @@ export function ProjectDetailClient({
       )}
 
       {/* Edit dialog */}
-      <EditProjectDialog project={project} open={editOpen} onOpenChange={setEditOpen} />
+      <EditProjectDialog project={project} open={editOpen} onOpenChange={setEditOpen} onProjectUpdated={setProject} />
 
       {/* Advance Focus Area dialog */}
       <AdvanceFocusAreaDialog

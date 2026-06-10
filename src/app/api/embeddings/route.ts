@@ -5,13 +5,12 @@ import { documents } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { processDocument } from '@/lib/ai/embeddings';
 
-export const maxDuration = 300; // 5 minutes for large documents
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
-  // Verify auth
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -20,11 +19,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'documentId required' }, { status: 400 });
   }
 
-  // Fetch document record and verify ownership
   const [doc] = await db
     .select()
     .from(documents)
-    .where(and(eq(documents.id, documentId), eq(documents.userId, session.user.id)))
+    .where(and(eq(documents.id, documentId), eq(documents.userId, user.id)))
     .limit(1);
 
   if (!doc) {
@@ -35,13 +33,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, status: 'already_completed' });
   }
 
-  // Download file from storage and process it
   const adminSupabase = createAdminClient();
   const { data: fileData, error: downloadError } = await adminSupabase.storage
     .from('documents')
     .download(doc.storagePath);
 
   if (downloadError || !fileData) {
+    await db.update(documents)
+      .set({ processingStatus: 'failed', processingError: 'Failed to download file from storage' })
+      .where(eq(documents.id, documentId));
     return NextResponse.json({ error: 'Failed to download file from storage' }, { status: 500 });
   }
 
@@ -58,9 +58,21 @@ export async function POST(req: NextRequest) {
 
       if (!textContent?.trim()) {
         await db.update(documents)
-          .set({ processingStatus: 'failed', processingError: 'PDF appears to be scanned/image-only. Text extraction returned empty content.' })
+          .set({ processingStatus: 'failed', processingError: 'PDF appears to be scanned/image-only — no extractable text.' })
           .where(eq(documents.id, documentId));
         return NextResponse.json({ error: 'Scanned PDF — no extractable text' }, { status: 422 });
+      }
+    } else if (ext === 'docx') {
+      const mammoth = await import('mammoth');
+      const buffer = Buffer.from(await fileData.arrayBuffer());
+      const result = await mammoth.extractRawText({ buffer });
+      textContent = result.value;
+
+      if (!textContent?.trim()) {
+        await db.update(documents)
+          .set({ processingStatus: 'failed', processingError: 'DOCX appears to contain no extractable text.' })
+          .where(eq(documents.id, documentId));
+        return NextResponse.json({ error: 'No extractable text in DOCX' }, { status: 422 });
       }
     } else {
       textContent = await fileData.text();

@@ -64,6 +64,11 @@ export function KnowledgeBaseClient({
 }) {
   const router = useRouter();
   const [documents, setDocuments] = React.useState(initialDocuments);
+
+  // Sync local state whenever the server re-fetches (router.refresh())
+  React.useEffect(() => {
+    setDocuments(initialDocuments);
+  }, [initialDocuments]);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [filterProjectId, setFilterProjectId] = React.useState<number | null>(null);
   const [uploadOpen, setUploadOpen] = React.useState(false);

@@ -91,24 +91,20 @@ export async function processDocument(
       allEmbeddings.push(...batchEmbeddings);
     }
 
-    // Insert chunks with embeddings
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      const contentHash = crypto.createHash('sha256').update(chunk).digest('hex');
-      const embedding = allEmbeddings[i];
+    // Bulk insert all chunks in a single DB round-trip
+    const chunkValues = chunks.map((chunk, i) => ({
+      documentId,
+      projectId,
+      chunkIndex: i,
+      content: chunk,
+      contentHash: crypto.createHash('sha256').update(chunk).digest('hex'),
+      embeddingModel: 'text-embedding-3-small',
+      embedding: allEmbeddings[i],
+      tokenCount: null as null,
+      metadata: { chunkIndex: i },
+    }));
 
-      await db.insert(documentChunks).values({
-        documentId,
-        projectId,
-        chunkIndex: i,
-        content: chunk,
-        contentHash,
-        embeddingModel: 'text-embedding-3-small',
-        embedding: embedding,
-        tokenCount: null,
-        metadata: { chunkIndex: i },
-      });
-    }
+    await db.insert(documentChunks).values(chunkValues);
 
     await db
       .update(documents)

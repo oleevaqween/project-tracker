@@ -8,10 +8,11 @@ import { db } from '@/db';
 import { documents, projects } from '@/db/schema';
 import { KnowledgeBaseClient } from '@/components/knowledge-base-client';
 
+export const maxDuration = 60;
+
 export default async function KnowledgeBasePage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
   const userDocuments = await db

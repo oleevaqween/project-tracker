@@ -69,64 +69,14 @@ export async function uploadDocument(formData: FormData) {
     let textContent: string;
 
     if (ext === 'pdf') {
-      // pdf-parse v2 / pdfjs-dist v5 references DOMMatrix (browser-only API)
-      // at module load time, crashing in Node.js. Polyfill the minimal subset
-      // pdfjs needs so the module initialises; we only call getTextContent()
-      // which does not use the rendering pipeline that needs real DOMMatrix math.
-      if (typeof (globalThis as any).DOMMatrix === 'undefined') {
-        (globalThis as any).DOMMatrix = class DOMMatrix {
-          a=1; b=0; c=0; d=1; e=0; f=0;
-          m11=1; m12=0; m13=0; m14=0;
-          m21=0; m22=1; m23=0; m24=0;
-          m31=0; m32=0; m33=1; m34=0;
-          m41=0; m42=0; m43=0; m44=1;
-          is2D=true; isIdentity=true;
-          constructor(init?: string | number[]) {
-            if (Array.isArray(init) && init.length >= 6) {
-              [this.a, this.b, this.c, this.d, this.e, this.f] = init as number[];
-              this.m11=this.a; this.m22=this.d; this.m41=this.e; this.m42=this.f;
-            }
-          }
-          static fromMatrix(m: any) {
-            return new (globalThis as any).DOMMatrix([m.a??1,m.b??0,m.c??0,m.d??1,m.e??0,m.f??0]);
-          }
-          static fromFloat64Array(a: Float64Array) { return new (globalThis as any).DOMMatrix([...a] as number[]); }
-          static fromFloat32Array(a: Float32Array) { return new (globalThis as any).DOMMatrix([...a] as number[]); }
-          multiply() { return new (globalThis as any).DOMMatrix(); }
-          translate() { return new (globalThis as any).DOMMatrix(); }
-          scale() { return new (globalThis as any).DOMMatrix(); }
-          rotate() { return new (globalThis as any).DOMMatrix(); }
-          inverse() { return new (globalThis as any).DOMMatrix(); }
-          transformPoint(p?: {x?:number;y?:number}) { return {x:p?.x??0, y:p?.y??0, z:0, w:1}; }
-          toFloat32Array() { return new Float32Array([this.a,this.b,this.c,this.d,this.e,this.f]); }
-          toFloat64Array() { return new Float64Array([this.a,this.b,this.c,this.d,this.e,this.f]); }
-          toString() { return `matrix(${this.a},${this.b},${this.c},${this.d},${this.e},${this.f})`; }
-        };
-      }
-
-      // Use pdfjs-dist directly (it's already installed as pdf-parse's dep).
-      // getTextContent() extracts raw text without the canvas/SVG rendering
-      // pipeline, so the DOMMatrix stub above is sufficient.
+      // Import from lib/pdf-parse.js (pdf-parse v1) to skip the top-level
+      // test-file loading side-effect that crashes in serverless environments.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfjs = (await import('pdfjs-dist/legacy/build/pdf.mjs')) as any;
-      pdfjs.GlobalWorkerOptions.workerSrc = ''; // inline mode — no worker thread
+      const pdfParse = (await import('pdf-parse/lib/pdf-parse.js')) as any;
+      const parse = pdfParse.default ?? pdfParse;
       const buffer = Buffer.from(await file.arrayBuffer());
-      const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer) });
-      const pdfDoc = await loadingTask.promise;
-      const pageTexts: string[] = [];
-      for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-        const page = await pdfDoc.getPage(pageNum);
-        const content = await page.getTextContent();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pageText = (content.items as any[])
-          .filter((item) => typeof item.str === 'string')
-          .map((item) => item.str)
-          .join(' ');
-        pageTexts.push(pageText);
-        page.cleanup();
-      }
-      await pdfDoc.destroy();
-      textContent = pageTexts.join('\n\n');
+      const data = await parse(buffer);
+      textContent = data.text as string;
 
       if (!textContent?.trim()) {
         await db

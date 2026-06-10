@@ -154,7 +154,7 @@ export function KnowledgeBaseClient({
           <div>
             <h3 className="text-lg font-semibold">No documents yet</h3>
             <p className="text-sm text-muted-foreground">
-              Upload PDFs, text files, or markdown documents to enable AI-powered search
+              Upload PDFs, Word docs, text files, or markdown to enable AI-powered search
             </p>
           </div>
           <Button variant="outline" className="gap-2" onClick={() => setUploadOpen(true)}>

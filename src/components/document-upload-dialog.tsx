@@ -28,13 +28,6 @@ interface DocumentUploadDialogProps {
   onSuccess: () => void;
 }
 
-const SUPPORTED_TYPES = [
-  'application/pdf',
-  'text/plain',
-  'text/markdown',
-  'text/csv',
-  'application/csv',
-];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function DocumentUploadDialog({
@@ -53,9 +46,9 @@ export function DocumentUploadDialog({
   function handleFileSelect(f: File) {
     setError(null);
     const ext = f.name.split('.').pop()?.toLowerCase() ?? '';
-    const allowedExts = ['pdf', 'txt', 'md', 'csv'];
+    const allowedExts = ['pdf', 'docx', 'txt', 'md', 'csv'];
     if (!allowedExts.includes(ext)) {
-      setError(`Unsupported file type. Allowed: ${allowedExts.join(', ')}`);
+      setError(`Unsupported file type. Allowed: PDF, DOCX, TXT, MD, CSV`);
       return;
     }
     if (f.size > MAX_FILE_SIZE) {
@@ -116,7 +109,7 @@ export function DocumentUploadDialog({
         <DialogHeader>
           <DialogTitle>Upload Document</DialogTitle>
           <DialogDescription>
-            Upload a document to your project&apos;s knowledge base. Supported formats: PDF, TXT, MD, CSV.
+            Upload a document to your project&apos;s knowledge base. Supported formats: PDF, DOCX, TXT, MD, CSV.
           </DialogDescription>
         </DialogHeader>
 
@@ -153,7 +146,7 @@ export function DocumentUploadDialog({
             <input
               ref={inputRef}
               type="file"
-              accept=".pdf,.txt,.md,.csv"
+              accept=".pdf,.docx,.txt,.md,.csv"
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
@@ -187,7 +180,7 @@ export function DocumentUploadDialog({
                 <UploadIcon className="size-8 text-muted-foreground" />
                 <div className="text-center">
                   <p className="text-sm font-medium">Drop a file here or click to browse</p>
-                  <p className="text-xs text-muted-foreground">PDF, TXT, MD, CSV (max 10MB)</p>
+                  <p className="text-xs text-muted-foreground">PDF, DOCX, TXT, MD, CSV (max 10MB)</p>
                 </div>
               </>
             )}

@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
 import { processDocument } from '@/lib/ai/embeddings';
 
-const SUPPORTED_EXTENSIONS = ['.pdf', '.txt', '.md', '.csv'];
+const SUPPORTED_EXTENSIONS = ['.pdf', '.txt', '.md', '.csv', '.docx'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function uploadDocument(formData: FormData) {
@@ -38,9 +38,12 @@ export async function uploadDocument(formData: FormData) {
     return { error: 'File too large (max 10MB)' };
   }
 
-  // Upload to Supabase Storage
+  // Upload to Supabase Storage using admin client — the user-session client doesn't
+  // reliably carry its JWT to storage in server action context. Auth is already
+  // verified above; using the service role here is safe.
   const storagePath = `documents/${user.id}/${projectId}/${Date.now()}-${file.name}`;
-  const { error: uploadError } = await supabase.storage
+  const adminSupabaseUpload = createAdminClient();
+  const { error: uploadError } = await adminSupabaseUpload.storage
     .from('documents')
     .upload(storagePath, file);
 
@@ -81,15 +84,26 @@ export async function uploadDocument(formData: FormData) {
       }
 
       let textContent: string;
+      const buffer = Buffer.from(await fileData.arrayBuffer());
       if (ext === 'pdf') {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pdfParse = (await import('pdf-parse')) as any;
-        const buffer = Buffer.from(await fileData.arrayBuffer());
         const pdfData = await pdfParse(buffer);
         textContent = pdfData.text ?? '';
         if (!textContent.trim()) {
           await db.update(documents)
             .set({ processingStatus: 'failed', processingError: 'Scanned/image-only PDF — no extractable text' })
+            .where(eq(documents.id, doc.id));
+          return;
+        }
+      } else if (ext === 'docx') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mammoth = (await import('mammoth')) as any;
+        const result = await mammoth.extractRawText({ buffer });
+        textContent = result.value ?? '';
+        if (!textContent.trim()) {
+          await db.update(documents)
+            .set({ processingStatus: 'failed', processingError: 'DOCX appears to be empty or image-only' })
             .where(eq(documents.id, doc.id));
           return;
         }

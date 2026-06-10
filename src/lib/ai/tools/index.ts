@@ -1,5 +1,6 @@
 import { searchKnowledgeBaseTool } from './search-knowledge-base';
 import { getProjectSummaryTool } from './get-project-summary';
+import { listDocumentsTool } from './list-documents';
 import { listTasksTool } from './list-tasks';
 import { listRisksTool } from './list-risks';
 import { assessDomainHealthTool } from './assess-domain-health';
@@ -12,6 +13,7 @@ import { logLessonLearnedTool } from './log-lesson-learned';
 // Read-only tools (no confirmation needed)
 export const readOnlyTools = {
   searchKnowledgeBase: searchKnowledgeBaseTool,
+  listDocuments: listDocumentsTool,
   getProjectSummary: getProjectSummaryTool,
   listTasks: listTasksTool,
   listRisks: listRisksTool,

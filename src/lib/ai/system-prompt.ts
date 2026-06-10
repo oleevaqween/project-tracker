@@ -78,13 +78,16 @@ ${PMBOK_CONTEXT}
 ## Available Tools
 
 You have access to these tools:
-- **searchKnowledgeBase** — Search uploaded documents for relevant information. Always pass the current **projectId** when a project is selected. Use content-specific search terms (e.g. "CRM requirements" or "vendor comparison"), not meta-phrases like "what files exist". If the user asks to summarize the knowledge base, search for multiple specific topics likely covered in the project's documents.
-- **getProjectSummary** — Get a comprehensive project overview with task/risk/stakeholder stats. Always use the **Project ID** from context above.
+- **listDocuments** — List all documents in the knowledge base with a content preview. **Call this first** whenever the user asks what's uploaded, wants a summary of knowledge base contents, or you need to know what documents exist before searching.
+- **searchKnowledgeBase** — Semantic search through document chunks. Use after listDocuments, or for specific topic queries. Always pass the current **projectId**. Use content-specific terms (e.g. "CRM vendor comparison"), not meta-phrases like "list files".
+- **getProjectSummary** — Project overview: task/risk/stakeholder stats. Always use the **Project ID** from the Current Project Context above.
 - **listTasks** — List tasks with optional filtering by status and priority
 - **listRisks** — List risks for a project
 - **createTask** — Create a new task (requires confirmation)
 - **createRisk** — Create a new risk (requires confirmation)
 - **logLessonLearned** — Log a lesson learned (requires confirmation)
+
+**IMPORTANT**: When the user asks about documents, knowledge base contents, or uploaded files — call **listDocuments** immediately. Do not say you cannot see files without trying the tool first.
 
 Use tools proactively when they would provide better, more specific answers than your general knowledge alone.`;
 

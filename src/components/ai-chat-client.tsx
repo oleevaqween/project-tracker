@@ -62,20 +62,34 @@ export function AiChatClient({
 
   const aiReady = isAIConfigured(aiConfig);
 
-  // AI SDK v6: configure transport with endpoint and extra body params
+  // AI SDK v6: transport only carries the API endpoint.
+  // sessionId and projectId are passed per-message via options.body because
+  // useChat's internal Chat instance caches the transport at creation time and
+  // does not pick up transport prop changes when selectedProjectId changes.
   const transport = React.useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: '/api/chat',
-        body: { sessionId: activeSessionId, projectId: selectedProjectId },
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeSessionId, selectedProjectId]
+    () => new DefaultChatTransport({ api: '/api/chat' }),
+    []
   );
 
   const { messages, sendMessage, status, stop, setMessages, addToolResult } = useChat({
     transport,
   });
+
+  // Always send the latest sessionId + projectId with every message.
+  const activeSessionIdRef = React.useRef(activeSessionId);
+  const selectedProjectIdRef = React.useRef(selectedProjectId);
+  React.useEffect(() => { activeSessionIdRef.current = activeSessionId; }, [activeSessionId]);
+  React.useEffect(() => { selectedProjectIdRef.current = selectedProjectId; }, [selectedProjectId]);
+
+  const sendMsgWithContext = React.useCallback(
+    (text: string) => {
+      sendMessage(
+        { text },
+        { body: { sessionId: activeSessionIdRef.current, projectId: selectedProjectIdRef.current } }
+      );
+    },
+    [sendMessage]
+  );
 
   async function handleToolConfirm(toolCallId: string, toolName: string, input: unknown) {
     setPendingToolCallId(toolCallId);
@@ -219,7 +233,7 @@ export function AiChatClient({
             <MessageList
               messages={messages}
               status={status}
-              onSuggestionClick={(text) => sendMessage({ text })}
+              onSuggestionClick={(text) => sendMsgWithContext(text)}
               onToolConfirm={handleToolConfirm}
               onToolReject={(toolCallId, toolName) => handleToolReject(toolCallId, toolName)}
               pendingToolCallId={pendingToolCallId}
@@ -227,7 +241,7 @@ export function AiChatClient({
 
             {/* Input */}
             <MessageInput
-              onSend={(text) => sendMessage({ text })}
+              onSend={(text) => sendMsgWithContext(text)}
               status={status}
               onStop={stop}
               disabled={!aiReady}

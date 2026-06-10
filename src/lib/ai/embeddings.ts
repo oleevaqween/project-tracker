@@ -91,7 +91,6 @@ export async function processDocument(
       allEmbeddings.push(...batchEmbeddings);
     }
 
-    // Bulk insert all chunks in a single DB round-trip
     const chunkValues = chunks.map((chunk, i) => ({
       documentId,
       projectId,
@@ -104,7 +103,12 @@ export async function processDocument(
       metadata: { chunkIndex: i },
     }));
 
-    await db.insert(documentChunks).values(chunkValues);
+    // Insert in batches of 10 — a single VALUES clause with many 1536-dim
+    // vectors generates a very large SQL statement that can exceed driver limits.
+    const DB_BATCH = 10;
+    for (let i = 0; i < chunkValues.length; i += DB_BATCH) {
+      await db.insert(documentChunks).values(chunkValues.slice(i, i + DB_BATCH));
+    }
 
     await db
       .update(documents)

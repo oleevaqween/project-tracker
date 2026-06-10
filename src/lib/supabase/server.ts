@@ -3,10 +3,15 @@ import { cookies } from 'next/headers';
 
 // Node 24 + undici keep-alive causes Supabase fetch calls to hang.
 // Forcing Connection: close prevents persistent connections from stalling the server.
+// Use the Headers constructor to copy existing headers — spreading a Headers instance
+// yields an empty object, which would silently drop the Authorization header.
 const supabaseGlobalOptions = {
   global: {
-    fetch: (url: RequestInfo | URL, options?: RequestInit) =>
-      fetch(url, { ...options, headers: { ...(options?.headers ?? {}), connection: 'close' } }),
+    fetch: (url: RequestInfo | URL, options?: RequestInit) => {
+      const headers = new Headers(options?.headers);
+      headers.set('connection', 'close');
+      return fetch(url, { ...options, headers });
+    },
   },
 };
 

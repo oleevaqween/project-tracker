@@ -1,4 +1,5 @@
 import { AppSidebar } from '@/components/app-sidebar';
+import { TopBar } from '@/components/top-bar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
@@ -21,8 +22,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <SidebarProvider>
-      <AppSidebar username={username} />
-      <SidebarInset>{children}</SidebarInset>
+      <AppSidebar />
+      <SidebarInset>
+        {/* Top-right user bar — sits over every page's header row */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex h-16 items-center justify-end px-4">
+          <div className="pointer-events-auto">
+            <TopBar username={username} />
+          </div>
+        </div>
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   );
 }

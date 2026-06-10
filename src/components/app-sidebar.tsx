@@ -13,11 +13,7 @@ import {
   BriefcaseIcon,
   Settings2Icon,
   GlobeIcon,
-  SunIcon,
-  MoonIcon,
 } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -33,46 +29,17 @@ import {
 } from '@/components/ui/sidebar';
 
 const navItems = [
-  {
-    title: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboardIcon,
-  },
-  {
-    title: 'Portfolios',
-    href: '/portfolios',
-    icon: BriefcaseIcon,
-  },
-  {
-    title: 'Projects',
-    href: '/projects',
-    icon: FolderKanbanIcon,
-  },
-  {
-    title: 'Tasks',
-    href: '/tasks',
-    icon: CheckSquareIcon,
-  },
-  {
-    title: 'Knowledge Base',
-    href: '/knowledge-base',
-    icon: BookOpenIcon,
-  },
-  {
-    title: 'AI Chat',
-    href: '/ai-chat',
-    icon: BotIcon,
-  },
-  {
-    title: 'Analytics',
-    href: '/analytics',
-    icon: BarChart3Icon,
-  },
+  { title: 'Dashboard',      href: '/dashboard',      icon: LayoutDashboardIcon },
+  { title: 'Portfolios',     href: '/portfolios',     icon: BriefcaseIcon       },
+  { title: 'Projects',       href: '/projects',       icon: FolderKanbanIcon    },
+  { title: 'Tasks',          href: '/tasks',          icon: CheckSquareIcon     },
+  { title: 'Knowledge Base', href: '/knowledge-base', icon: BookOpenIcon        },
+  { title: 'AI Chat',        href: '/ai-chat',        icon: BotIcon             },
+  { title: 'Analytics',      href: '/analytics',      icon: BarChart3Icon       },
 ];
 
-export function AppSidebar({ username, ...props }: React.ComponentProps<typeof Sidebar> & { username?: string }) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -80,12 +47,12 @@ export function AppSidebar({ username, ...props }: React.ComponentProps<typeof S
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/dashboard" />}>
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <GlobeIcon className="size-4" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">Project Tracker</span>
-                </div>
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <GlobeIcon className="size-4" />
+              </div>
+              <div className="flex flex-col gap-0.5 leading-none">
+                <span className="font-semibold">Project Tracker</span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -120,25 +87,18 @@ export function AppSidebar({ username, ...props }: React.ComponentProps<typeof S
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton render={<Link href="/settings" />} isActive={pathname.startsWith('/settings')} tooltip="Settings">
-                <Settings2Icon />
-                <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
             <SidebarMenuButton
-              className="justify-center"
-              tooltip="Toggle theme"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              render={<Link href="/settings" />}
+              isActive={pathname.startsWith('/settings')}
+              tooltip="Settings"
             >
-              <SunIcon className="size-4 dark:hidden" />
-              <MoonIcon className="size-4 hidden dark:block" />
-              <span className="sr-only">Toggle theme</span>
+              <Settings2Icon />
+              <span>Settings</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <NavUser username={username ?? ''} />
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );

@@ -48,8 +48,20 @@ export const projects = pgTable('projects', {
   startDate: timestamp('start_date'),
   targetEndDate: timestamp('target_end_date'),
   completedDate: timestamp('completed_date'),
-  budget: numeric('budget', { precision: 12, scale: 2 }), // planned budget
-  progressPercent: integer('progress_percent').default(0), // manually set; AI can update from task data
+  budget: numeric('budget', { precision: 12, scale: 2 }),
+  budgetSpent: numeric('budget_spent', { precision: 12, scale: 2 }),
+  baselineStartDate: timestamp('baseline_start_date'),
+  baselineEndDate: timestamp('baseline_end_date'),
+  qualityMetrics: jsonb('quality_metrics').$type<{
+    defectsFound?: number;
+    defectsResolved?: number;
+    testCoverage?: number;
+    inspectionsPassed?: number;
+    inspectionsFailed?: number;
+    qualityScore?: number;
+    notes?: string;
+  }>(),
+  progressPercent: integer('progress_percent').default(0),
   coverImage: text('cover_image'), // Supabase Storage URL
   isPublic: boolean('is_public').default(false), // portfolio visibility
   isLegacy: boolean('is_legacy').notNull().default(false),
@@ -93,7 +105,10 @@ export const tasks = pgTable('tasks', {
   dueDate: timestamp('due_date'),
   completedDate: timestamp('completed_date'),
   estimatedHours: numeric('estimated_hours', { precision: 6, scale: 2 }),
+  actualHours: numeric('actual_hours', { precision: 6, scale: 2 }),
   estimatedCost: numeric('estimated_cost', { precision: 10, scale: 2 }),
+  actualCost: numeric('actual_cost', { precision: 10, scale: 2 }),
+  percentComplete: integer('percent_complete').default(0),
   wbsCode: varchar('wbs_code', { length: 20 }), // e.g. "1.2.3" for WBS numbering
   predecessorId: integer('predecessor_id'), // task dependency (sequence activities)
   orderIndex: integer('order_index').notNull().default(0),
@@ -278,6 +293,30 @@ export const lessonsLearned = pgTable('lessons_learned', {
   updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
 });
 
+// ============ ISSUE LOG (PMBOK 8 — Monitoring & Controlling) ============
+export const issues = pgTable('issues', {
+  id: serial('id').primaryKey(),
+  projectId: integer('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 500 }).notNull(),
+  description: text('description'),
+  impact: varchar('impact', { length: 20 }).default('medium'), // low | medium | high | critical
+  owner: varchar('owner', { length: 255 }),
+  status: varchar('status', { length: 50 }).default('open').notNull(), // open | in_progress | resolved | closed
+  resolvedDate: timestamp('resolved_date'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
+});
+
+// ============ PROJECT REPORTS ============
+export const projectReports = pgTable('project_reports', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id', { length: 36 }).notNull(),
+  projectId: integer('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 100 }).notNull(),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 // ============ CHAT SESSIONS ============
 export const chatSessions = pgTable('chat_sessions', {
   id: serial('id').primaryKey(),
@@ -344,6 +383,8 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   changeRequests: many(changeRequests),
   lessonsLearned: many(lessonsLearned),
   chatSessions: many(chatSessions),
+  issues: many(issues),
+  projectReports: many(projectReports),
 }));
 
 export const tasksRelations = relations(tasks, ({ one, many }) => ({
@@ -419,4 +460,12 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
 
 export const aiUsageLogRelations = relations(aiUsageLog, ({ one }) => ({
   user: one(profiles, { fields: [aiUsageLog.userId], references: [profiles.id] }),
+}));
+
+export const issuesRelations = relations(issues, ({ one }) => ({
+  project: one(projects, { fields: [issues.projectId], references: [projects.id] }),
+}));
+
+export const projectReportsRelations = relations(projectReports, ({ one }) => ({
+  project: one(projects, { fields: [projectReports.projectId], references: [projects.id] }),
 }));

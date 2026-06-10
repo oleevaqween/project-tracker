@@ -45,11 +45,14 @@ type Task = {
   dueDate: Date | null;
   completedDate: Date | null;
   estimatedHours: string | null;
+  actualHours: string | null;
+  estimatedCost: string | null;
+  actualCost: string | null;
+  percentComplete: number | null;
   wbsCode: string | null;
   orderIndex: number | null;
   parentId: number | null;
   predecessorId: number | null;
-  estimatedCost: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

@@ -186,3 +186,15 @@
     box-shadow: 2px 2px 0 0 var(--neo-shadow-color);
   }
 }
+
+@media print {
+  [data-slot="sidebar"],
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+}

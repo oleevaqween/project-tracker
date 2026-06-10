@@ -83,6 +83,7 @@ import { ChangeRequestsTab } from '@/components/tabs/change-requests-tab';
 import { LessonsLearnedTab } from '@/components/tabs/lessons-learned-tab';
 import { CharterTab } from '@/components/tabs/charter-tab';
 import { LegacySummaryTab } from '@/components/tabs/legacy-summary-tab';
+import { ReportsTab } from '@/components/tabs/reports-tab';
 import { DomainHealthDashboard } from '@/components/domain-health-dashboard';
 import { computeDomainHealth } from '@/lib/domain-health';
 import {
@@ -1127,6 +1128,7 @@ export function ProjectDetailClient({
             <TabsTrigger value="risks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Risks</TabsTrigger>
             <TabsTrigger value="changes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Changes</TabsTrigger>
             <TabsTrigger value="lessons" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Lessons</TabsTrigger>
+            <TabsTrigger value="reports" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Reports</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-4">
@@ -1165,6 +1167,21 @@ export function ProjectDetailClient({
 
           <TabsContent value="lessons" className="mt-4">
             <LessonsLearnedTab projectId={project.id} initialLessons={initialLessonsLearned} />
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-4">
+            <ReportsTab
+              projectId={project.id}
+              project={project as Parameters<typeof ReportsTab>[0]['project']}
+              data={{
+                tasks: initialTasks,
+                risks: initialRisks,
+                stakeholders: initialStakeholders,
+                changeRequests: initialChangeRequests,
+                lessonsLearned: initialLessonsLearned,
+                issues: [],
+              }}
+            />
           </TabsContent>
         </Tabs>
       )}

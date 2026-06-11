@@ -153,7 +153,7 @@ function IssueFormDialog({
       try {
         let saved: Issue;
         if (isEditing && issue) {
-          saved = await updateIssue(issue.id, projectId, {
+          const result = await updateIssue(issue.id, projectId, {
             title: data.title,
             description: data.description || null,
             impact: data.impact,
@@ -161,6 +161,8 @@ function IssueFormDialog({
             status: data.status,
             resolvedDate: data.resolvedDate ? new Date(data.resolvedDate) : null,
           });
+          if (!result) return;
+          saved = result;
         } else {
           saved = await createIssue({
             projectId,

@@ -48,18 +48,27 @@ export async function POST(req: NextRequest) {
 
   const { model } = getEffectiveConfig(aiConfig);
 
+  // Sanitize user inputs before injecting into prompt
+  const san = (v: string | null | undefined, max = 500) =>
+    (v ?? '').replace(/[\r\n\t]+/g, ' ').replace(/\0/g, '').trim().slice(0, max);
+
   const result = streamObject({
     model,
     schema: charterSchema,
     prompt: `You are a PMBOK 8th Edition certified project management expert. Draft a professional Project Charter for the following project.
 
-Project Name: ${body.name}
-Description: ${body.description ?? 'Not provided'}
-Category: ${body.category ?? 'Not specified'}
-Budget: ${body.budget ? `$${body.budget}` : 'Not set'}
-Start Date: ${body.startDate ?? 'Not set'}
-Target End Date: ${body.targetEndDate ?? 'Not set'}
-${body.existingCharter ? `\nExisting charter content to improve:\n${JSON.stringify(body.existingCharter, null, 2)}` : ''}
+Project Name: ${san(body.name, 200)}
+Description: ${san(body.description, 1000)}
+Category: ${san(body.category, 100)}
+Budget: ${body.budget ? `$${san(body.budget, 50)}` : 'Not set'}
+Start Date: ${san(body.startDate, 50)}
+Target End Date: ${san(body.targetEndDate, 50)}
+${body.existingCharter ? `\nExisting charter content to improve:\n${JSON.stringify(
+  Object.fromEntries(
+    Object.entries(body.existingCharter).map(([k, v]) => [san(k, 100), san(v ?? '', 1000)])
+  ),
+  null, 2
+)}` : ''}
 
 Generate a complete, professional Project Charter following PMBOK 8th Edition Governance domain best practices. Be specific to this project type. Each section should be substantive (2-5 sentences minimum). Use professional PM language.`,
   });

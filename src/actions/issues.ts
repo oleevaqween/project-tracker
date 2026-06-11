@@ -31,12 +31,32 @@ export async function getIssues(projectId: number) {
     .orderBy(desc(issues.createdAt));
 }
 
+export async function getIssue(id: number) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const rows = await db
+    .select({ item: issues })
+    .from(issues)
+    .innerJoin(projects, and(eq(issues.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(issues.id, id));
+
+  return rows[0]?.item ?? null;
+}
+
 // ---------- Mutations ----------
 
 export async function createIssue(data: Omit<IssueInsert, 'id' | 'createdAt' | 'updatedAt'>) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [project] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, data.projectId!), eq(projects.userId, user.id)));
+  if (!project) redirect('/projects');
 
   const [issue] = await db
     .insert(issues)
@@ -52,6 +72,13 @@ export async function updateIssue(id: number, projectId: number, data: IssueUpda
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const [owned] = await db
+    .select({ id: issues.id })
+    .from(issues)
+    .innerJoin(projects, and(eq(issues.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(issues.id, id));
+  if (!owned) return null;
+
   const [issue] = await db
     .update(issues)
     .set(data)
@@ -66,6 +93,13 @@ export async function deleteIssue(id: number, projectId: number) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [owned] = await db
+    .select({ id: issues.id })
+    .from(issues)
+    .innerJoin(projects, and(eq(issues.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(issues.id, id));
+  if (!owned) return;
 
   await db.delete(issues).where(eq(issues.id, id));
   revalidatePath(`/projects/${projectId}`);

@@ -41,12 +41,13 @@ export async function getTask(id: number) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const [task] = await db
-    .select()
+  const rows = await db
+    .select({ item: tasks })
     .from(tasks)
+    .innerJoin(projects, and(eq(tasks.projectId, projects.id), eq(projects.userId, user.id)))
     .where(eq(tasks.id, id));
 
-  return task ?? null;
+  return rows[0]?.item ?? null;
 }
 
 // ---------- Mutations ----------
@@ -57,6 +58,12 @@ export async function createTask(data: Omit<TaskInsert, 'id' | 'createdAt' | 'up
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [project] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, data.projectId!), eq(projects.userId, user.id)));
+  if (!project) redirect('/projects');
 
   // Get max orderIndex for this project
   const [maxOrder] = await db
@@ -82,6 +89,13 @@ export async function updateTask(id: number, projectId: number, data: TaskUpdate
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const [owned] = await db
+    .select({ id: tasks.id })
+    .from(tasks)
+    .innerJoin(projects, and(eq(tasks.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(tasks.id, id));
+  if (!owned) return null;
+
   const [task] = await db
     .update(tasks)
     .set(data)
@@ -98,6 +112,13 @@ export async function deleteTask(id: number, projectId: number) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [owned] = await db
+    .select({ id: tasks.id })
+    .from(tasks)
+    .innerJoin(projects, and(eq(tasks.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(tasks.id, id));
+  if (!owned) return;
 
   await db.delete(tasks).where(eq(tasks.id, id));
   revalidatePath(`/projects/${projectId}`);

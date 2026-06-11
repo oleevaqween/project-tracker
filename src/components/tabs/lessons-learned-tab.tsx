@@ -167,7 +167,7 @@ function LessonFormDialog({
       try {
         let saved: Lesson;
         if (isEditing && lesson) {
-          saved = await updateLessonLearned(lesson.id, projectId, {
+          const result = await updateLessonLearned(lesson.id, projectId, {
             title: data.title,
             description: data.description,
             focusArea: data.focusArea || null,
@@ -175,6 +175,8 @@ function LessonFormDialog({
             impact: data.impact,
             recommendation: data.recommendation || null,
           });
+          if (!result) return;
+          saved = result;
         } else {
           saved = await createLessonLearned({
             projectId,

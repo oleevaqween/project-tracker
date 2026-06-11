@@ -192,6 +192,10 @@ function EditProjectDialog({
           startDate: data.startDate ? new Date(data.startDate) : null,
           targetEndDate: data.targetEndDate ? new Date(data.targetEndDate) : null,
         });
+        if (!updated) {
+          toast.error('Failed to update project');
+          return;
+        }
         toast.success('Project updated');
         onProjectUpdated(updated);
         onOpenChange(false);
@@ -551,6 +555,7 @@ function EditTaskDialog({
           actualCost: data.actualCost || null,
           percentComplete: data.percentComplete,
         });
+        if (!updated) return;
         toast.success('Task updated');
         onTaskUpdated(updated);
         onOpenChange(false);

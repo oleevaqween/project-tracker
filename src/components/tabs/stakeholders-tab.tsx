@@ -151,7 +151,7 @@ function StakeholderFormDialog({
       try {
         let saved: Stakeholder;
         if (isEditing && stakeholder) {
-          saved = await updateStakeholder(stakeholder.id, projectId, {
+          const result = await updateStakeholder(stakeholder.id, projectId, {
             name: data.name,
             role: data.role || null,
             organization: data.organization || null,
@@ -161,6 +161,8 @@ function StakeholderFormDialog({
             engagementLevel: data.engagementLevel,
             engagementStrategy: data.engagementStrategy || null,
           });
+          if (!result) return;
+          saved = result;
         } else {
           saved = await createStakeholder({
             projectId,

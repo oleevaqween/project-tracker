@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'crypto';
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { getNotificationData } from '@/lib/notifications/checks';
@@ -8,7 +9,13 @@ export const maxDuration = 60;
 export async function POST(request: Request) {
   // Verify CRON_SECRET — QStash forwards this as the Authorization header
   const auth = request.headers.get('authorization') ?? request.headers.get('Authorization');
-  if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  const expected = `Bearer ${process.env.CRON_SECRET ?? ''}`;
+  const provided = auth ?? '';
+  const valid =
+    !!process.env.CRON_SECRET &&
+    provided.length === expected.length &&
+    timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+  if (!valid) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

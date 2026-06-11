@@ -172,7 +172,7 @@ function ChangeRequestFormDialog({
       try {
         let saved: ChangeRequest;
         if (isEditing && changeRequest) {
-          saved = await updateChangeRequest(changeRequest.id, projectId, {
+          const result = await updateChangeRequest(changeRequest.id, projectId, {
             title: data.title,
             description: data.description,
             requestedBy: data.requestedBy || null,
@@ -182,6 +182,8 @@ function ChangeRequestFormDialog({
             status: data.status,
             reviewNotes: data.reviewNotes || null,
           });
+          if (!result) return;
+          saved = result;
         } else {
           saved = await createChangeRequest({
             projectId,

@@ -145,6 +145,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json(models);
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 502 });
+    console.error('[ai/models] upstream fetch failed:', err);
+    return NextResponse.json({ error: 'Failed to fetch models. Check your API key and try again.' }, { status: 502 });
   }
 }

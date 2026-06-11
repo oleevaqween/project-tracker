@@ -41,12 +41,13 @@ export async function getLessonLearned(id: number) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const [lesson] = await db
-    .select()
+  const rows = await db
+    .select({ item: lessonsLearned })
     .from(lessonsLearned)
+    .innerJoin(projects, and(eq(lessonsLearned.projectId, projects.id), eq(projects.userId, user.id)))
     .where(eq(lessonsLearned.id, id));
 
-  return lesson ?? null;
+  return rows[0]?.item ?? null;
 }
 
 // ---------- Mutations ----------
@@ -57,6 +58,12 @@ export async function createLessonLearned(data: Omit<LessonInsert, 'id' | 'creat
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [project] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, data.projectId!), eq(projects.userId, user.id)));
+  if (!project) redirect('/projects');
 
   const [lesson] = await db
     .insert(lessonsLearned)
@@ -74,6 +81,13 @@ export async function updateLessonLearned(id: number, projectId: number, data: L
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const [owned] = await db
+    .select({ id: lessonsLearned.id })
+    .from(lessonsLearned)
+    .innerJoin(projects, and(eq(lessonsLearned.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(lessonsLearned.id, id));
+  if (!owned) return null;
+
   const [lesson] = await db
     .update(lessonsLearned)
     .set(data)
@@ -90,6 +104,13 @@ export async function deleteLessonLearned(id: number, projectId: number) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [owned] = await db
+    .select({ id: lessonsLearned.id })
+    .from(lessonsLearned)
+    .innerJoin(projects, and(eq(lessonsLearned.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(lessonsLearned.id, id));
+  if (!owned) return;
 
   await db.delete(lessonsLearned).where(eq(lessonsLearned.id, id));
   revalidatePath(`/projects/${projectId}`);

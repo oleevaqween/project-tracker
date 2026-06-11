@@ -41,12 +41,13 @@ export async function getNote(id: number) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const [note] = await db
-    .select()
+  const rows = await db
+    .select({ item: notes })
     .from(notes)
+    .innerJoin(projects, and(eq(notes.projectId, projects.id), eq(projects.userId, user.id)))
     .where(eq(notes.id, id));
 
-  return note ?? null;
+  return rows[0]?.item ?? null;
 }
 
 // ---------- Mutations ----------
@@ -57,6 +58,12 @@ export async function createNote(data: Omit<NoteInsert, 'id' | 'createdAt' | 'up
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [project] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, data.projectId!), eq(projects.userId, user.id)));
+  if (!project) redirect('/projects');
 
   const [note] = await db
     .insert(notes)
@@ -74,6 +81,13 @@ export async function updateNote(id: number, projectId: number, data: NoteUpdate
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const [owned] = await db
+    .select({ id: notes.id })
+    .from(notes)
+    .innerJoin(projects, and(eq(notes.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(notes.id, id));
+  if (!owned) return null;
+
   const [note] = await db
     .update(notes)
     .set(data)
@@ -90,6 +104,13 @@ export async function deleteNote(id: number, projectId: number) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [owned] = await db
+    .select({ id: notes.id })
+    .from(notes)
+    .innerJoin(projects, and(eq(notes.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(notes.id, id));
+  if (!owned) return;
 
   await db.delete(notes).where(eq(notes.id, id));
   revalidatePath(`/projects/${projectId}`);

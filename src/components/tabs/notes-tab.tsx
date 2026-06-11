@@ -95,10 +95,12 @@ function NoteFormDialog({
       try {
         let saved: Note;
         if (isEditing && note) {
-          saved = await updateNote(note.id, projectId, {
+          const result = await updateNote(note.id, projectId, {
             title: data.title,
             content: data.content || null,
           });
+          if (!result) return;
+          saved = result;
         } else {
           saved = await createNote({
             projectId,

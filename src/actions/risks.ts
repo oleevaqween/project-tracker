@@ -41,12 +41,13 @@ export async function getRisk(id: number) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const [risk] = await db
-    .select()
+  const rows = await db
+    .select({ item: risks })
     .from(risks)
+    .innerJoin(projects, and(eq(risks.projectId, projects.id), eq(projects.userId, user.id)))
     .where(eq(risks.id, id));
 
-  return risk ?? null;
+  return rows[0]?.item ?? null;
 }
 
 // ---------- Mutations ----------
@@ -57,6 +58,12 @@ export async function createRisk(data: Omit<RiskInsert, 'id' | 'createdAt' | 'up
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [project] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, data.projectId!), eq(projects.userId, user.id)));
+  if (!project) redirect('/projects');
 
   const [risk] = await db
     .insert(risks)
@@ -74,6 +81,13 @@ export async function updateRisk(id: number, projectId: number, data: RiskUpdate
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const [owned] = await db
+    .select({ id: risks.id })
+    .from(risks)
+    .innerJoin(projects, and(eq(risks.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(risks.id, id));
+  if (!owned) return null;
+
   const [risk] = await db
     .update(risks)
     .set(data)
@@ -90,6 +104,13 @@ export async function deleteRisk(id: number, projectId: number) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [owned] = await db
+    .select({ id: risks.id })
+    .from(risks)
+    .innerJoin(projects, and(eq(risks.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(risks.id, id));
+  if (!owned) return;
 
   await db.delete(risks).where(eq(risks.id, id));
   revalidatePath(`/projects/${projectId}`);

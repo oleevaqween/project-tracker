@@ -1,5 +1,14 @@
 import type { ReportType } from './types';
 
+function sanitizeForPrompt(value: unknown, maxLen = 500): string {
+  if (value == null) return 'N/A';
+  return String(value)
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/\0/g, '')
+    .trim()
+    .slice(0, maxLen);
+}
+
 export const REPORT_SYSTEM_PROMPT = `You are a certified PMBOK 8th Edition PMO analyst generating a formal project report.
 Write in clear, professional prose. Use markdown formatting:
 - ## for section headers
@@ -173,16 +182,16 @@ export function buildContext(data: {
 
   const lines: string[] = [
     '--- PROJECT DATA ---',
-    `Name: ${p.name}`,
-    `Status: ${p.status}`,
-    `Focus Area: ${p.currentFocusArea ?? 'N/A'}`,
-    `Category: ${p.category ?? 'N/A'}`,
-    `Start Date: ${p.startDate ?? 'Not set'}`,
-    `Target End Date: ${p.targetEndDate ?? 'Not set'}`,
-    `Budget (Planned): ${p.budget ?? 'Not set'}`,
-    `Budget Spent: ${p.budgetSpent ?? 'Not set'}`,
-    `Progress: ${p.progressPercent ?? 0}%`,
-    `Description: ${p.description ?? 'None'}`,
+    `Name: ${sanitizeForPrompt(p.name)}`,
+    `Status: ${sanitizeForPrompt(p.status)}`,
+    `Focus Area: ${sanitizeForPrompt(p.currentFocusArea)}`,
+    `Category: ${sanitizeForPrompt(p.category)}`,
+    `Start Date: ${sanitizeForPrompt(p.startDate)}`,
+    `Target End Date: ${sanitizeForPrompt(p.targetEndDate)}`,
+    `Budget (Planned): ${sanitizeForPrompt(p.budget)}`,
+    `Budget Spent: ${sanitizeForPrompt(p.budgetSpent)}`,
+    `Progress: ${sanitizeForPrompt(p.progressPercent)}%`,
+    `Description: ${sanitizeForPrompt(p.description, 1000)}`,
     '',
   ];
 
@@ -191,7 +200,7 @@ export function buildContext(data: {
   if (charter && Object.values(charter).some((v) => v)) {
     lines.push('--- CHARTER ---');
     for (const [key, val] of Object.entries(charter)) {
-      if (val) lines.push(`${key}: ${val}`);
+      if (val) lines.push(`${sanitizeForPrompt(key, 100)}: ${sanitizeForPrompt(val, 1000)}`);
     }
     lines.push('');
   }
@@ -205,7 +214,9 @@ export function buildContext(data: {
     lines.push(`Total Estimated Hours: ${totalEstHours}`);
     lines.push(`Total Actual Hours: ${totalActHours}`);
     data.tasks.forEach((t) => {
-      lines.push(`- [${t.status}] ${t.title} | Priority: ${t.priority} | Due: ${t.dueDate ?? 'N/A'} | Est: ${t.estimatedHours ?? '-'}h | Actual: ${t.actualHours ?? '-'}h`);
+      lines.push(
+        `- [${sanitizeForPrompt(t.status, 50)}] ${sanitizeForPrompt(t.title)} | Priority: ${sanitizeForPrompt(t.priority, 50)} | Due: ${sanitizeForPrompt(t.dueDate, 50)} | Est: ${sanitizeForPrompt(t.estimatedHours, 20)}h | Actual: ${sanitizeForPrompt(t.actualHours, 20)}h`
+      );
     });
     lines.push('');
   }
@@ -214,7 +225,9 @@ export function buildContext(data: {
   if (data.risks.length > 0) {
     lines.push(`--- RISKS (${data.risks.length} total) ---`);
     data.risks.forEach((r) => {
-      lines.push(`- [${r.status}] ${r.title} | Score: ${r.riskScore ?? (Number(r.probability ?? 0) * Number(r.impact ?? 0))} | Response: ${r.responseType ?? 'N/A'} | Owner: ${r.owner ?? 'N/A'}`);
+      lines.push(
+        `- [${sanitizeForPrompt(r.status, 50)}] ${sanitizeForPrompt(r.title)} | Score: ${sanitizeForPrompt(r.riskScore ?? (Number(r.probability ?? 0) * Number(r.impact ?? 0)), 20)} | Response: ${sanitizeForPrompt(r.responseType, 50)} | Owner: ${sanitizeForPrompt(r.owner, 100)}`
+      );
     });
     lines.push('');
   }
@@ -223,7 +236,9 @@ export function buildContext(data: {
   if (data.stakeholders.length > 0) {
     lines.push(`--- STAKEHOLDERS (${data.stakeholders.length} total) ---`);
     data.stakeholders.forEach((s) => {
-      lines.push(`- ${s.name} | Role: ${s.role ?? 'N/A'} | Engagement: ${s.engagementLevel} → ${s.desiredEngagementLevel ?? 'N/A'}`);
+      lines.push(
+        `- ${sanitizeForPrompt(s.name, 100)} | Role: ${sanitizeForPrompt(s.role, 100)} | Engagement: ${sanitizeForPrompt(s.engagementLevel, 50)} → ${sanitizeForPrompt(s.desiredEngagementLevel, 50)}`
+      );
     });
     lines.push('');
   }
@@ -232,7 +247,9 @@ export function buildContext(data: {
   if (data.changeRequests.length > 0) {
     lines.push(`--- CHANGE REQUESTS (${data.changeRequests.length} total) ---`);
     data.changeRequests.forEach((c) => {
-      lines.push(`- [${c.status}] ${c.title} | Type: ${c.changeType} | Priority: ${c.priority}`);
+      lines.push(
+        `- [${sanitizeForPrompt(c.status, 50)}] ${sanitizeForPrompt(c.title)} | Type: ${sanitizeForPrompt(c.changeType, 50)} | Priority: ${sanitizeForPrompt(c.priority, 50)}`
+      );
     });
     lines.push('');
   }
@@ -241,8 +258,8 @@ export function buildContext(data: {
   if (data.lessonsLearned.length > 0) {
     lines.push(`--- LESSONS LEARNED (${data.lessonsLearned.length} total) ---`);
     data.lessonsLearned.forEach((l) => {
-      lines.push(`- [${l.impact}] ${l.title}: ${l.description}`);
-      if (l.recommendation) lines.push(`  Recommendation: ${l.recommendation}`);
+      lines.push(`- [${sanitizeForPrompt(l.impact, 50)}] ${sanitizeForPrompt(l.title)}: ${sanitizeForPrompt(l.description, 500)}`);
+      if (l.recommendation) lines.push(`  Recommendation: ${sanitizeForPrompt(l.recommendation, 500)}`);
     });
     lines.push('');
   }
@@ -251,7 +268,9 @@ export function buildContext(data: {
   if (data.issues.length > 0) {
     lines.push(`--- ISSUES (${data.issues.length} total) ---`);
     data.issues.forEach((i) => {
-      lines.push(`- [${i.status}] ${i.title} | Impact: ${i.impact} | Owner: ${i.owner ?? 'N/A'}`);
+      lines.push(
+        `- [${sanitizeForPrompt(i.status, 50)}] ${sanitizeForPrompt(i.title)} | Impact: ${sanitizeForPrompt(i.impact, 50)} | Owner: ${sanitizeForPrompt(i.owner, 100)}`
+      );
     });
     lines.push('');
   }
@@ -261,7 +280,7 @@ export function buildContext(data: {
   if (qm && Object.keys(qm).length > 0) {
     lines.push('--- QUALITY METRICS ---');
     for (const [key, val] of Object.entries(qm)) {
-      if (val !== undefined) lines.push(`${key}: ${val}`);
+      if (val !== undefined) lines.push(`${sanitizeForPrompt(key, 100)}: ${sanitizeForPrompt(val, 200)}`);
     }
     lines.push('');
   }

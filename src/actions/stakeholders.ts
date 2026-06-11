@@ -41,12 +41,13 @@ export async function getStakeholder(id: number) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const [stakeholder] = await db
-    .select()
+  const rows = await db
+    .select({ item: stakeholders })
     .from(stakeholders)
+    .innerJoin(projects, and(eq(stakeholders.projectId, projects.id), eq(projects.userId, user.id)))
     .where(eq(stakeholders.id, id));
 
-  return stakeholder ?? null;
+  return rows[0]?.item ?? null;
 }
 
 // ---------- Mutations ----------
@@ -57,6 +58,12 @@ export async function createStakeholder(data: Omit<StakeholderInsert, 'id' | 'cr
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [project] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, data.projectId!), eq(projects.userId, user.id)));
+  if (!project) redirect('/projects');
 
   const [stakeholder] = await db
     .insert(stakeholders)
@@ -74,6 +81,13 @@ export async function updateStakeholder(id: number, projectId: number, data: Sta
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const [owned] = await db
+    .select({ id: stakeholders.id })
+    .from(stakeholders)
+    .innerJoin(projects, and(eq(stakeholders.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(stakeholders.id, id));
+  if (!owned) return null;
+
   const [stakeholder] = await db
     .update(stakeholders)
     .set(data)
@@ -90,6 +104,13 @@ export async function deleteStakeholder(id: number, projectId: number) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [owned] = await db
+    .select({ id: stakeholders.id })
+    .from(stakeholders)
+    .innerJoin(projects, and(eq(stakeholders.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(stakeholders.id, id));
+  if (!owned) return;
 
   await db.delete(stakeholders).where(eq(stakeholders.id, id));
   revalidatePath(`/projects/${projectId}`);

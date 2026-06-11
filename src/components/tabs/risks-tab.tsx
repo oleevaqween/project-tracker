@@ -186,7 +186,7 @@ function RiskFormDialog({
       try {
         let saved: Risk;
         if (isEditing && risk) {
-          saved = await updateRisk(risk.id, projectId, {
+          const result = await updateRisk(risk.id, projectId, {
             title: data.title,
             description: data.description || null,
             category: data.category || null,
@@ -197,6 +197,8 @@ function RiskFormDialog({
             responseAction: data.responseAction || null,
             owner: data.owner || null,
           });
+          if (!result) return;
+          saved = result;
         } else {
           saved = await createRisk({
             projectId,

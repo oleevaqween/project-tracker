@@ -41,12 +41,13 @@ export async function getChangeRequest(id: number) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const [changeRequest] = await db
-    .select()
+  const rows = await db
+    .select({ item: changeRequests })
     .from(changeRequests)
+    .innerJoin(projects, and(eq(changeRequests.projectId, projects.id), eq(projects.userId, user.id)))
     .where(eq(changeRequests.id, id));
 
-  return changeRequest ?? null;
+  return rows[0]?.item ?? null;
 }
 
 // ---------- Mutations ----------
@@ -57,6 +58,12 @@ export async function createChangeRequest(data: Omit<ChangeRequestInsert, 'id' |
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [project] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, data.projectId!), eq(projects.userId, user.id)));
+  if (!project) redirect('/projects');
 
   const [changeRequest] = await db
     .insert(changeRequests)
@@ -74,6 +81,13 @@ export async function updateChangeRequest(id: number, projectId: number, data: C
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const [owned] = await db
+    .select({ id: changeRequests.id })
+    .from(changeRequests)
+    .innerJoin(projects, and(eq(changeRequests.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(changeRequests.id, id));
+  if (!owned) return null;
+
   const [changeRequest] = await db
     .update(changeRequests)
     .set(data)
@@ -90,6 +104,13 @@ export async function deleteChangeRequest(id: number, projectId: number) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const [owned] = await db
+    .select({ id: changeRequests.id })
+    .from(changeRequests)
+    .innerJoin(projects, and(eq(changeRequests.projectId, projects.id), eq(projects.userId, user.id)))
+    .where(eq(changeRequests.id, id));
+  if (!owned) return;
 
   await db.delete(changeRequests).where(eq(changeRequests.id, id));
   revalidatePath(`/projects/${projectId}`);

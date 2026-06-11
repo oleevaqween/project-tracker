@@ -307,7 +307,7 @@ export function buildEmailHtml(data: NotificationData, now: Date): string {
         </div>
       </td>
       <td style="text-align:right;vertical-align:middle;">
-        <div style="color:#60a5fa;font-size:13px;font-weight:700;">aboveone.com</div>
+        <div style="color:#60a5fa;font-size:13px;font-weight:700;">aboveone.net</div>
       </td>
     </tr></table>
   </td>

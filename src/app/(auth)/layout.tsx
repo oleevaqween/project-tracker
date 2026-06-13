@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export default function AuthLayout({
   children,
 }: {
@@ -14,11 +16,13 @@ export default function AuthLayout({
 
       {/* Brand mark in corner */}
       <div className="absolute top-6 left-6 flex items-center gap-2.5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z" fill="currentColor" opacity=".8" />
-          </svg>
-        </div>
+        <Image
+          src="/icon.png"
+          width={32}
+          height={32}
+          alt="Project Tracker"
+          className="rounded-lg"
+        />
         <div className="leading-none">
           <p className="text-sm font-semibold font-heading tracking-[-0.01em]">Project Tracker</p>
           <p className="text-[10px] uppercase tracking-[0.10em] text-muted-foreground font-mono">PMBOK 8</p>

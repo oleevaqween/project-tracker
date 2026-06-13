@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function AuthLayout({
   children,
@@ -14,19 +15,26 @@ export default function AuthLayout({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-primary/4 blur-3xl" />
       </div>
 
-      {/* Brand mark in corner */}
+      {/* Brand mark */}
       <div className="absolute top-6 left-6 flex items-center gap-2.5">
-        <Image
-          src="/icon.png"
-          width={32}
-          height={32}
-          alt="Project Tracker"
-          className="rounded-lg"
-        />
+        <div className="flex size-8 items-center justify-center rounded-lg dark:bg-primary">
+          <Image
+            src="/icon.png"
+            width={28}
+            height={28}
+            alt="Project Tracker"
+            className="rounded-md"
+          />
+        </div>
         <div className="leading-none">
           <p className="text-sm font-semibold font-heading tracking-[-0.01em]">Project Tracker</p>
           <p className="text-[10px] uppercase tracking-[0.10em] text-muted-foreground font-mono">PMBOK 8</p>
         </div>
+      </div>
+
+      {/* Theme toggle */}
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
       </div>
 
       <div className="relative z-10 w-full max-w-md">{children}</div>

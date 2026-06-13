@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -14,7 +15,6 @@ import {
   BriefcaseIcon,
   LayersIcon,
   Settings2Icon,
-  GlobeIcon,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -115,14 +115,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           >
             <SidebarMenuButton size="lg" render={<Link href="/dashboard" />}>
               <motion.div
-                className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+                className="flex aspect-square size-8 items-center justify-center rounded-lg dark:bg-primary"
                 animate={{
                   scale: logoPressed ? 0.88 : logoHovered ? 1.12 : 1,
                   rotate: logoPressed ? 0 : logoHovered ? 10 : 0,
                 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 20 }}
               >
-                <GlobeIcon className="size-4" />
+                <Image
+                  src="/icon.png"
+                  width={24}
+                  height={24}
+                  alt="Project Tracker"
+                  className="rounded-sm"
+                />
               </motion.div>
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="font-semibold">Project Tracker</span>

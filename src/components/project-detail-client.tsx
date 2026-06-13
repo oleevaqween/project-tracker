@@ -106,6 +106,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 type Project = typeof import('@/db/schema').projects.$inferSelect;
 type Task = typeof import('@/db/schema').tasks.$inferSelect;
+type PortfolioOption = { id: number; name: string; color: string | null };
+type ProgramOption = { id: number; name: string; portfolioId: number | null };
 type Note = typeof import('@/db/schema').notes.$inferSelect;
 type Stakeholder = typeof import('@/db/schema').stakeholders.$inferSelect;
 type Risk = typeof import('@/db/schema').risks.$inferSelect;
@@ -135,6 +137,8 @@ const editProjectSchema = z.object({
   budget: z.string().optional(),
   startDate: z.string().optional(),
   targetEndDate: z.string().optional(),
+  portfolioId: z.string().optional(),
+  programId: z.string().optional(),
 });
 
 type EditProjectForm = z.infer<typeof editProjectSchema>;
@@ -151,6 +155,20 @@ function EditProjectDialog({
   onProjectUpdated: (project: Project) => void;
 }) {
   const [isPending, startTransition] = React.useTransition();
+  const [portfolios, setPortfolios] = React.useState<PortfolioOption[]>([]);
+  const [programOptions, setProgramOptions] = React.useState<ProgramOption[]>([]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    fetch('/api/portfolios')
+      .then((r) => r.json())
+      .then((data: PortfolioOption[]) => setPortfolios(Array.isArray(data) ? data : []))
+      .catch(() => setPortfolios([]));
+    fetch('/api/programs')
+      .then((r) => r.json())
+      .then((data: ProgramOption[]) => setProgramOptions(Array.isArray(data) ? data : []))
+      .catch(() => setProgramOptions([]));
+  }, [open]);
 
   const form = useForm<EditProjectForm>({
     resolver: zodResolver(editProjectSchema),
@@ -164,6 +182,8 @@ function EditProjectDialog({
       budget: project.budget ?? '',
       startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
       targetEndDate: project.targetEndDate ? new Date(project.targetEndDate).toISOString().split('T')[0] : '',
+      portfolioId: project.portfolioId ? String(project.portfolioId) : '',
+      programId: project.programId ? String(project.programId) : '',
     },
   });
 
@@ -179,8 +199,20 @@ function EditProjectDialog({
       budget: project.budget ?? '',
       startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
       targetEndDate: project.targetEndDate ? new Date(project.targetEndDate).toISOString().split('T')[0] : '',
+      portfolioId: project.portfolioId ? String(project.portfolioId) : '',
+      programId: project.programId ? String(project.programId) : '',
     });
   }, [project, form]);
+
+  function handleProgramChange(programId: string | null) {
+    form.setValue('programId', programId ?? '');
+    if (programId) {
+      const prog = programOptions.find((p) => p.id === Number(programId));
+      if (prog?.portfolioId) {
+        form.setValue('portfolioId', String(prog.portfolioId));
+      }
+    }
+  }
 
   function onSubmit(data: EditProjectForm) {
     startTransition(async () => {
@@ -195,6 +227,8 @@ function EditProjectDialog({
           budget: data.budget ? parseBudgetInput(data.budget) : null,
           startDate: data.startDate ? new Date(data.startDate) : null,
           targetEndDate: data.targetEndDate ? new Date(data.targetEndDate) : null,
+          portfolioId: data.portfolioId ? Number(data.portfolioId) : null,
+          programId: data.programId ? Number(data.programId) : null,
         });
         if (!updated) {
           toast.error('Failed to update project');
@@ -274,6 +308,58 @@ function EditProjectDialog({
                 <FormMessage />
               </FormItem>
             )} />
+            <FormField
+              control={form.control}
+              name="portfolioId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5">
+                    <BriefcaseIcon className="size-3.5 text-muted-foreground" />
+                    Portfolio
+                  </FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="No portfolio" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No portfolio</SelectItem>
+                      {portfolios.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="programId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5">
+                    <LayersIcon className="size-3.5 text-muted-foreground" />
+                    Program
+                  </FormLabel>
+                  <Select value={field.value} onValueChange={handleProgramChange}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="No program" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No program</SelectItem>
+                      {programOptions.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="grid grid-cols-[140px_1fr] gap-3">
               <FormField control={form.control} name="currency" render={({ field }) => (
                 <FormItem>

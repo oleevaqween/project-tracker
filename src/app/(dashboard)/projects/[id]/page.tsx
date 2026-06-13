@@ -5,7 +5,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbLink } from '@/components/ui/breadcrumb';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { profiles, projects, tasks, notes, stakeholders, risks, changeRequests, lessonsLearned, issues } from '@/db/schema';
+import { profiles, projects, portfolios, programs, tasks, notes, stakeholders, risks, changeRequests, lessonsLearned, issues } from '@/db/schema';
 import { ProjectDetailClient } from '@/components/project-detail-client';
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -32,6 +32,16 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     .where(and(eq(projects.id, id), eq(projects.userId, user.id)));
 
   if (!project) notFound();
+
+  // Fetch portfolio + program context for header tags
+  const [portfolioContext, programContext] = await Promise.all([
+    project.portfolioId
+      ? db.select({ id: portfolios.id, name: portfolios.name }).from(portfolios).where(eq(portfolios.id, project.portfolioId)).limit(1).then((r) => r[0] ?? null)
+      : Promise.resolve(null),
+    project.programId
+      ? db.select({ id: programs.id, name: programs.name }).from(programs).where(eq(programs.id, project.programId)).limit(1).then((r) => r[0] ?? null)
+      : Promise.resolve(null),
+  ]);
 
   // Legacy projects don't use PMBOK data — skip the heavy queries
   let projectTasks: (typeof tasks.$inferSelect)[] = [];
@@ -77,7 +87,18 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         </Breadcrumb>
       </header>
 
-      <ProjectDetailClient project={project} initialTasks={projectTasks} initialNotes={projectNotes} initialStakeholders={projectStakeholders} initialRisks={projectRisks} initialChangeRequests={projectChangeRequests} initialLessonsLearned={projectLessonsLearned} initialIssues={projectIssues} />
+      <ProjectDetailClient
+        project={project}
+        portfolioContext={portfolioContext}
+        programContext={programContext}
+        initialTasks={projectTasks}
+        initialNotes={projectNotes}
+        initialStakeholders={projectStakeholders}
+        initialRisks={projectRisks}
+        initialChangeRequests={projectChangeRequests}
+        initialLessonsLearned={projectLessonsLearned}
+        initialIssues={projectIssues}
+      />
     </>
   );
 }

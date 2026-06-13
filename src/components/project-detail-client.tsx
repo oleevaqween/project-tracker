@@ -20,7 +20,10 @@ import {
   ListTreeIcon,
   LayoutDashboardIcon,
   ChevronDownIcon,
+  BriefcaseIcon,
+  LayersIcon,
 } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
@@ -1341,6 +1344,8 @@ function AdvanceFocusAreaDialog({
 
 export function ProjectDetailClient({
   project: initialProject,
+  portfolioContext,
+  programContext,
   initialTasks,
   initialNotes,
   initialStakeholders,
@@ -1350,6 +1355,8 @@ export function ProjectDetailClient({
   initialIssues,
 }: {
   project: Project;
+  portfolioContext?: { id: number; name: string } | null;
+  programContext?: { id: number; name: string } | null;
   initialTasks: Task[];
   initialNotes: Note[];
   initialStakeholders: Stakeholder[];
@@ -1413,6 +1420,31 @@ export function ProjectDetailClient({
               </h1>
               <StatusBadge value={project.status} />
             </div>
+            {(portfolioContext || programContext) && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {portfolioContext && (
+                  <Link
+                    href={`/portfolios/${portfolioContext.id}`}
+                    className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border border-border bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted hover:border-foreground/20 transition-colors"
+                  >
+                    <BriefcaseIcon className="size-2.5" />
+                    {portfolioContext.name}
+                  </Link>
+                )}
+                {portfolioContext && programContext && (
+                  <ChevronRightIcon className="size-3 text-muted-foreground/40" />
+                )}
+                {programContext && (
+                  <Link
+                    href={`/programs/${programContext.id}`}
+                    className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border border-border bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted hover:border-foreground/20 transition-colors"
+                  >
+                    <LayersIcon className="size-2.5" />
+                    {programContext.name}
+                  </Link>
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-3 flex-wrap">
               {project.currentFocusArea && (
                 <FocusAreaStepper currentFocusArea={project.currentFocusArea} size="md" />

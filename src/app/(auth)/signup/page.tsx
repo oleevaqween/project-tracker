@@ -34,6 +34,7 @@ export default function SignupPage() {
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
+    mode: 'onBlur',
     defaultValues: { email: '', password: '', confirmPassword: '' },
   });
 
@@ -111,13 +112,31 @@ export default function SignupPage() {
             <FormField
               control={form.control}
               name="password"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
-                  <FormMessage />
+                  {fieldState.isTouched && (
+                    <ul className="mt-1.5 space-y-1">
+                      {[
+                        { label: 'At least 8 characters', pass: field.value.length >= 8 },
+                        { label: 'Contains a letter', pass: /[A-Za-z]/.test(field.value) },
+                        { label: 'Contains a number', pass: /[0-9]/.test(field.value) },
+                      ].map(({ label, pass }) => (
+                        <li
+                          key={label}
+                          className={`flex items-center gap-1.5 text-xs ${
+                            pass ? 'text-green-600 dark:text-green-400' : 'text-destructive'
+                          }`}
+                        >
+                          <span>{pass ? '✓' : '✗'}</span>
+                          <span>{label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </FormItem>
               )}
             />

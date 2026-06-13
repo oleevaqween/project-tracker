@@ -33,11 +33,28 @@ export const portfolios = pgTable('portfolios', {
   updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
 });
 
+// ============ PROGRAMS ============
+export const programs = pgTable('programs', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id', { length: 36 }).notNull(),
+  portfolioId: integer('portfolio_id').references(() => portfolios.id, { onDelete: 'set null' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  objectives: text('objectives'),
+  status: varchar('status', { length: 50 }).notNull().default('active'),
+  // active | completed | on_hold | cancelled
+  startDate: timestamp('start_date'),
+  targetEndDate: timestamp('target_end_date'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
+});
+
 // ============ PROJECTS ============
 export const projects = pgTable('projects', {
   id: serial('id').primaryKey(),
   userId: varchar('user_id', { length: 36 }).notNull(),
   portfolioId: integer('portfolio_id'),
+  programId: integer('program_id').references(() => programs.id, { onDelete: 'set null' }),
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   status: varchar('status', { length: 50 }).notNull().default('planning'),
@@ -61,6 +78,21 @@ export const projects = pgTable('projects', {
     inspectionsFailed?: number;
     qualityScore?: number;
     notes?: string;
+  }>(),
+  // EVM — Phase 4
+  plannedValue: numeric('planned_value', { precision: 12, scale: 2 }),
+  // PV: what value of work was planned to be done by today
+  // EV is computed: (progressPercent / 100) × budget (no stored override needed)
+  // Phase 5: PMBOK 8 Performance Domains self-assessment (1-5 per domain)
+  performanceDomains: jsonb('performance_domains').$type<{
+    stakeholders?: number;
+    team?: number;
+    developmentApproach?: number;
+    planning?: number;
+    projectWork?: number;
+    delivery?: number;
+    measurement?: number;
+    uncertainty?: number;
   }>(),
   progressPercent: integer('progress_percent').default(0),
   coverImage: text('cover_image'), // Supabase Storage URL
@@ -361,10 +393,18 @@ export const aiUsageLog = pgTable('ai_usage_log', {
 export const portfoliosRelations = relations(portfolios, ({ one, many }) => ({
   user: one(profiles, { fields: [portfolios.userId], references: [profiles.id] }),
   projects: many(projects),
+  programs: many(programs),
+}));
+
+export const programsRelations = relations(programs, ({ one, many }) => ({
+  user: one(profiles, { fields: [programs.userId], references: [profiles.id] }),
+  portfolio: one(portfolios, { fields: [programs.portfolioId], references: [portfolios.id] }),
+  projects: many(projects),
 }));
 
 export const profilesRelations = relations(profiles, ({ many }) => ({
   portfolios: many(portfolios),
+  programs: many(programs),
   projects: many(projects),
   chatSessions: many(chatSessions),
   documents: many(documents),
@@ -374,6 +414,7 @@ export const profilesRelations = relations(profiles, ({ many }) => ({
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   user: one(profiles, { fields: [projects.userId], references: [profiles.id] }),
   portfolio: one(portfolios, { fields: [projects.portfolioId], references: [portfolios.id] }),
+  program: one(programs, { fields: [projects.programId], references: [programs.id] }),
   tasks: many(tasks),
   notes: many(notes),
   documents: many(documents),

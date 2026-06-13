@@ -5,7 +5,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbLink } from '@/components/ui/breadcrumb';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { profiles, portfolios, projects, tasks, risks } from '@/db/schema';
+import { profiles, portfolios, programs, projects, tasks, risks } from '@/db/schema';
 import { PortfolioDetailClient } from '@/components/portfolio-detail-client';
 
 export default async function PortfolioDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,11 +26,15 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
 
   if (!portfolio) notFound();
 
-  const portfolioProjects = await db
-    .select()
-    .from(projects)
-    .where(and(eq(projects.portfolioId, id), eq(projects.userId, user.id)))
-    .orderBy(projects.updatedAt);
+  const [portfolioProjects, portfolioPrograms] = await Promise.all([
+    db.select().from(projects)
+      .where(and(eq(projects.portfolioId, id), eq(projects.userId, user.id)))
+      .orderBy(projects.updatedAt),
+    db.select({ id: programs.id, name: programs.name, status: programs.status, description: programs.description })
+      .from(programs)
+      .where(and(eq(programs.portfolioId, id), eq(programs.userId, user.id)))
+      .orderBy(programs.name),
+  ]);
 
   const projectIds = portfolioProjects.map((p) => p.id);
 
@@ -38,8 +42,10 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
   let allRisks: typeof risks.$inferSelect[] = [];
 
   if (projectIds.length > 0) {
-    allTasks = await db.select().from(tasks).where(inArray(tasks.projectId, projectIds));
-    allRisks = await db.select().from(risks).where(inArray(risks.projectId, projectIds));
+    [allTasks, allRisks] = await Promise.all([
+      db.select().from(tasks).where(inArray(tasks.projectId, projectIds)),
+      db.select().from(risks).where(inArray(risks.projectId, projectIds)),
+    ]);
   }
 
   return (
@@ -62,6 +68,7 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
 
       <PortfolioDetailClient
         portfolio={portfolio}
+        programs={portfolioPrograms}
         projects={portfolioProjects}
         tasks={allTasks}
         risks={allRisks}

@@ -8,11 +8,12 @@ import { toast } from 'sonner';
 import {
   BriefcaseIcon, FolderKanbanIcon, CheckSquareIcon, ShieldAlertIcon,
   TrendingUpIcon, CheckCircle2Icon, CircleDotIcon, PauseCircleIcon, ArchiveIcon,
-  ArrowLeftIcon, Trash2Icon, PencilIcon,
+  ArrowLeftIcon, Trash2Icon, PencilIcon, LayersIcon, PlusIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StaggerContainer, StaggerItem, Reveal } from '@/components/motion';
+import { PMBOKGuide } from '@/components/pmbok';
 
 type Portfolio = {
   id: number;
@@ -35,6 +36,13 @@ type Project = {
   targetEndDate: Date | null;
 };
 
+type ProgramSummary = {
+  id: number;
+  name: string;
+  status: string;
+  description: string | null;
+};
+
 type Task = {
   id: number;
   projectId: number;
@@ -54,6 +62,7 @@ type Risk = {
 
 interface PortfolioDetailClientProps {
   portfolio: Portfolio;
+  programs: ProgramSummary[];
   projects: Project[];
   tasks: Task[];
   risks: Risk[];
@@ -83,7 +92,7 @@ function riskLevel(score: number | null) {
   return { label: 'Low', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' };
 }
 
-export function PortfolioDetailClient({ portfolio, projects, tasks, risks }: PortfolioDetailClientProps) {
+export function PortfolioDetailClient({ portfolio, programs, projects, tasks, risks }: PortfolioDetailClientProps) {
   const router = useRouter();
   const c = COLOR_MAP[portfolio.color ?? 'amber'] ?? COLOR_MAP.amber;
 
@@ -112,33 +121,43 @@ export function PortfolioDetailClient({ portfolio, projects, tasks, risks }: Por
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
-      {/* Header */}
-      <Reveal direction="up">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className={`mt-1 rounded-md border-2 ${c.border} ${c.bg} p-2.5`}>
-              <BriefcaseIcon className={`size-6 ${c.text}`} />
-            </div>
+    <div className="flex flex-1 flex-col">
+      {/* ── PAGE HEADER BAND ─────────────────────────────────────────────── */}
+      <div className="border-b px-6 pt-8 pb-6 md:px-12 lg:px-16">
+        <Reveal direction="up">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className={`text-2xl font-black tracking-tight ${c.text}`}>{portfolio.name}</h1>
+              <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground mb-2">
+                PORTFOLIOS / {portfolio.name.toUpperCase()}
+              </p>
+              <div className="flex items-center gap-3">
+                <div className={`shrink-0 rounded-md border-2 ${c.border} ${c.bg} p-2`}>
+                  <BriefcaseIcon className={`size-5 ${c.text}`} />
+                </div>
+                <h1 className={`text-[clamp(1.75rem,4vw,2.75rem)] font-black font-heading tracking-[-0.025em] leading-[1.05] ${c.text}`}>
+                  {portfolio.name}
+                </h1>
+              </div>
               {portfolio.description && (
-                <p className="text-sm text-muted-foreground mt-0.5 max-w-lg">{portfolio.description}</p>
+                <p className="mt-1 text-sm text-muted-foreground leading-relaxed max-w-xl">{portfolio.description}</p>
               )}
             </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="gap-1.5 self-start lg:self-end"
+            >
+              <Trash2Icon className="size-3.5" />
+              {deleting ? 'Deleting…' : 'Delete Portfolio'}
+            </Button>
           </div>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDelete}
-            disabled={deleting}
-            className="gap-1.5"
-          >
-            <Trash2Icon className="size-3.5" />
-            {deleting ? 'Deleting…' : 'Delete Portfolio'}
-          </Button>
-        </div>
-      </Reveal>
+        </Reveal>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-6 px-6 pt-6 pb-8 md:px-12 lg:px-16">
+      <PMBOKGuide context="portfolio" />
 
       {/* KPI strip */}
       <Reveal direction="up">
@@ -159,6 +178,70 @@ export function PortfolioDetailClient({ portfolio, projects, tasks, risks }: Por
           ))}
         </div>
       </Reveal>
+
+      {/* Programs */}
+      <section>
+        <Reveal direction="up">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-black uppercase tracking-wider text-muted-foreground">
+              Programs ({programs.length})
+            </h2>
+            <Link href="/programs">
+              <Button size="sm" variant="outline" className="gap-1.5 text-xs h-7 px-2">
+                <PlusIcon className="size-3" />
+                New Program
+              </Button>
+            </Link>
+          </div>
+        </Reveal>
+
+        {programs.length === 0 ? (
+          <Reveal direction="up">
+            <div className="rounded-lg border-2 border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              No programs linked to this portfolio.{' '}
+              <Link href="/programs" className="underline underline-offset-2 text-foreground/70 hover:text-foreground">
+                Create a program
+              </Link>{' '}
+              and assign it here.
+            </div>
+          </Reveal>
+        ) : (
+          <StaggerContainer className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {programs.map((prog) => (
+              <StaggerItem key={prog.id}>
+                <Link href={`/programs/${prog.id}`} className="group block focus:outline-none">
+                  <motion.div
+                    whileHover={{ y: -3 }}
+                    whileTap={{ y: 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                  >
+                    <Card>
+                      <CardContent className="p-4 flex items-start gap-3">
+                        <div className={`mt-0.5 shrink-0 rounded-md border-2 ${c.border} ${c.bg} p-1.5`}>
+                          <LayersIcon className={`size-4 ${c.text}`} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm group-hover:underline truncate">{prog.name}</p>
+                          {prog.description && (
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{prog.description}</p>
+                          )}
+                          <span className={`mt-1.5 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                            prog.status === 'active' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300' :
+                            prog.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                            'bg-muted text-muted-foreground'
+                          }`}>
+                            {prog.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </Link>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        )}
+      </section>
 
       {/* Projects */}
       <section>
@@ -271,6 +354,7 @@ export function PortfolioDetailClient({ portfolio, projects, tasks, risks }: Por
           </Reveal>
         </section>
       )}
+      </div>
     </div>
   );
 }

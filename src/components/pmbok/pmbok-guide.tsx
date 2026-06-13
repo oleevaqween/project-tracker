@@ -7,6 +7,10 @@ import { cn } from '@/lib/utils';
 
 export type PMBOKContext =
   | 'dashboard'
+  | 'portfolio'
+  | 'portfolios'
+  | 'program'
+  | 'programs'
   | 'projects'
   | 'tasks'
   | 'analytics'
@@ -26,33 +30,143 @@ interface GuideEntry {
 
 const GUIDE: Record<PMBOKContext, GuideEntry> = {
   dashboard: {
-    domain: 'Portfolio',
+    domain: 'Enterprise',
     domainColor: 'bg-violet-500/15 text-violet-400',
-    title: 'PMBOK 8 Portfolio Overview',
+    title: 'Enterprise Overview',
     description:
-      'PMBOK 8th Edition shifts from prescriptive process groups to outcome-focused Performance Domains. Your dashboard gives you a holistic portfolio view. Track value delivery across all 8 domains, not just schedule and cost.',
+      'This is your enterprise-level view — above portfolios, programs, and individual projects. PMBOK 8 positions this as the organizational layer where strategic alignment is maintained across all portfolios, ensuring the right work is being done for the right reasons.',
     concepts: [
       {
-        term: 'Performance Domains',
+        term: 'Portfolio vs. Enterprise',
         definition:
-          '8 interrelated areas that address project management concerns: Stakeholders, Team, Development Approach, Planning, Project Work, Delivery, Measurement, and Uncertainty.',
+          'A Portfolio groups projects/programs by strategic theme. The enterprise view aggregates across all portfolios to give leadership a single health signal for the entire project ecosystem.',
       },
       {
-        term: 'Value Delivery',
+        term: 'Value Delivery System',
         definition:
-          "PMBOK 8's core principle: projects succeed when they deliver intended outcomes and business value, not simply when they come in on time and on budget.",
+          "PMBOK 8's foundational model: organizations deliver value through a system of portfolios, programs, and projects. The enterprise dashboard surfaces how well that system is functioning holistically.",
       },
       {
-        term: 'Portfolio Health',
+        term: 'Strategic Alignment',
         definition:
-          "The aggregate measure of all active projects' performance: completion rates, risk exposure, and alignment to strategic objectives.",
+          'Every active project should trace back to an organizational objective. Projects without a clear strategic link are candidates for re-scoping or cancellation.',
       },
     ],
     actions: [
-      'Review any project with task completion < 70% for scope or resource blockers',
-      'Ensure every active project has at least one documented risk with a response plan',
-      'Update all project statuses before weekly stakeholder reviews',
-      'Archive completed projects and capture lessons learned to build organizational knowledge',
+      'Ensure every project belongs to a portfolio — unassigned projects lack strategic alignment',
+      'Review portfolio health weekly; a portfolio with avg progress < 30% after mid-term needs governance intervention',
+      'Balance project load across portfolios to avoid concentrating risk in one area',
+      'Archive completed projects and transfer lessons learned to the knowledge base',
+    ],
+  },
+  portfolio: {
+    domain: 'Portfolio Governance',
+    domainColor: 'bg-indigo-500/15 text-indigo-400',
+    title: 'Portfolio Management — PMBOK 8',
+    description:
+      'A Portfolio is a collection of projects and programs grouped to achieve a strategic objective. PMBOK 8 Portfolio Management is not about running the projects — it is about selecting the right projects, allocating resources strategically, and governing value delivery at the collection level.',
+    concepts: [
+      {
+        term: 'Portfolio Governance',
+        definition:
+          'The framework for making decisions about which projects to start, continue, accelerate, or stop based on strategic priority, risk exposure, and available capacity.',
+      },
+      {
+        term: 'Benefits Realisation',
+        definition:
+          'Portfolio success is measured by whether the intended strategic benefits are actually realised, not just whether individual projects delivered their outputs on time and budget.',
+      },
+      {
+        term: 'Resource Optimisation',
+        definition:
+          'Portfolios compete for the same pool of organisational resources. Effective portfolio management allocates resources to the projects delivering the highest strategic return.',
+      },
+    ],
+    actions: [
+      'Review avg progress across all projects; escalate any project below 50% at its halfway point',
+      'Ensure each project in this portfolio has a documented charter with clear strategic objectives',
+      'Monitor open risks across contained projects — aggregate risk exposure should inform portfolio decisions',
+      'Conduct a quarterly portfolio review: continue, re-scope, or cancel projects based on value delivery',
+    ],
+  },
+  portfolios: {
+    domain: 'Portfolio Governance',
+    domainColor: 'bg-indigo-500/15 text-indigo-400',
+    title: 'Managing Multiple Portfolios',
+    description:
+      'Multiple portfolios allow you to separate projects by strategic theme, client, business unit, or company. Each portfolio operates as an independent governance unit with its own projects, resources, and success criteria — giving you clear accountability at every level.',
+    concepts: [
+      {
+        term: 'Portfolio Segmentation',
+        definition:
+          'Dividing work into separate portfolios by strategic theme, client, or entity. Prevents cross-contamination of priorities and makes resource allocation and governance decisions cleaner.',
+      },
+      {
+        term: 'Portfolio Prioritisation',
+        definition:
+          'When organisational capacity is limited, portfolios themselves must be prioritised. Some portfolios may be paused or reduced in scope to protect the most strategically important work.',
+      },
+    ],
+    actions: [
+      'Create one portfolio per distinct strategic theme, client, or business entity',
+      'Assign every project to a portfolio before it enters execution; unassigned projects lack governance',
+      'Compare portfolio health across entities to identify which areas need leadership attention',
+      'Conduct a bi-annual portfolio rationalisation — remove or merge portfolios that no longer have active projects',
+    ],
+  },
+  program: {
+    domain: 'Program Management',
+    domainColor: 'bg-sky-500/15 text-sky-400',
+    title: 'Program Management — PMBOK 8',
+    description:
+      'A Program is a group of related projects managed in a coordinated way to obtain benefits not achievable from managing them individually. Programs exist between portfolios and projects, providing an intermediate coordination layer for complex, multi-project initiatives.',
+    concepts: [
+      {
+        term: 'Program vs. Portfolio',
+        definition:
+          'A Portfolio groups projects by strategic theme. A Program groups related projects that share a common outcome, interdependencies, or resources — and must be coordinated to deliver their collective benefit.',
+      },
+      {
+        term: 'Benefits Management',
+        definition:
+          "The Program Manager's primary responsibility. Benefits are the measurable improvements resulting from the program's outcomes — not simply the outputs of individual projects.",
+      },
+      {
+        term: 'Program Governance',
+        definition:
+          'The framework for program decision-making, oversight, and control. Includes a Program Steering Committee, risk escalation paths, and change authority above individual project level.',
+      },
+    ],
+    actions: [
+      'Define the shared benefit this program delivers that no single project achieves alone',
+      'Map interdependencies between contained projects — a delay in one may cascade to others',
+      'Hold a monthly program review across all project managers to surface cross-project risks and blockers',
+      'Track program-level milestones (not just project milestones) to measure collective progress toward the shared benefit',
+    ],
+  },
+  programs: {
+    domain: 'Program Management',
+    domainColor: 'bg-sky-500/15 text-sky-400',
+    title: 'Programs Across Your Portfolios',
+    description:
+      'Programs allow you to group related projects within a portfolio that share a common strategic outcome, resources, or timeline dependencies. Use programs when coordinating multiple projects toward a single shared goal is more effective than managing them independently.',
+    concepts: [
+      {
+        term: 'When to Create a Program',
+        definition:
+          'Create a program when: projects share resources that need coordinating; project timelines are interdependent; or the collective benefit of the projects exceeds what each delivers individually.',
+      },
+      {
+        term: 'Standalone Projects',
+        definition:
+          'Not every project needs a program. Short, independent projects with no shared resources or outputs should remain standalone under their portfolio.',
+      },
+    ],
+    actions: [
+      'Group related projects into a program only when they share outcomes, resources, or dependencies',
+      'Assign a single Program Manager responsible for cross-project coordination',
+      'Review program health monthly: aggregate progress, shared risks, and cross-project blockers',
+      'Close a program formally once all contained projects are closed and benefits are confirmed delivered',
     ],
   },
   projects: {

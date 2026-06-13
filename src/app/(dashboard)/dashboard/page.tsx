@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { profiles, projects, tasks } from '@/db/schema';
+import { profiles, portfolios, projects, tasks, risks } from '@/db/schema';
 import { DashboardClient } from '@/components/dashboard-client';
 
 export default async function DashboardPage() {
@@ -18,24 +17,27 @@ export default async function DashboardPage() {
   // Redirect to onboarding if profile hasn't been created yet
   const [profile] = await db
     .select({ username: profiles.username, displayName: profiles.displayName })
+    // username is fetched as fallback for the greeting when displayName is not set
     .from(profiles)
     .where(eq(profiles.id, user.id))
     .limit(1);
 
   if (!profile) redirect('/onboarding');
 
-  // Fetch dashboard data
-  const userProjects = await db
-    .select()
-    .from(projects)
-    .where(eq(projects.userId, user.id))
-    .orderBy(projects.updatedAt);
+  // Fetch dashboard data — all queries in parallel for performance
+  const [userPortfolios, userProjects, userTaskRows, userRisks] = await Promise.all([
+    db.select().from(portfolios).where(eq(portfolios.userId, user.id)).orderBy(portfolios.createdAt),
+    db.select().from(projects).where(eq(projects.userId, user.id)).orderBy(projects.updatedAt),
+    db.select().from(tasks)
+      .innerJoin(projects, eq(tasks.projectId, projects.id))
+      .where(eq(projects.userId, user.id)),
+    db.select({ projectId: risks.projectId, status: risks.status, riskScore: risks.riskScore })
+      .from(risks)
+      .innerJoin(projects, eq(risks.projectId, projects.id))
+      .where(eq(projects.userId, user.id)),
+  ]);
 
-  const userTasks = await db
-    .select()
-    .from(tasks)
-    .innerJoin(projects, eq(tasks.projectId, projects.id))
-    .where(eq(projects.userId, user.id));
+  const userTasks = userTaskRows;
 
   // Compute stats
   const totalProjects = userProjects.length;
@@ -45,6 +47,32 @@ export default async function DashboardPage() {
   const avgProgress = totalProjects > 0
     ? Math.round(userProjects.reduce((sum, p) => sum + (p.progressPercent ?? 0), 0) / totalProjects)
     : 0;
+
+  // Per-portfolio breakdown — computed from already-fetched data (no extra DB queries)
+  const portfolioBreakdown = userPortfolios.map((p) => {
+    const pProjects = userProjects.filter((pr) => pr.portfolioId === p.id);
+    const projectIds = new Set(pProjects.map((pr) => pr.id));
+    const pTasks = userTasks.filter((t) => projectIds.has(t.tasks.projectId));
+    const pRisks = userRisks.filter((r) => projectIds.has(r.projectId));
+    const totalBudget = pProjects.reduce((s, pr) => s + Number(pr.budget ?? 0), 0);
+    return {
+      id: p.id,
+      name: p.name,
+      color: p.color ?? 'amber',
+      projectCount: pProjects.length,
+      avgProgress: pProjects.length > 0
+        ? Math.round(pProjects.reduce((s, pr) => s + (pr.progressPercent ?? 0), 0) / pProjects.length)
+        : 0,
+      activeProjects: pProjects.filter((pr) => pr.status === 'active' || pr.status === 'in_progress' || pr.status === 'planning').length,
+      completedProjects: pProjects.filter((pr) => pr.status === 'completed').length,
+      taskDone: pTasks.filter((t) => t.tasks.status === 'done').length,
+      taskTotal: pTasks.length,
+      openRisks: pRisks.filter((r) => r.status !== 'closed').length,
+      highRisks: pRisks.filter((r) => (r.riskScore ?? 0) >= 15 && r.status !== 'closed').length,
+      totalBudget,
+    };
+  });
+  const unassignedCount = userProjects.filter((p) => !p.portfolioId).length;
 
   // Status distribution for pie chart
   const statusCounts = Object.entries(
@@ -95,6 +123,7 @@ export default async function DashboardPage() {
 
       <DashboardClient
         displayName={profile.displayName}
+        username={profile.username}
         totalProjects={totalProjects}
         completedProjects={completedProjects}
         totalTasks={totalTasks}
@@ -102,6 +131,8 @@ export default async function DashboardPage() {
         avgProgress={avgProgress}
         statusCounts={statusCounts}
         weeklyVelocity={weeklyVelocity}
+        portfolioBreakdown={portfolioBreakdown}
+        unassignedCount={unassignedCount}
       />
     </>
   );

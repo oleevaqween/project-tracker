@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { PlusIcon, BriefcaseIcon } from 'lucide-react';
+import { PlusIcon, BriefcaseIcon, LayersIcon } from 'lucide-react';
 import { createProject } from '@/actions/projects';
 import {
   Dialog,
@@ -48,16 +48,19 @@ const createProjectSchema = z.object({
   startDate: z.string().optional(),
   targetEndDate: z.string().optional(),
   portfolioId: z.string().optional(),
+  programId: z.string().optional(),
 });
 
 type CreateProjectForm = z.infer<typeof createProjectSchema>;
 
 type PortfolioOption = { id: number; name: string; color: string | null };
+type ProgramOption = { id: number; name: string; portfolioId: number | null };
 
 export function CreateProjectDialog() {
   const [open, setOpen] = React.useState(false);
   const [isPending, startTransition] = React.useTransition();
   const [portfolios, setPortfolios] = React.useState<PortfolioOption[]>([]);
+  const [programOptions, setProgramOptions] = React.useState<ProgramOption[]>([]);
   const router = useRouter();
 
   React.useEffect(() => {
@@ -66,6 +69,10 @@ export function CreateProjectDialog() {
       .then((r) => r.json())
       .then((data: PortfolioOption[]) => setPortfolios(Array.isArray(data) ? data : []))
       .catch(() => setPortfolios([]));
+    fetch('/api/programs')
+      .then((r) => r.json())
+      .then((data: ProgramOption[]) => setProgramOptions(Array.isArray(data) ? data : []))
+      .catch(() => setProgramOptions([]));
   }, [open]);
 
   const form = useForm<CreateProjectForm>({
@@ -81,8 +88,19 @@ export function CreateProjectDialog() {
       startDate: '',
       targetEndDate: '',
       portfolioId: '',
+      programId: '',
     },
   });
+
+  function handleProgramChange(programId: string | null) {
+    form.setValue('programId', programId ?? '');
+    if (programId) {
+      const prog = programOptions.find((p) => p.id === Number(programId));
+      if (prog?.portfolioId) {
+        form.setValue('portfolioId', String(prog.portfolioId));
+      }
+    }
+  }
 
   function onSubmit(data: CreateProjectForm) {
     startTransition(async () => {
@@ -98,6 +116,7 @@ export function CreateProjectDialog() {
           startDate: data.startDate ? new Date(data.startDate) : null,
           targetEndDate: data.targetEndDate ? new Date(data.targetEndDate) : null,
           portfolioId: data.portfolioId ? Number(data.portfolioId) : null,
+          programId: data.programId ? Number(data.programId) : null,
         });
 
         toast.success('Project created');
@@ -243,6 +262,38 @@ export function CreateProjectDialog() {
                     <SelectContent>
                       <SelectItem value="">No portfolio</SelectItem>
                       {portfolios.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="programId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5">
+                    <LayersIcon className="size-3.5 text-muted-foreground" />
+                    Program
+                  </FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={handleProgramChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="No program (assign later)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No program</SelectItem>
+                      {programOptions.map((p) => (
                         <SelectItem key={p.id} value={String(p.id)}>
                           {p.name}
                         </SelectItem>

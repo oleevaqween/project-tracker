@@ -9,6 +9,7 @@ import { BriefcaseIcon, PlusIcon, FolderKanbanIcon, TrendingUpIcon } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { StaggerContainer, StaggerItem, Reveal } from '@/components/motion';
+import { PMBOKGuide } from '@/components/pmbok';
 
 type Portfolio = {
   id: number;
@@ -121,6 +122,7 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
       </div>
 
       <div className="flex flex-1 flex-col gap-6 px-6 pt-6 pb-8 md:px-12 lg:px-16">
+        <PMBOKGuide context="portfolios" />
         {/* Inline creation form */}
       <AnimatePresence>
         {creating && (

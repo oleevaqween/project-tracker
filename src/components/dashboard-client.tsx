@@ -10,11 +10,30 @@ import {
   CheckCircle2Icon,
   ListTodoIcon,
   TrendingUpIcon,
+  BriefcaseIcon,
+  ShieldAlertIcon,
+  AlertTriangleIcon,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+type PortfolioStat = {
+  id: number;
+  name: string;
+  color: string;
+  projectCount: number;
+  avgProgress: number;
+  activeProjects: number;
+  completedProjects: number;
+  taskDone: number;
+  taskTotal: number;
+  openRisks: number;
+  highRisks: number;
+  totalBudget: number;
+};
+
 interface DashboardClientProps {
   displayName: string | null;
+  username: string | null;
   totalProjects: number;
   completedProjects: number;
   totalTasks: number;
@@ -22,6 +41,8 @@ interface DashboardClientProps {
   avgProgress: number;
   statusCounts: { status: string; count: number }[];
   weeklyVelocity: { week: string; completed: number; created: number }[];
+  portfolioBreakdown: PortfolioStat[];
+  unassignedCount: number;
 }
 
 const KPI_CONFIG = [
@@ -150,8 +171,18 @@ function KpiCard({
   );
 }
 
+const PORTFOLIO_COLORS: Record<string, { bg: string; text: string; border: string; bar: string }> = {
+  amber:   { bg: 'bg-amber-500/10',   text: 'text-amber-600 dark:text-amber-400',   border: 'border-amber-500/30',   bar: 'bg-amber-500' },
+  violet:  { bg: 'bg-violet-500/10',  text: 'text-violet-600 dark:text-violet-400',  border: 'border-violet-500/30',  bar: 'bg-violet-500' },
+  emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/30', bar: 'bg-emerald-500' },
+  sky:     { bg: 'bg-sky-500/10',     text: 'text-sky-600 dark:text-sky-400',     border: 'border-sky-500/30',     bar: 'bg-sky-500' },
+  rose:    { bg: 'bg-rose-500/10',    text: 'text-rose-600 dark:text-rose-400',    border: 'border-rose-500/30',    bar: 'bg-rose-500' },
+  slate:   { bg: 'bg-slate-500/10',   text: 'text-slate-600 dark:text-slate-400',   border: 'border-slate-500/30',   bar: 'bg-slate-400' },
+};
+
 export function DashboardClient({
   displayName,
+  username,
   totalProjects,
   completedProjects,
   totalTasks,
@@ -159,8 +190,10 @@ export function DashboardClient({
   avgProgress,
   statusCounts,
   weeklyVelocity,
+  portfolioBreakdown,
+  unassignedCount,
 }: DashboardClientProps) {
-  const firstName = displayName ? displayName.split(' ')[0] : null;
+  const firstName = displayName ? displayName.split(' ')[0] : (username ?? null);
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return (
@@ -182,9 +215,6 @@ export function DashboardClient({
 
             {/* Left: identity block */}
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground mb-2">
-                OVERVIEW
-              </p>
               <h1 className="leading-[1.05] text-foreground">
                 {firstName ? (
                   <>
@@ -195,16 +225,14 @@ export function DashboardClient({
                       {firstName}
                     </span>
                   </>
-                ) : (
-                  <span className="block text-[2.75rem] font-black font-heading tracking-[-0.025em]">
-                    Your Portfolio
-                  </span>
-                )}
+                ) : null}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                 {totalProjects === 0
-                  ? 'Create your first project to get started with PMBOK 8 tracking.'
-                  : `Tracking ${totalProjects} project${totalProjects !== 1 ? 's' : ''} across all 8 Performance Domains.`}
+                  ? 'Create a portfolio and your first project to begin PMBOK 8 tracking.'
+                  : portfolioBreakdown.length > 0
+                    ? `${portfolioBreakdown.length} portfolio${portfolioBreakdown.length !== 1 ? 's' : ''}, ${totalProjects} project${totalProjects !== 1 ? 's' : ''} across your enterprise.`
+                    : `${totalProjects} project${totalProjects !== 1 ? 's' : ''} — assign them to portfolios for governance.`}
               </p>
             </div>
 
@@ -295,6 +323,111 @@ export function DashboardClient({
             index={3}
           />
         </StaggerContainer>
+
+        {/* ── PORTFOLIO HEALTH ─────────────────────────────────────────────
+            Enterprise view: one card per portfolio showing its aggregate health.
+            Visible only when the user has at least one portfolio.
+        ─────────────────────────────────────────────────────────────────── */}
+        {portfolioBreakdown.length > 0 && (
+          <section>
+            <Reveal direction="up">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                  Portfolio Health
+                </p>
+                <Link href="/portfolios" className="text-[11px] font-medium text-primary hover:underline tracking-wide uppercase">
+                  View all
+                </Link>
+              </div>
+            </Reveal>
+            <StaggerContainer className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {portfolioBreakdown.map((p) => {
+                const c = PORTFOLIO_COLORS[p.color] ?? PORTFOLIO_COLORS.amber;
+                const taskPct = p.taskTotal > 0 ? Math.round((p.taskDone / p.taskTotal) * 100) : 0;
+                return (
+                  <StaggerItem key={p.id}>
+                    <Link href={`/portfolios/${p.id}`} className="block focus:outline-none group">
+                      <motion.div
+                        whileHover={{ y: -3 }}
+                        whileTap={{ y: 1 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                      >
+                        <div className={`relative rounded-lg border bg-card/70 backdrop-blur-sm p-4 transition-all duration-200 group-hover:bg-card/90 ${c.border}`}>
+                          {/* Header row */}
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className={`shrink-0 rounded-md p-1.5 ${c.bg}`}>
+                                <BriefcaseIcon className={`size-3.5 ${c.text}`} />
+                              </div>
+                              <p className={`font-semibold text-sm truncate group-hover:underline ${c.text}`}>{p.name}</p>
+                            </div>
+                            {p.highRisks > 0 && (
+                              <div className="flex items-center gap-1 shrink-0 text-rose-500">
+                                <AlertTriangleIcon className="size-3" />
+                                <span className="text-[10px] font-bold">{p.highRisks}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Progress bar */}
+                          <div className="mb-2">
+                            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                              <span>Avg Progress</span>
+                              <span className="font-semibold tabular-nums">{p.avgProgress}%</span>
+                            </div>
+                            <div className="h-1 rounded-full bg-muted/60 overflow-hidden">
+                              <motion.div
+                                className={`h-full rounded-full ${c.bar}`}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${p.avgProgress}%` }}
+                                transition={{ duration: 0.7, ease: [0.34, 1.56, 0.64, 1] }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Stats row */}
+                          <div className="flex items-center gap-3 text-[10px] text-muted-foreground flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <FolderKanbanIcon className="size-3" />
+                              {p.projectCount} project{p.projectCount !== 1 ? 's' : ''}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <CheckCircle2Icon className="size-3" />
+                              {p.taskDone}/{p.taskTotal} tasks
+                            </span>
+                            {p.openRisks > 0 && (
+                              <span className="flex items-center gap-1">
+                                <ShieldAlertIcon className="size-3" />
+                                {p.openRisks} risk{p.openRisks !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    </Link>
+                  </StaggerItem>
+                );
+              })}
+
+              {/* Unassigned projects warning */}
+              {unassignedCount > 0 && (
+                <StaggerItem>
+                  <Link href="/projects" className="block focus:outline-none group">
+                    <div className="rounded-lg border border-dashed border-amber-500/40 bg-amber-500/5 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <AlertTriangleIcon className="size-3.5 text-amber-500 shrink-0" />
+                        <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Unassigned</p>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        {unassignedCount} project{unassignedCount !== 1 ? 's' : ''} not assigned to a portfolio — no governance coverage.
+                      </p>
+                    </div>
+                  </Link>
+                </StaggerItem>
+              )}
+            </StaggerContainer>
+          </section>
+        )}
 
         {/* Charts — 5-column grid: Status (col 1–2) | Progress (col 3) | Velocity (col 4–5).
             Explicitly different structure from the 4-col KPI row above.

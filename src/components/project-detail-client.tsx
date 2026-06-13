@@ -88,6 +88,7 @@ import { CharterTab } from '@/components/tabs/charter-tab';
 import { LegacySummaryTab } from '@/components/tabs/legacy-summary-tab';
 import { ReportsTab } from '@/components/tabs/reports-tab';
 import { IssuesTab } from '@/components/tabs/issues-tab';
+import { MeasurementTab } from '@/components/tabs/measurement-tab';
 import { DomainHealthDashboard } from '@/components/domain-health-dashboard';
 import { computeDomainHealth } from '@/lib/domain-health';
 import {
@@ -252,7 +253,7 @@ function EditProjectDialog({
               )} />
               <FormField control={form.control} name="currentFocusArea" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Focus Area</FormLabel>
+                  <FormLabel>Life Cycle Phase</FormLabel>
                   <Select value={field.value ?? undefined} onValueChange={field.onChange}>
                     <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
@@ -835,7 +836,7 @@ function OverviewTab({
               <StatusBadge value={project.status} />
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Focus Area</span>
+              <span className="text-muted-foreground">Life Cycle Phase</span>
               <FocusAreaBadge value={project.currentFocusArea} />
             </div>
             {project.category && (
@@ -1482,6 +1483,7 @@ export function ProjectDetailClient({
             <TabsTrigger value="changes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Changes</TabsTrigger>
             <TabsTrigger value="lessons" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Lessons</TabsTrigger>
             <TabsTrigger value="issues" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Issues</TabsTrigger>
+            <TabsTrigger value="measurement" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Measurement</TabsTrigger>
             <TabsTrigger value="reports" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Reports</TabsTrigger>
           </TabsList>
 
@@ -1525,6 +1527,10 @@ export function ProjectDetailClient({
 
           <TabsContent value="issues" className="mt-4">
             <IssuesTab projectId={project.id} initialIssues={initialIssues} />
+          </TabsContent>
+
+          <TabsContent value="measurement" className="mt-4">
+            <MeasurementTab project={project} />
           </TabsContent>
 
           <TabsContent value="reports" className="mt-4">

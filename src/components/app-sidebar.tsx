@@ -30,12 +30,12 @@ import {
 
 const navItems = [
   { title: 'Dashboard',      href: '/dashboard',      icon: LayoutDashboardIcon },
-  { title: 'Portfolios',     href: '/portfolios',     icon: BriefcaseIcon       },
   { title: 'Projects',       href: '/projects',       icon: FolderKanbanIcon    },
   { title: 'Tasks',          href: '/tasks',          icon: CheckSquareIcon     },
-  { title: 'Knowledge Base', href: '/knowledge-base', icon: BookOpenIcon        },
-  { title: 'AI Chat',        href: '/ai-chat',        icon: BotIcon             },
+  { title: 'Portfolios',     href: '/portfolios',     icon: BriefcaseIcon       },
   { title: 'Analytics',      href: '/analytics',      icon: BarChart3Icon       },
+  { title: 'Knowledge Base', href: '/knowledge-base', icon: BookOpenIcon        },
+  { title: 'Chat',           href: '/ai-chat',        icon: BotIcon             },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

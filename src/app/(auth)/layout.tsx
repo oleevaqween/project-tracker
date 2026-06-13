@@ -20,8 +20,8 @@ export default function AuthLayout({
           </svg>
         </div>
         <div className="leading-none">
-          <p className="text-sm font-semibold">Project Tracker</p>
-          <p className="text-[10px] text-muted-foreground">PMBOK 8 Edition</p>
+          <p className="text-sm font-semibold font-heading tracking-[-0.01em]">Project Tracker</p>
+          <p className="text-[10px] uppercase tracking-[0.10em] text-muted-foreground font-mono">PMBOK 8</p>
         </div>
       </div>
 

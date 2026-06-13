@@ -23,7 +23,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset id="main-content">
         {/* Top-right user bar — sits over every page's header row */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex h-16 items-center justify-end px-4">
           <div className="pointer-events-auto">

@@ -174,6 +174,9 @@ export function AiChatClient({
 
       {/* Main chat area */}
       <div className="flex flex-1 flex-col">
+        {/* Visually hidden page title for screen readers — no visible H1 in chat UI */}
+        <h1 className="sr-only">Chat</h1>
+
         {/* Top bar */}
         <div className="flex items-center justify-between border-b px-4 py-2">
           <div className="flex items-center gap-2">

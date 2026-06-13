@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface GradientMeshProps {
@@ -19,42 +19,52 @@ export function GradientMesh({
   ],
   speed = 12,
 }: GradientMeshProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <div className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}>
-      {colors.map((color, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full blur-3xl"
-          style={{
-            background: color,
-            width: '60%',
-            height: '60%',
-          }}
-          initial={{
-            x: `${20 + i * 15}%`,
-            y: `${10 + i * 10}%`,
-          }}
-          animate={{
-            x: [
-              `${20 + i * 15}%`,
-              `${30 + i * 10}%`,
-              `${15 + i * 12}%`,
-              `${20 + i * 15}%`,
-            ],
-            y: [
-              `${10 + i * 10}%`,
-              `${25 + i * 8}%`,
-              `${15 + i * 12}%`,
-              `${10 + i * 10}%`,
-            ],
-          }}
-          transition={{
-            duration: speed,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        />
-      ))}
+      {colors.map((color, i) => {
+        const staticX = `${20 + i * 15}%`;
+        const staticY = `${10 + i * 10}%`;
+        return (
+          <motion.div
+            key={i}
+            className="absolute rounded-full blur-3xl"
+            style={{
+              background: color,
+              width: '60%',
+              height: '60%',
+            }}
+            initial={{
+              x: staticX,
+              y: staticY,
+            }}
+            animate={
+              shouldReduceMotion
+                ? { x: staticX, y: staticY }
+                : {
+                    x: [
+                      `${20 + i * 15}%`,
+                      `${30 + i * 10}%`,
+                      `${15 + i * 12}%`,
+                      `${20 + i * 15}%`,
+                    ],
+                    y: [
+                      `${10 + i * 10}%`,
+                      `${25 + i * 8}%`,
+                      `${15 + i * 12}%`,
+                      `${10 + i * 10}%`,
+                    ],
+                  }
+            }
+            transition={
+              shouldReduceMotion
+                ? { duration: 0 }
+                : { duration: speed, repeat: Infinity, ease: 'easeInOut' }
+            }
+          />
+        );
+      })}
     </div>
   );
 }

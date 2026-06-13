@@ -7,9 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  /* Syne — display/headings. IBM Plex Sans — body/UI. IBM Plex Mono — data/machine values. */
+  --font-sans: var(--font-ibm-plex-sans);
+  --font-mono: var(--font-ibm-plex-mono);
+  --font-heading: var(--font-syne);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -65,6 +66,15 @@
 /* Light mode — warm cream + amber */
 :root {
   --background: oklch(0.975 0.008 75);
+  /* Card glass shadow: inset top highlight + neo hard offset */
+  --card-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.08), 3px 3px 0 0 oklch(0.22 0.028 55);
+  /* Info/Content card: inner highlight only — top + left light refraction, no hard offset */
+  --info-card-shadow: inset 0 1px 0 0 oklch(0 0 0 / 0.06), inset 1px 0 0 0 oklch(0 0 0 / 0.04);
+  /* Color drench: deep amber — dark enough (Y≈0.097) for WCAG AA white text (~7:1).
+     Distinct from --primary (L=0.68) which is too bright for white text. */
+  --color-amber-drench: oklch(0.46 0.21 52);
+  /* Signal: electric mint-cyan — surprise accent, dark surfaces only, max 2/page. */
+  --color-signal: oklch(0.85 0.22 160);
   --foreground: oklch(0.13 0.022 55);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.13 0.022 55);
@@ -75,7 +85,7 @@
   --secondary: oklch(0.93 0.016 70);
   --secondary-foreground: oklch(0.25 0.04 55);
   --muted: oklch(0.93 0.010 70);
-  --muted-foreground: oklch(0.50 0.022 60);
+  --muted-foreground: oklch(0.44 0.022 58);
   --accent: oklch(0.58 0.24 272);
   --accent-foreground: oklch(0.98 0 0);
   --destructive: oklch(0.60 0.24 25);
@@ -97,6 +107,8 @@
   --sidebar-accent-foreground: oklch(0.25 0.04 55);
   --sidebar-border: oklch(0.87 0.012 70);
   --sidebar-ring: oklch(0.68 0.19 52);
+  /* Hero light-ray beam — dark indigo-purple on light amber/teal gradient */
+  --ray-beam: oklch(0.28 0.25 272);
 }
 
 /* Dark mode — warm charcoal + amber */
@@ -125,6 +137,10 @@
   --chart-4: oklch(0.66 0.20 290);
   --chart-5: oklch(0.66 0.22 22);
   --neo-shadow-color: oklch(0.06 0.010 55);
+  --card-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.06), 3px 3px 0 0 oklch(0.06 0.010 55);
+  --info-card-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.10), inset 1px 0 0 0 oklch(1 0 0 / 0.06);
+  /* Dark amber drench — very dark (Y≈0.01) for deep burnt amber feel in dark mode. */
+  --color-amber-drench: oklch(0.22 0.12 52);
   --sidebar: oklch(0.13 0.018 62);
   --sidebar-foreground: oklch(0.94 0.010 65);
   --sidebar-primary: oklch(0.79 0.20 52);
@@ -133,6 +149,8 @@
   --sidebar-accent-foreground: oklch(0.94 0.010 65);
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.79 0.20 52);
+  /* Hero light-ray beam — bright electric violet on dark hero */
+  --ray-beam: oklch(0.80 0.26 290);
 }
 
 @layer base {
@@ -142,6 +160,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    line-height: 1.65;
   }
   html {
     @apply font-sans;
@@ -149,9 +168,27 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer utilities {
   .glass {
     @apply bg-card/80 backdrop-blur-xl border-border/50;
+    box-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.10);
+  }
+
+  /* Dashboard hero — light atmospheric gradient, dark-mode aware */
+  .hero-gradient {
+    background: linear-gradient(135deg, oklch(0.92 0.025 52) 0%, oklch(0.89 0.020 272) 60%, oklch(0.93 0.015 200) 100%);
+  }
+  .dark .hero-gradient {
+    background: linear-gradient(135deg, oklch(0.23 0.10 52) 0%, oklch(0.18 0.10 272) 60%, oklch(0.20 0.08 200) 100%);
   }
   .glow-primary {
     box-shadow: 0 0 32px -8px oklch(0.68 0.19 52 / 0.35);
@@ -185,6 +222,70 @@
     transform: translate(2px, 2px);
     box-shadow: 2px 2px 0 0 var(--neo-shadow-color);
   }
+}
+
+/* ── ATMOSPHERE ─────────────────────────────────────────────────────────── */
+
+/* Global grain overlay — static SVG feTurbulence, no HTTP requests.
+   Adds tactile depth across all pages; pointer-events:none means no
+   interaction is blocked. mix-blend-mode:overlay keeps it tone-neutral. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+}
+
+/* Sidebar atmospheric gradient — reads as its own spatial zone.
+   Slightly more chromatic and vertically graded vs the flat page background.
+   Inset border-right creates a warm separation edge. */
+[data-sidebar="sidebar"] {
+  background: linear-gradient(
+    170deg,
+    oklch(0.95 0.018 68) 0%,
+    oklch(0.92 0.020 65) 55%,
+    oklch(0.90 0.022 62) 100%
+  ) !important;
+  box-shadow: inset -1px 0 0 oklch(1 0 0 / 0.55), 2px 0 12px oklch(0.68 0.19 52 / 0.04);
+}
+
+.dark [data-sidebar="sidebar"] {
+  background: linear-gradient(
+    170deg,
+    oklch(0.148 0.022 64) 0%,
+    oklch(0.125 0.020 62) 55%,
+    oklch(0.105 0.022 60) 100%
+  ) !important;
+  box-shadow: inset -1px 0 0 oklch(1 0 0 / 0.05), 2px 0 20px oklch(0 0 0 / 0.25);
+}
+
+/* Active nav: amber left-bar indicator in light mode. No background pill. */
+[data-sidebar="menu-button"][data-active="true"] {
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+/* Signal — CRT-glow on active nav item in dark mode (moment 1 of 2 per page).
+   Overrides light-mode rule above. inset bar shifts from amber to signal mint. */
+.dark [data-sidebar="menu-button"][data-active="true"] {
+  box-shadow: inset 3px 0 0 var(--color-signal), 0 0 14px oklch(0.85 0.22 160 / 0.14);
+}
+
+/* Disabled state: grayscale filter is the SECOND signal beyond opacity alone.
+   opacity-50 already applied by Tailwind; filter adds desaturation so disabled
+   state communicates through two visual properties, not color alone. */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+  filter: grayscale(0.4) saturate(0.55);
 }
 
 @media print {

@@ -291,19 +291,30 @@ function EditProjectDialog({
                       type="text"
                       inputMode="numeric"
                       placeholder="0"
-                      {...field}
+                      name={field.name}
+                      ref={field.ref}
+                      value={field.value ? formatBudgetInput(field.value) : ''}
+                      onBlur={field.onBlur}
                       onChange={(e) => {
-                        const raw = e.target.value.replace(/[^0-9.]/g, '');
+                        const input = e.target;
+                        const selStart = input.selectionStart ?? input.value.length;
+                        const rawDigitsBefore = input.value.slice(0, selStart).replace(/[^0-9.]/g, '').length;
+                        const raw = input.value.replace(/[^0-9.]/g, '');
+                        const formatted = raw ? formatBudgetInput(raw) : '';
                         field.onChange(raw);
-                        e.target.value = raw;
+                        requestAnimationFrame(() => {
+                          if (!input.isConnected) return;
+                          let count = 0;
+                          let newPos = formatted.length;
+                          for (let i = 0; i < formatted.length; i++) {
+                            if (/[0-9.]/.test(formatted[i])) {
+                              count++;
+                              if (count > rawDigitsBefore) { newPos = i; break; }
+                            }
+                          }
+                          input.setSelectionRange(newPos, newPos);
+                        });
                       }}
-                      onBlur={(e) => {
-                        const formatted = formatBudgetInput(e.target.value);
-                        field.onChange(parseBudgetInput(e.target.value));
-                        e.target.value = formatted;
-                        field.onBlur();
-                      }}
-                      defaultValue={field.value ? formatBudgetInput(field.value) : ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -810,10 +821,13 @@ function OverviewTab({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* ── OVERVIEW CARDS ── 7fr/5fr asymmetric (≠ KPI grid, ≠ chart grid)
+          60/40 split makes Details card visually dominant, Progress card a
+          tighter companion. Different ratio from every other grid in the app. */}
+      <div className="grid gap-4 lg:grid-cols-[7fr_5fr]">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Project Details</CardTitle>
+            <CardTitle className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Project Details</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 text-sm">
             <div className="flex justify-between">
@@ -849,7 +863,7 @@ function OverviewTab({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Progress</CardTitle>
+            <CardTitle className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Progress</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3">
             <div>
@@ -882,9 +896,9 @@ function OverviewTab({
         </Card>
 
         {project.description && (
-          <Card className="md:col-span-2">
+          <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Description</CardTitle>
+              <CardTitle className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Description</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm whitespace-pre-wrap">{project.description}</p>
@@ -1372,49 +1386,83 @@ export function ProjectDetailClient({
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
-      {/* Project header */}
+    <div className="flex flex-1 flex-col overflow-hidden">
+      {/* ── PROJECT HEADER BAND ───────────────────────────────────────────────
+          Asymmetric two-column: identity left (name/status/stepper/desc),
+          data right (progress stat + actions). The oversized progress number
+          right-anchored mirrors the dashboard avg% — consistent retro-futurist
+          typographic moment. Full-bleed band with border-b creates a clear
+          spatial break from the tab content below.
+      ──────────────────────────────────────────────────────────────────── */}
       <motion.div
-        className="flex items-start justify-between gap-4"
+        className="border-b px-6 pt-8 pb-6 md:px-12 lg:px-16"
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="space-y-3 min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-              {project.name}
-            </h1>
-            <StatusBadge value={project.status} />
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            {project.currentFocusArea && (
-              <FocusAreaStepper currentFocusArea={project.currentFocusArea} size="md" />
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-start">
+          {/* Left: project identity */}
+          <div className="space-y-3 min-w-0">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              PROJECTS / DETAIL
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-[2.75rem] font-black font-heading tracking-[-0.025em] leading-[1.05] bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+                {project.name}
+              </h1>
+              <StatusBadge value={project.status} />
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              {project.currentFocusArea && (
+                <FocusAreaStepper currentFocusArea={project.currentFocusArea} size="md" />
+              )}
+              {canAdvance && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-xs border-primary/30 text-primary hover:bg-primary/5"
+                  onClick={() => setAdvanceOpen(true)}
+                >
+                  Advance <ChevronRightIcon className="size-3" />
+                </Button>
+              )}
+            </div>
+            {project.description && (
+              <p className="text-sm text-muted-foreground/80 line-clamp-2 max-w-xl">{project.description}</p>
             )}
-            {canAdvance && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1 text-xs border-primary/30 text-primary hover:bg-primary/5"
-                onClick={() => setAdvanceOpen(true)}
-              >
-                Advance <ChevronRightIcon className="size-3" />
+          </div>
+
+          {/* Right: data sidebar — progress stat + actions */}
+          <div className="flex flex-col items-start lg:items-end gap-4 shrink-0">
+            <div className="lg:text-right">
+              <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1">
+                PROGRESS
+              </p>
+              <div className="flex items-baseline gap-1 lg:justify-end">
+                <span className="font-heading text-5xl font-black tracking-[-0.04em] text-primary leading-none tabular-nums">
+                  {project.progressPercent ?? 0}
+                </span>
+                <span className="font-mono text-xl font-bold text-primary/60">%</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                <PencilIcon className="mr-1.5 size-3.5" /> Edit
               </Button>
-            )}
+              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>
+                <TrashIcon className="mr-1.5 size-3.5" /> Delete
+              </Button>
+            </div>
           </div>
-          {project.description && (
-            <p className="text-sm text-muted-foreground/80 line-clamp-2 max-w-xl">{project.description}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <PencilIcon className="mr-1.5 size-3.5" /> Edit
-          </Button>
-          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>
-            <TrashIcon className="mr-1.5 size-3.5" /> Delete
-          </Button>
         </div>
       </motion.div>
+
+      {/* ── TAB CONTENT ZONE ────────────────────────────────────────────────
+          Different spatial rhythm from header: inner padding, no border.
+          Layout contrast between the full-bleed header above and this
+          contained zone below gives the page its structural identity.
+      ──────────────────────────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-6 px-6 pt-6 pb-8 md:px-12 lg:px-16">
 
       {/* Tabs — legacy projects get a simplified summary view */}
       {project.isLegacy ? (
@@ -1523,6 +1571,7 @@ export function ProjectDetailClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>{/* end tab content zone */}
     </div>
   );
 }

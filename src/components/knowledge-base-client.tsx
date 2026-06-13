@@ -111,21 +111,32 @@ export function KnowledgeBaseClient({
   const projectMap = new Map(projects.map((p) => [p.id, p.name]));
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Knowledge Base</h1>
-          <p className="text-sm text-muted-foreground">
-            Upload documents to enable RAG-powered AI search
-          </p>
+    <div className="flex flex-1 flex-col">
+      {/* PAGE HEADER BAND */}
+      <div className="border-b px-6 pt-8 pb-6 md:px-12 lg:px-16">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground mb-2">
+              KNOWLEDGE MANAGEMENT
+            </p>
+            <h1 className="text-[2.75rem] font-black font-heading tracking-[-0.025em] leading-[1.05] text-foreground">
+              Knowledge Base
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+              Upload documents to enable RAG-powered AI search
+            </p>
+          </div>
+          <div className="flex items-center gap-2 pb-1">
+            <Button className="gap-2" onClick={() => setUploadOpen(true)}>
+              <UploadIcon className="size-4" />
+              Upload Document
+            </Button>
+          </div>
         </div>
-        <Button className="gap-2" onClick={() => setUploadOpen(true)}>
-          <UploadIcon className="size-4" />
-          Upload Document
-        </Button>
       </div>
 
-      {/* Filters */}
+      <div className="flex flex-1 flex-col gap-4 px-6 pt-6 pb-8 md:px-12 lg:px-16">
+        {/* Filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
           <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -157,7 +168,7 @@ export function KnowledgeBaseClient({
             <FileIcon className="size-8 text-muted-foreground" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold">No documents yet</h3>
+            <h2 className="text-lg font-semibold">No documents yet</h2>
             <p className="text-sm text-muted-foreground">
               Upload PDFs, Word docs, text files, or markdown to enable AI-powered search
             </p>
@@ -227,6 +238,7 @@ export function KnowledgeBaseClient({
         projects={projects}
         onSuccess={handleUploadSuccess}
       />
+      </div>
     </div>
   );
 }

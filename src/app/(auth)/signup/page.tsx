@@ -71,8 +71,8 @@ export default function SignupPage() {
   return (
     <Card>
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-        <CardDescription>Start managing your projects with PMBOK 8 structure</CardDescription>
+        <CardTitle className="text-2xl font-black font-heading tracking-[-0.02em] leading-tight">Create an account</CardTitle>
+        <CardDescription className="text-sm leading-relaxed">Start managing your projects with PMBOK 8 structure</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button

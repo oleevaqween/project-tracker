@@ -366,7 +366,7 @@ export function PMBOKGuide({ context, focusArea, className }: PMBOKGuideProps) {
                   {guide.description}
                 </p>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/50 mb-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2.5">
                     Key Concepts
                   </p>
                   <div className="space-y-2.5">
@@ -384,7 +384,7 @@ export function PMBOKGuide({ context, focusArea, className }: PMBOKGuideProps) {
               <div>
                 <div className="flex items-center gap-2 mb-2.5">
                   <ZapIcon className="size-3 text-primary/70" />
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                     {phaseGuide ? `${phaseGuide.title}: Action Items` : 'Recommended Actions'}
                   </p>
                 </div>

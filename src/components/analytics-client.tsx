@@ -1,6 +1,6 @@
 'use client';
 
-import { StaggerContainer, StaggerItem, NumberTicker, Reveal } from '@/components/motion';
+import { StaggerContainer, StaggerItem, NumberTicker } from '@/components/motion';
 import { PMBOKGuide } from '@/components/pmbok';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ProgressRing, WeeklyVelocityChart } from '@/components/progress-charts';
@@ -80,19 +80,24 @@ export function AnalyticsClient({
   const criticalRisks = riskSeverity.find((r) => r.level === 'Critical (17-25)')?.count ?? 0;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 pt-0">
-      <Reveal direction="up">
+    <div className="flex flex-1 flex-col">
+      {/* PAGE HEADER BAND */}
+      <div className="border-b px-6 pt-8 pb-6 md:px-12 lg:px-16">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground">
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground mb-2">
+            PORTFOLIO / ANALYTICS
+          </p>
+          <h1 className="text-[2.75rem] font-black font-heading tracking-[-0.025em] leading-[1.05] text-foreground">
             Analytics
           </h1>
-          <p className="text-sm text-muted-foreground/70 mt-0.5">
+          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
             Portfolio health, velocity trends, and risk overview
           </p>
         </div>
-      </Reveal>
+      </div>
 
-      <PMBOKGuide context="analytics" />
+      <div className="flex flex-1 flex-col gap-6 px-6 pt-6 pb-8 md:px-12 lg:px-16">
+        <PMBOKGuide context="analytics" />
 
       {/* KPI Cards */}
       <StaggerContainer className="grid auto-rows-min gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -409,6 +414,7 @@ export function AnalyticsClient({
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

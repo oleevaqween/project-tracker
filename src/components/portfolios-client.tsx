@@ -94,23 +94,34 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
-      <Reveal direction="up">
-        <div className="flex items-start justify-between gap-4">
+    <div className="flex flex-1 flex-col">
+      {/* PAGE HEADER BAND */}
+      <div className="border-b px-6 pt-8 pb-6 md:px-12 lg:px-16">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-foreground">Portfolios</h1>
-            <p className="text-sm text-muted-foreground/70 mt-0.5">
-              Group projects by client or organisation, aligned with PMBOK 8 Portfolio Management.
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground mb-2">
+              PORTFOLIO MANAGEMENT
+            </p>
+            <h1 className="text-[2.75rem] font-black font-heading tracking-[-0.025em] leading-[1.05] text-foreground">
+              Portfolios
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+              {portfolios.length === 0
+                ? 'Create a portfolio to group projects by client or company.'
+                : `${portfolios.length} portfolio${portfolios.length !== 1 ? 's' : ''} — group projects by client or organisation.`}
             </p>
           </div>
-          <Button onClick={openCreating} className="gap-2">
-            <PlusIcon className="size-4" />
-            New Portfolio
-          </Button>
+          <div className="flex items-center gap-2 pb-1">
+            <Button onClick={openCreating} className="gap-2">
+              <PlusIcon className="size-4" />
+              New Portfolio
+            </Button>
+          </div>
         </div>
-      </Reveal>
+      </div>
 
-      {/* Inline creation form */}
+      <div className="flex flex-1 flex-col gap-6 px-6 pt-6 pb-8 md:px-12 lg:px-16">
+        {/* Inline creation form */}
       <AnimatePresence>
         {creating && (
           <motion.div
@@ -213,9 +224,9 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
                     <div className={`relative rounded-lg border-2 ${c.border} ${c.bg} p-5 transition-all ${c.shadow} hover:translate-x-[-2px] hover:translate-y-[-2px]`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h3 className={`font-black text-lg tracking-tight ${c.text} group-hover:underline`}>
+                          <h2 className={`font-black text-lg tracking-tight ${c.text} group-hover:underline`}>
                             {p.name}
-                          </h3>
+                          </h2>
                           {p.description && (
                             <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{p.description}</p>
                           )}
@@ -262,6 +273,7 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
           </div>
         </Reveal>
       )}
+      </div>
     </div>
   );
 }

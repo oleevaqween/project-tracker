@@ -44,7 +44,7 @@ export default async function AiChatPage() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbPage>AI Chat</BreadcrumbPage>
+              <BreadcrumbPage>Chat</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>

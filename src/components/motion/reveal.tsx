@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, type Variants } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 type RevealDirection = 'up' | 'down' | 'left' | 'right';
@@ -27,6 +27,7 @@ export function Reveal({
   delay = 0,
   duration = 0.5,
 }: RevealProps) {
+  const shouldReduceMotion = useReducedMotion();
   const offset = directionOffset[direction];
 
   const variants: Variants = {
@@ -51,7 +52,7 @@ export function Reveal({
     <motion.div
       className={cn(className)}
       variants={variants}
-      initial="hidden"
+      initial={shouldReduceMotion ? 'visible' : 'hidden'}
       animate="visible"
     >
       {children}

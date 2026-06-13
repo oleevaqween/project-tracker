@@ -9,13 +9,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground border-2 border-primary/70 shadow-[3px_3px_0_0_var(--neo-shadow-color)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--neo-shadow-color)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0_0_var(--neo-shadow-color)]",
+          "bg-primary text-primary-foreground border-2 border-primary/70 shadow-[3px_3px_0_0_var(--neo-shadow-color)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_var(--neo-shadow-color)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0_0_var(--neo-shadow-color)]",
         outline:
           "border-2 border-border bg-background shadow-[3px_3px_0_0_var(--neo-shadow-color)] hover:bg-muted hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--neo-shadow-color)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0_0_var(--neo-shadow-color)] aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
           "border-2 border-border bg-secondary text-secondary-foreground shadow-[2px_2px_0_0_var(--neo-shadow-color)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_var(--neo-shadow-color)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0_0_var(--neo-shadow-color)]",
         ghost:
-          "hover:bg-muted hover:text-foreground active:scale-[0.95] aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "hover:bg-primary/10 hover:text-primary active:bg-primary/20 active:scale-[0.95] aria-expanded:bg-primary/10 aria-expanded:text-primary dark:hover:bg-primary/15 dark:aria-expanded:bg-primary/15",
         destructive:
           "border-2 border-destructive/40 bg-destructive/10 text-destructive shadow-[2px_2px_0_0_var(--neo-shadow-color)] hover:bg-destructive/20 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_var(--neo-shadow-color)] active:translate-x-0.5 active:translate-y-0.5 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",

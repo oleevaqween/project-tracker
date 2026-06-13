@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, type Variants } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const containerVariants: Variants = {
@@ -41,6 +41,7 @@ export function StaggerContainer({
   staggerDelay = 0.1,
   delayChildren = 0.05,
 }: StaggerContainerProps) {
+  const shouldReduceMotion = useReducedMotion();
   return (
     <motion.div
       className={cn(className)}
@@ -54,7 +55,7 @@ export function StaggerContainer({
           },
         },
       }}
-      initial="hidden"
+      initial={shouldReduceMotion ? 'visible' : 'hidden'}
       animate="visible"
     >
       {children}

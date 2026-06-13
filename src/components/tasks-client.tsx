@@ -30,7 +30,7 @@ import {
   TASK_STATUSES,
   TASK_PRIORITIES,
 } from '@/lib/project-helpers';
-import { Reveal, StaggerContainer, StaggerItem } from '@/components/motion';
+import { StaggerContainer, StaggerItem } from '@/components/motion';
 import { PMBOKGuide } from '@/components/pmbok';
 import { updateTaskStatus } from '@/actions/tasks';
 
@@ -195,20 +195,25 @@ export function TasksClient({ allTasks, projects }: TasksClientProps) {
   const completionRate = tasks.length > 0 ? Math.round((totalDone / tasks.length) * 100) : 0;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
-      <Reveal direction="up">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-foreground">Tasks</h1>
-            <p className="text-sm text-muted-foreground">
-              {tasks.length} task{tasks.length !== 1 ? 's' : ''} across {projects.length} project
-              {projects.length !== 1 ? 's' : ''}, {completionRate}% complete
-            </p>
-          </div>
+    <div className="flex flex-1 flex-col">
+      {/* PAGE HEADER BAND */}
+      <div className="border-b px-6 pt-8 pb-6 md:px-12 lg:px-16">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground mb-2">
+            PORTFOLIO / TASKS
+          </p>
+          <h1 className="text-[2.75rem] font-black font-heading tracking-[-0.025em] leading-[1.05] text-foreground">
+            Tasks
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+            {tasks.length} task{tasks.length !== 1 ? 's' : ''} across {projects.length} project
+            {projects.length !== 1 ? 's' : ''}, {completionRate}% complete
+          </p>
         </div>
-      </Reveal>
+      </div>
 
-      <PMBOKGuide context="tasks" />
+      <div className="flex flex-1 flex-col gap-6 px-6 pt-6 pb-8 md:px-12 lg:px-16">
+        <PMBOKGuide context="tasks" />
 
       {/* Stats bar */}
       <StaggerContainer className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -334,6 +339,7 @@ export function TasksClient({ allTasks, projects }: TasksClientProps) {
           </AnimatePresence>
         </div>
       )}
+      </div>
     </div>
   );
 }

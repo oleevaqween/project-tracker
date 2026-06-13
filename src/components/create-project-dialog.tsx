@@ -290,19 +290,31 @@ export function CreateProjectDialog() {
                         type="text"
                         inputMode="numeric"
                         placeholder="0"
-                        {...field}
+                        name={field.name}
+                        ref={field.ref}
+                        value={field.value ? formatBudgetInput(field.value) : ''}
+                        onBlur={field.onBlur}
                         onChange={(e) => {
-                          const raw = e.target.value.replace(/[^0-9.]/g, '');
+                          const input = e.target;
+                          const selStart = input.selectionStart ?? input.value.length;
+                          // Count raw digits before cursor so we can restore it after reformatting
+                          const rawDigitsBefore = input.value.slice(0, selStart).replace(/[^0-9.]/g, '').length;
+                          const raw = input.value.replace(/[^0-9.]/g, '');
+                          const formatted = raw ? formatBudgetInput(raw) : '';
                           field.onChange(raw);
-                          e.target.value = raw;
+                          requestAnimationFrame(() => {
+                            if (!input.isConnected) return;
+                            let count = 0;
+                            let newPos = formatted.length;
+                            for (let i = 0; i < formatted.length; i++) {
+                              if (/[0-9.]/.test(formatted[i])) {
+                                count++;
+                                if (count > rawDigitsBefore) { newPos = i; break; }
+                              }
+                            }
+                            input.setSelectionRange(newPos, newPos);
+                          });
                         }}
-                        onBlur={(e) => {
-                          const formatted = formatBudgetInput(e.target.value);
-                          field.onChange(parseBudgetInput(e.target.value));
-                          e.target.value = formatted;
-                          field.onBlur();
-                        }}
-                        defaultValue={field.value ? formatBudgetInput(field.value) : ''}
                       />
                     </FormControl>
                     <FormMessage />

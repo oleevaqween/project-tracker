@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useSpring, useTransform } from 'framer-motion';
+import { motion, useReducedMotion, useSpring, useTransform } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface NumberTickerProps {
@@ -23,6 +23,8 @@ export function NumberTicker({
   suffix = '',
   decimalPlaces = 0,
 }: NumberTickerProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   const spring = useSpring(0, {
     duration: duration * 1000,
     bounce: 0,
@@ -56,6 +58,18 @@ export function NumberTicker({
   useEffect(() => {
     spring.set(0);
   }, [spring]);
+
+  if (shouldReduceMotion) {
+    const formatted = Intl.NumberFormat('en-US', {
+      minimumFractionDigits: decimalPlaces,
+      maximumFractionDigits: decimalPlaces,
+    }).format(value);
+    return (
+      <span className={cn('tabular-nums', className)}>
+        {prefix}{formatted}{suffix}
+      </span>
+    );
+  }
 
   return (
     <span className={cn('tabular-nums', className)}>

@@ -67,8 +67,8 @@ export function LoginContent() {
     >
       <Card className="border-border/50 bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10">
         <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-xl font-bold">Welcome back</CardTitle>
-          <CardDescription>Sign in to your project portfolio</CardDescription>
+          <CardTitle className="text-2xl font-black font-heading tracking-[-0.02em] leading-tight">Welcome back</CardTitle>
+          <CardDescription className="text-sm leading-relaxed">Sign in to your project portfolio</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button

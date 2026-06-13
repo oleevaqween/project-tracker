@@ -4,3 +4,4 @@ export { NumberTicker } from './number-ticker';
 export { GradientMesh } from './gradient-mesh';
 export { SplitText } from './split-text';
 export { GlowCard } from './glow-card';
+export { LightRays } from './light-rays';

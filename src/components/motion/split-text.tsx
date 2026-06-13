@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, type Variants } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface SplitTextProps {
@@ -36,17 +36,26 @@ export function SplitText({
   duration = 0.4,
   delay = 0,
 }: SplitTextProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return <span className={cn(className)}>{children}</span>;
+  }
+
   const units = splitBy === 'chars' ? children.split('') : children.split(' ');
 
   return (
     <motion.span
-      className={cn('inline-flex flex-wrap', className)}
+      className={cn('relative inline-flex flex-wrap', className)}
       initial="hidden"
       animate="visible"
     >
+      {/* Full text for screen readers; animated spans are aria-hidden */}
+      <span className="sr-only">{children}</span>
       {units.map((unit, i) => (
         <motion.span
           key={`${unit}-${i}`}
+          aria-hidden="true"
           className="inline-block"
           variants={charVariants}
           custom={delay + i * staggerDelay}

@@ -57,26 +57,55 @@ export default async function ProjectsPage() {
         </Breadcrumb>
       </header>
 
-      <div className="flex flex-1 flex-col gap-6 p-6">
-        <div className="flex items-center justify-between gap-4">
+      {/* ── PAGE HEADER BAND ─────────────────────────────────────────────────
+          Full-bleed section with wider gutters than standard p-6.
+          Asymmetric grid: title left, oversized count stat + actions right.
+          The count stat creates a spatial anchor mirroring the dashboard's
+          avg% stat — same retro-futurist typographic moment, different page.
+      ──────────────────────────────────────────────────────────────────── */}
+      <div className="border-b px-6 pt-8 pb-6 md:px-12 lg:px-16">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-foreground">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground mb-2">
+              PORTFOLIO / PROJECTS
+            </p>
+            <h1 className="text-[2.75rem] font-black font-heading tracking-[-0.025em] leading-[1.05] text-foreground">
               Projects
             </h1>
-            <p className="text-sm text-muted-foreground/70 mt-0.5">
+            <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
               {userProjects.length === 0
                 ? 'Start your first project to begin PMBOK 8 tracking.'
                 : `${userProjects.length} project${userProjects.length !== 1 ? 's' : ''} in your portfolio.`}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <CreateLegacyProjectDialog />
-            <CreateProjectDialog />
+
+          {/* Right: editorial counter (desktop) + action buttons.
+              TYPOGRAPHIC MOMENT — three-line stack: spaced caption / text-8xl
+              zero-padded numeral / spaced caption. The 11px:96px:11px size
+              ratio (1:8.7:1) creates maximum scale contrast on one element. */}
+          <div className="flex items-end gap-8">
+            <div className="hidden lg:block text-right">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                TOTAL
+              </p>
+              <span className="block font-sans text-5xl font-black tracking-[-0.04em] text-primary leading-none tabular-nums">
+                {String(userProjects.length).padStart(2, '0')}
+              </span>
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                PROJECTS
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pb-1">
+              <CreateLegacyProjectDialog />
+              <CreateProjectDialog />
+            </div>
           </div>
         </div>
+      </div>
 
+      {/* ── CONTENT ZONE ─────────────────────────────────────────────────── */}
+      <div className="flex flex-1 flex-col gap-6 px-6 pt-8 pb-8 md:px-12 lg:px-16">
         <PMBOKGuide context="projects" />
-
         <ProjectGrid projects={userProjects} taskCountMap={taskCountMap} />
       </div>
     </>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
+import type { EmailOtpType } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { profiles } from '@/db/schema';
@@ -7,16 +8,29 @@ import { profiles } from '@/db/schema';
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-
-  if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=missing_code`);
-  }
+  const tokenHash = searchParams.get('token_hash');
+  const VALID_OTP_TYPES: EmailOtpType[] = ['signup', 'magiclink', 'recovery', 'invite', 'email', 'email_change'];
+  const typeRaw = searchParams.get('type');
+  const type: EmailOtpType | null = typeRaw && (VALID_OTP_TYPES as string[]).includes(typeRaw)
+    ? (typeRaw as EmailOtpType)
+    : null;
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-  if (error) {
-    return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+  if (tokenHash && type) {
+    // Email confirmation flow: ?token_hash=xxx&type=signup
+    const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+    if (error) {
+      return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+    }
+  } else if (code) {
+    // OAuth / PKCE code exchange flow: ?code=xxx
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+    }
+  } else {
+    return NextResponse.redirect(`${origin}/login?error=missing_code`);
   }
 
   const {
@@ -27,7 +41,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login?error=no_user`);
   }
 
-  // Check if profile exists — new OAuth users need onboarding
   const [existingProfile] = await db
     .select({ id: profiles.id })
     .from(profiles)

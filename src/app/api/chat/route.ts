@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText, convertToModelMessages, generateText } from 'ai';
 import { getEffectiveConfig, isAIConfigured, getConfigLabel, type AIConfig } from '@/lib/ai/models';
 import { allTools } from '@/lib/ai/tools';
 import { logAIUsage, estimateCost } from '@/lib/ai/usage';
@@ -60,16 +60,17 @@ export async function POST(request: Request) {
   };
 
   // Get or create a chat session
+  const isNewSession = !sessionId;
   let effectiveSessionId = sessionId;
   if (!effectiveSessionId) {
-    // Auto-create a session from the first user message
+    // Temporary title from first message — will be replaced by auto-generated title after response
     const firstUserMsg = messages.find((m) => m.role === 'user');
-    const title = firstUserMsg
-      ? firstUserMsg.parts
+    const tempTitle = firstUserMsg
+      ? (firstUserMsg.parts
           ?.filter((p) => p.type === 'text')
           .map((p) => (p as { type: 'text'; text: string }).text)
           .join(' ')
-          .slice(0, 100) ?? 'New Chat'
+          .slice(0, 100) ?? 'New Chat')
       : 'New Chat';
 
     const [newSession] = await db
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
       .values({
         userId: user.id,
         projectId: projectId ?? null,
-        title,
+        title: tempTitle,
       })
       .returning();
     effectiveSessionId = newSession.id;
@@ -172,13 +173,35 @@ export async function POST(request: Request) {
             },
           })
           .then(() => {
-            // Update session's updatedAt timestamp
             return db
               .update(chatSessions)
               .set({ updatedAt: new Date() })
               .where(eq(chatSessions.id, effectiveSessionId!));
           })
           .catch(console.error);
+
+        // Auto-generate a descriptive title for new sessions after first response
+        if (isNewSession) {
+          const firstUserMsg = messages.find((m) => m.role === 'user');
+          const userText = (firstUserMsg?.parts ?? [])
+            .filter((p) => p.type === 'text')
+            .map((p) => (p as { type: 'text'; text: string }).text)
+            .join(' ');
+
+          generateText({
+            model,
+            prompt: `Summarize this conversation in 4 to 6 words as a chat title. Reply with only the title — no quotes, no punctuation, no explanation.\n\nUser: ${userText.slice(0, 300)}\nAssistant: ${text.slice(0, 300)}`,
+            maxOutputTokens: 16,
+          }).then(({ text: generatedTitle }) => {
+            const clean = generatedTitle.trim().replace(/^["'`]|["'`]$/g, '');
+            if (clean) {
+              return db
+                .update(chatSessions)
+                .set({ title: clean })
+                .where(eq(chatSessions.id, effectiveSessionId!));
+            }
+          }).catch(console.error);
+        }
       }
     },
   });

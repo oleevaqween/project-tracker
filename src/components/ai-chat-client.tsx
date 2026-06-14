@@ -75,6 +75,19 @@ export function AiChatClient({
     transport,
   });
 
+  // Refresh session list when streaming ends so auto-generated title appears in sidebar
+  const prevStatusRef = React.useRef(status);
+  React.useEffect(() => {
+    const wasGenerating = prevStatusRef.current === 'streaming' || prevStatusRef.current === 'submitted';
+    prevStatusRef.current = status;
+    if (wasGenerating && status !== 'streaming' && status !== 'submitted') {
+      fetch('/api/chat/sessions')
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data)) setSessions(data); })
+        .catch(() => {});
+    }
+  }, [status]);
+
   // Always send the latest sessionId + projectId with every message.
   const activeSessionIdRef = React.useRef(activeSessionId);
   const selectedProjectIdRef = React.useRef(selectedProjectId);

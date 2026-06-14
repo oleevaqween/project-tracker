@@ -88,6 +88,32 @@ async function fetchOpenRouterModels(apiKey: string): Promise<ModelOption[]> {
     .map((m) => ({ id: m.id, name: m.name ?? m.id }));
 }
 
+// ── Ollama Cloud ─────────────────────────────────────────────────────────────
+
+async function fetchOllamaCloudModels(apiKey: string): Promise<ModelOption[]> {
+  const res = await fetch('https://ollama.com/v1/models', {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) throw new Error(`Ollama Cloud ${res.status}`);
+  const body = await res.json() as
+    | { data: { id: string; name?: string }[] }          // OpenAI-compatible format
+    | { models: { name: string; model?: string }[] };    // Ollama native format
+
+  if ('data' in body && Array.isArray(body.data)) {
+    return body.data
+      .filter((m) => m.id && !m.id.includes('embed'))
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map((m) => ({ id: m.id, name: m.name ?? m.id }));
+  }
+  if ('models' in body && Array.isArray(body.models)) {
+    return body.models
+      .filter((m) => m.name && !m.name.includes('embed'))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((m) => ({ id: m.model ?? m.name, name: m.name }));
+  }
+  throw new Error('Unexpected response format from Ollama Cloud');
+}
+
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -98,10 +124,6 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { provider, apiKey: inputKey }: { provider: AIProvider; apiKey?: string } = await req.json();
-
-  if (provider === 'ollama') {
-    return NextResponse.json({ error: 'Ollama runs locally — cannot fetch models server-side' }, { status: 400 });
-  }
 
   // Resolve API key: prefer the one sent in the request (not yet saved), else use stored key
   let apiKey = inputKey;
@@ -139,6 +161,9 @@ export async function POST(req: NextRequest) {
         break;
       case 'openrouter':
         models = await fetchOpenRouterModels(apiKey);
+        break;
+      case 'ollama':
+        models = await fetchOllamaCloudModels(apiKey);
         break;
       default:
         return NextResponse.json({ error: 'Unknown provider' }, { status: 400 });

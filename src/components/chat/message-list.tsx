@@ -7,6 +7,54 @@ import { BotIcon, UserIcon, Loader2Icon, CheckIcon, XIcon, ShieldAlertIcon, Chec
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
+const THINKING_PHRASES = [
+  'Thinking...',
+  'Analyzing your request...',
+  'Gathering insights...',
+  'Looking into this...',
+  'Connecting the dots...',
+  'Checking your projects...',
+  'Working on it...',
+  'Let me think about that...',
+  'Pulling relevant data...',
+  'Digging into this...',
+  'Processing your question...',
+  'Consulting the knowledge base...',
+  'Almost there...',
+  'Putting it all together...',
+];
+
+function ThinkingIndicator() {
+  const [index, setIndex] = React.useState(0);
+  const [visible, setVisible] = React.useState(true);
+
+  React.useEffect(() => {
+    const tick = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex((i) => (i + 1) % THINKING_PHRASES.length);
+        setVisible(true);
+      }, 250);
+    }, 2800);
+    return () => clearInterval(tick);
+  }, []);
+
+  return (
+    <span
+      className="text-sm text-muted-foreground"
+      style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.25s ease' }}
+    >
+      {THINKING_PHRASES[index]}
+    </span>
+  );
+}
+
+function BlinkingCursor() {
+  return (
+    <span className="inline-block w-[2px] h-[1em] bg-foreground/60 ml-[1px] align-text-bottom animate-pulse" />
+  );
+}
+
 // Write tools that require confirmation before executing
 const WRITE_TOOLS = new Set(['createTask', 'createRisk', 'logLessonLearned']);
 
@@ -47,10 +95,14 @@ export function MessageList({
   pendingToolCallId,
 }: MessageListProps) {
   const bottomRef = React.useRef<HTMLDivElement>(null);
+  const prevLengthRef = React.useRef(messages.length);
 
   React.useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const isNewMessage = messages.length !== prevLengthRef.current;
+    prevLengthRef.current = messages.length;
+    // Smooth scroll only when a new message bubble appears; instant during streaming
+    bottomRef.current?.scrollIntoView({ behavior: isNewMessage ? 'smooth' : 'instant' });
+  }, [messages, status]);
 
   if (messages.length === 0) {
     return (
@@ -83,9 +135,15 @@ export function MessageList({
     );
   }
 
+  const isGenerating = status === 'streaming' || status === 'submitted';
+
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {messages.map((message) => (
+      {messages.map((message, msgIndex) => {
+        const isLastMsg = msgIndex === messages.length - 1;
+        const isStreamingThisMsg = isLastMsg && status === 'streaming' && message.role === 'assistant';
+
+        return (
         <div
           key={message.id}
           className={cn(
@@ -109,9 +167,11 @@ export function MessageList({
           >
             {message.parts.map((part, i) => {
               if (part.type === 'text') {
+                const isLastPart = i === message.parts.length - 1;
                 return (
-                  <div key={i} className="whitespace-pre-wrap">
+                  <div key={i} className="whitespace-pre-wrap leading-relaxed">
                     {part.text}
+                    {isStreamingThisMsg && isLastPart && <BlinkingCursor />}
                   </div>
                 );
               }
@@ -209,15 +269,17 @@ export function MessageList({
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
 
-      {(status === 'streaming' || status === 'submitted') && (
+      {/* Thinking indicator — shown while waiting for first token */}
+      {status === 'submitted' && (
         <div className="flex gap-3 justify-start">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
             <BotIcon className="size-4 text-primary" />
           </div>
-          <div className="rounded-xl bg-muted px-4 py-2.5">
-            <Loader2Icon className="size-4 animate-spin text-muted-foreground" />
+          <div className="rounded-xl bg-muted px-4 py-3">
+            <ThinkingIndicator />
           </div>
         </div>
       )}

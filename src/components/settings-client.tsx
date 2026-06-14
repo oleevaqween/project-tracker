@@ -68,10 +68,9 @@ export function SettingsClient({
   const displayModels  = dynamicModels ?? fallbackModels;
   const needsApiKey    = true; // all providers support a key; ollama key is optional (enables cloud)
   const keyLabel       = PROVIDER_KEY_LABELS[provider];
-  const canFetchModels = provider !== 'ollama' && (hasExistingKey || !!apiKey);
+  const canFetchModels = hasExistingKey || !!apiKey;
 
   async function fetchModels(targetProvider: AIProvider = provider, keyOverride?: string) {
-    if (targetProvider === 'ollama') return;
     setModelsLoading(true);
     setModelsError(null);
     try {
@@ -105,7 +104,7 @@ export function SettingsClient({
   React.useEffect(() => {
     setDynamicModels(null);
     setModelsError(null);
-    if (provider !== 'ollama' && hasExistingKey) {
+    if (hasExistingKey) {
       fetchModels(provider);
     } else {
       // Reset model to first option of the new provider's fallback list
@@ -196,27 +195,25 @@ export function SettingsClient({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="model">Model</Label>
-              {provider !== 'ollama' && (
-                <button
-                  type="button"
-                  onClick={() => fetchModels(provider, apiKey || undefined)}
-                  disabled={modelsLoading || !canFetchModels}
-                  className={cn(
-                    'flex items-center gap-1 text-xs text-muted-foreground transition-colors',
-                    canFetchModels
-                      ? 'hover:text-foreground cursor-pointer'
-                      : 'opacity-40 cursor-not-allowed',
-                  )}
-                  title={canFetchModels ? 'Refresh model list from provider' : 'Save an API key first'}
-                >
-                  {modelsLoading ? (
-                    <Loader2Icon className="size-3 animate-spin" />
-                  ) : (
-                    <RefreshCwIcon className="size-3" />
-                  )}
-                  {modelsLoading ? 'Loading…' : dynamicModels ? 'Refresh' : 'Load live models'}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => fetchModels(provider, apiKey || undefined)}
+                disabled={modelsLoading || !canFetchModels}
+                className={cn(
+                  'flex items-center gap-1 text-xs text-muted-foreground transition-colors',
+                  canFetchModels
+                    ? 'hover:text-foreground cursor-pointer'
+                    : 'opacity-40 cursor-not-allowed',
+                )}
+                title={canFetchModels ? 'Refresh model list from provider' : 'Save an API key first'}
+              >
+                {modelsLoading ? (
+                  <Loader2Icon className="size-3 animate-spin" />
+                ) : (
+                  <RefreshCwIcon className="size-3" />
+                )}
+                {modelsLoading ? 'Loading…' : dynamicModels ? 'Refresh' : 'Load live models'}
+              </button>
             </div>
 
             {modelsError && (

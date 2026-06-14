@@ -31,16 +31,20 @@ export function buildWbsTree(elements: WbsElement[]): WbsNode[] {
   [...elements]
     .sort((a, b) => a.orderIndex - b.orderIndex)
     .forEach((e) => {
-      if (e.parentId != null && map.has(e.parentId)) {
-        map.get(e.parentId)!.children.push(map.get(e.id)!);
-      } else {
+      if (e.parentId == null) {
         roots.push(map.get(e.id)!);
+      } else if (map.has(e.parentId)) {
+        map.get(e.parentId)!.children.push(map.get(e.id)!);
       }
+      // Orphaned nodes (parentId points to a deleted/missing element) are silently dropped.
+      // This prevents broken subtrees appearing at root level during race conditions or
+      // cascaded deletes that haven't propagated to the client yet.
     });
   return roots;
 }
 
 // Assign WBS codes by position in tree. Mutates nodes in place.
+// Callers must persist updated codes to DB after calling this (use recomputeAndSaveWbsCodes in server actions).
 export function assignWbsCodes(nodes: WbsNode[], prefix = ''): void {
   nodes
     .sort((a, b) => a.orderIndex - b.orderIndex)
@@ -75,10 +79,8 @@ export function resolveParentId(rows: EditRow[], currentIndex: number): number |
   return null;
 }
 
-// Compute sibling orderIndex for a new/moved node.
+// Returns the next available orderIndex for appending a new sibling under parentId.
 export function resolveOrderIndex(
-  _rows: EditRow[],
-  _currentIndex: number,
   parentId: number | null,
   existingElements: WbsElement[],
 ): number {
@@ -101,7 +103,10 @@ export function computeWbsCompleteness(tasks: { wbsElementId: number | null }[])
 // Dictionary completeness (for report tier detection)
 export function dictionaryTier(node: WbsNode): 1 | 2 | 3 {
   const hasTier2 =
-    node.description || node.acceptanceCriteria || node.responsibleParty || node.estimatedCost;
+    node.description?.trim() ||
+    node.acceptanceCriteria?.trim() ||
+    node.responsibleParty?.trim() ||
+    (node.estimatedCost != null && node.estimatedCost !== '0');
   if (!hasTier2) return 1;
   const d = node.dictionaryDetails;
   const hasTier3 = d && (d.milestones || d.resourcesRequired || d.qualityRequirements || d.assumptionsConstraints);

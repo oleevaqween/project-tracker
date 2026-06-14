@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/form';
 import { PROJECT_STATUSES, FOCUS_AREAS, CURRENCIES, parseBudgetInput, formatBudgetInput } from '@/lib/project-helpers';
 import { toast } from 'sonner';
+import { ProjectModeSelector } from '@/components/project-mode-selector';
 
 const createProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required').max(255),
@@ -49,6 +50,7 @@ const createProjectSchema = z.object({
   targetEndDate: z.string().optional(),
   portfolioId: z.string().optional(),
   programId: z.string().optional(),
+  useWbs: z.boolean(),
 });
 
 type CreateProjectForm = z.infer<typeof createProjectSchema>;
@@ -89,6 +91,7 @@ export function CreateProjectDialog() {
       targetEndDate: '',
       portfolioId: '',
       programId: '',
+      useWbs: true,
     },
   });
 
@@ -117,6 +120,7 @@ export function CreateProjectDialog() {
           targetEndDate: data.targetEndDate ? new Date(data.targetEndDate) : null,
           portfolioId: data.portfolioId ? Number(data.portfolioId) : null,
           programId: data.programId ? Number(data.programId) : null,
+          useWbs: data.useWbs,
         });
 
         toast.success('Project created');
@@ -403,6 +407,11 @@ export function CreateProjectDialog() {
                 )}
               />
             </div>
+
+            <ProjectModeSelector
+              value={form.watch('useWbs')}
+              onChange={(v) => form.setValue('useWbs', v)}
+            />
 
             <DialogFooter showCloseButton>
               <Button type="submit" disabled={isPending}>

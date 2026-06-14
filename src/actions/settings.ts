@@ -25,11 +25,23 @@ export async function updateAIConfig(config: AIConfig) {
     return { error: 'Model is required' };
   }
 
+  // If no new key is submitted, preserve whatever is already stored
+  let preservedKey: string | undefined;
+  if (!config.apiKeyEncrypted) {
+    const [existing] = await db
+      .select({ aiConfig: profiles.aiConfig })
+      .from(profiles)
+      .where(eq(profiles.id, user.id))
+      .limit(1);
+    const existingConfig = existing?.aiConfig as AIConfig | null;
+    preservedKey = existingConfig?.apiKeyEncrypted;
+  }
+
   // Encode API key if provided (stored as base64 for obfuscation)
   const storedConfig: AIConfig = {
     provider: config.provider,
     model: config.model,
-    apiKeyEncrypted: config.apiKeyEncrypted ? encodeApiKey(config.apiKeyEncrypted) : undefined,
+    apiKeyEncrypted: config.apiKeyEncrypted ? encodeApiKey(config.apiKeyEncrypted) : preservedKey,
     baseUrl: config.baseUrl || undefined,
   };
 

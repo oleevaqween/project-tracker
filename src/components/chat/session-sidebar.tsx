@@ -77,7 +77,7 @@ export function SessionSidebar({
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  className="opacity-0 group-hover:opacity-100 shrink-0"
+                  className="shrink-0 opacity-40 hover:opacity-100"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeleteSession(session.id);

@@ -66,7 +66,7 @@ export function SettingsClient({
 
   const fallbackModels = PROVIDER_MODELS[provider];
   const displayModels  = dynamicModels ?? fallbackModels;
-  const needsApiKey    = provider !== 'ollama';
+  const needsApiKey    = true; // all providers support a key; ollama key is optional (enables cloud)
   const keyLabel       = PROVIDER_KEY_LABELS[provider];
   const canFetchModels = provider !== 'ollama' && (hasExistingKey || !!apiKey);
 

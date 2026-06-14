@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,7 @@ const CHARTER_FIELDS: { key: keyof CharterData; label: string; description: stri
 ];
 
 export function CharterTab({ project }: { project: Project }) {
+  const router = useRouter();
   const existingCharter = (project.charter ?? {}) as CharterData;
   const [fields, setFields] = React.useState<CharterData>(existingCharter);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -94,6 +96,7 @@ export function CharterTab({ project }: { project: Project }) {
     setIsSaving(true);
     try {
       await saveCharter(project.id, fields);
+      router.refresh();
       toast.success('Charter saved');
     } catch {
       toast.error('Failed to save charter');

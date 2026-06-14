@@ -1,17 +1,18 @@
 'use client';
 
 import { StaggerContainer, Reveal } from '@/components/motion';
-import { ProjectCard } from '@/components/project-card';
 import { CreateProjectDialog } from '@/components/create-project-dialog';
+import { CardC_Featured, CardC_Standard } from '@/components/project-card-variants';
 
 type Project = typeof import('@/db/schema').projects.$inferSelect;
 
 interface ProjectGridProps {
   projects: Project[];
   taskCountMap: Map<number, number>;
+  featuredProjectId: number | null;
 }
 
-export function ProjectGrid({ projects, taskCountMap }: ProjectGridProps) {
+export function ProjectGrid({ projects, taskCountMap, featuredProjectId }: ProjectGridProps) {
   if (projects.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12 text-center">
@@ -27,42 +28,37 @@ export function ProjectGrid({ projects, taskCountMap }: ProjectGridProps) {
     );
   }
 
-  const [featured, ...rest] = projects;
+  const featured = featuredProjectId != null
+    ? projects.find((p) => p.id === featuredProjectId) ?? null
+    : null;
+
+  const rest = featured
+    ? projects.filter((p) => p.id !== featured.id)
+    : projects;
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ── FEATURED CARD ────────────────────────────────────────────────────
-          First project breaks out of the equal-width grid: full-width,
-          horizontal layout, progress stat right-anchored. This is the
-          asymmetric element required per skill rules — one element per
-          page that does not conform to the surrounding grid structure.
-      ──────────────────────────────────────────────────────────────────── */}
-      <Reveal direction="up">
-        <ProjectCard
-          project={featured}
-          taskCount={taskCountMap.get(featured.id) ?? 0}
-          isFeatured
-        />
-      </Reveal>
+      {featured && (
+        <Reveal direction="up">
+          <CardC_Featured
+            project={featured}
+            taskCount={taskCountMap.get(featured.id) ?? 0}
+            isFeatured
+          />
+        </Reveal>
+      )}
 
-      {/* ── STANDARD GRID ────────────────────────────────────────────────────
-          Remaining projects in 3-col staggered grid. Different layout
-          from the featured card above — these are compact vertical cards,
-          establishing a clear hierarchy: featured → secondary.
-      ──────────────────────────────────────────────────────────────────── */}
       {rest.length > 0 && (
-        <>
-          <div className="h-px bg-gradient-to-r from-border/60 via-border/30 to-transparent -mx-0" />
-          <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {rest.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                taskCount={taskCountMap.get(project.id) ?? 0}
-              />
-            ))}
-          </StaggerContainer>
-        </>
+        <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {rest.map((p) => (
+            <CardC_Standard
+              key={p.id}
+              project={p}
+              taskCount={taskCountMap.get(p.id) ?? 0}
+              isFeatured={false}
+            />
+          ))}
+        </StaggerContainer>
       )}
     </div>
   );

@@ -386,6 +386,13 @@ export const aiUsageLog = pgTable('ai_usage_log', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+// ============ USER PREFERENCES ============
+export const userPreferences = pgTable('user_preferences', {
+  userId: varchar('user_id', { length: 36 }).primaryKey().references(() => profiles.id, { onDelete: 'cascade' }),
+  featuredProjectId: integer('featured_project_id').references(() => projects.id, { onDelete: 'set null' }),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
 // ============================================================
 // RELATIONS
 // ============================================================
@@ -510,4 +517,9 @@ export const issuesRelations = relations(issues, ({ one }) => ({
 
 export const projectReportsRelations = relations(projectReports, ({ one }) => ({
   project: one(projects, { fields: [projectReports.projectId], references: [projects.id] }),
+}));
+
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+  user: one(profiles, { fields: [userPreferences.userId], references: [profiles.id] }),
+  featuredProject: one(projects, { fields: [userPreferences.featuredProjectId], references: [projects.id] }),
 }));

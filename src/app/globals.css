@@ -70,6 +70,8 @@
   --card-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.08), 3px 3px 0 0 oklch(0.22 0.028 55);
   /* Info/Content card: inner highlight only — top + left light refraction, no hard offset */
   --info-card-shadow: inset 0 1px 0 0 oklch(0 0 0 / 0.06), inset 1px 0 0 0 oklch(0 0 0 / 0.04);
+  /* Card C light mode: laminated plastic sheen — bright inner ring + outer frame + drop shadow */
+  --card-c: inset 0 0 0 1.5px rgba(255, 255, 255, 0.85), 0 0 0 1px rgba(0, 0, 0, 0.07), 0 4px 12px rgba(0, 0, 0, 0.05);
   /* Color drench: deep amber — dark enough (Y≈0.097) for WCAG AA white text (~7:1).
      Distinct from --primary (L=0.68) which is too bright for white text. */
   --color-amber-drench: oklch(0.46 0.21 52);
@@ -139,6 +141,8 @@
   --neo-shadow-color: oklch(0.06 0.010 55);
   --card-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.06), 3px 3px 0 0 oklch(0.06 0.010 55);
   --info-card-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.10), inset 1px 0 0 0 oklch(1 0 0 / 0.06);
+  /* Card C dark mode: depth shadow */
+  --card-c: 0 8px 32px rgba(0, 0, 0, 0.5);
   /* Dark amber drench — very dark (Y≈0.01) for deep burnt amber feel in dark mode. */
   --color-amber-drench: oklch(0.22 0.12 52);
   --sidebar: oklch(0.13 0.018 62);

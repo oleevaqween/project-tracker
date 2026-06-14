@@ -5,7 +5,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbLink } from '@/components/ui/breadcrumb';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { profiles, projects, tasks } from '@/db/schema';
+import { profiles, projects, tasks, userPreferences } from '@/db/schema';
 import { CreateProjectDialog } from '@/components/create-project-dialog';
 import { CreateLegacyProjectDialog } from '@/components/create-legacy-project-dialog';
 import { ProjectGrid } from '@/components/project-grid';
@@ -38,6 +38,14 @@ export default async function ProjectsPage() {
     .groupBy(tasks.projectId);
 
   const taskCountMap = new Map(taskCounts.map((t) => [t.projectId, t.count]));
+
+  const [pref] = await db
+    .select({ featuredProjectId: userPreferences.featuredProjectId })
+    .from(userPreferences)
+    .where(eq(userPreferences.userId, user.id))
+    .limit(1);
+
+  const featuredProjectId = pref?.featuredProjectId ?? null;
 
   return (
     <>
@@ -106,7 +114,7 @@ export default async function ProjectsPage() {
       {/* ── CONTENT ZONE ─────────────────────────────────────────────────── */}
       <div className="flex flex-1 flex-col gap-6 px-6 pt-8 pb-8 md:px-12 lg:px-16">
         <PMBOKGuide context="projects" />
-        <ProjectGrid projects={userProjects} taskCountMap={taskCountMap} />
+        <ProjectGrid projects={userProjects} taskCountMap={taskCountMap} featuredProjectId={featuredProjectId} />
       </div>
     </>
   );

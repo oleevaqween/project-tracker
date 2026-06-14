@@ -9,10 +9,11 @@ type Project = typeof import('@/db/schema').projects.$inferSelect;
 interface ProjectGridProps {
   projects: Project[];
   taskCountMap: Map<number, number>;
+  wbsUnassignedMap: Map<number, number>;
   featuredProjectId: number | null;
 }
 
-export function ProjectGrid({ projects, taskCountMap, featuredProjectId }: ProjectGridProps) {
+export function ProjectGrid({ projects, taskCountMap, wbsUnassignedMap, featuredProjectId }: ProjectGridProps) {
   if (projects.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12 text-center">
@@ -43,6 +44,7 @@ export function ProjectGrid({ projects, taskCountMap, featuredProjectId }: Proje
           <CardC_Featured
             project={featured}
             taskCount={taskCountMap.get(featured.id) ?? 0}
+            wbsUnassigned={wbsUnassignedMap.get(featured.id) ?? 0}
             isFeatured
           />
         </Reveal>
@@ -55,6 +57,7 @@ export function ProjectGrid({ projects, taskCountMap, featuredProjectId }: Proje
               key={p.id}
               project={p}
               taskCount={taskCountMap.get(p.id) ?? 0}
+              wbsUnassigned={wbsUnassignedMap.get(p.id) ?? 0}
               isFeatured={false}
             />
           ))}

@@ -22,6 +22,7 @@ import {
   ChevronDownIcon,
   BriefcaseIcon,
   LayersIcon,
+  NetworkIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -93,6 +94,8 @@ import { ReportsTab } from '@/components/tabs/reports-tab';
 import { IssuesTab } from '@/components/tabs/issues-tab';
 import { MeasurementTab } from '@/components/tabs/measurement-tab';
 import { DomainHealthDashboard } from '@/components/domain-health-dashboard';
+import { WbsTab } from '@/components/wbs/wbs-tab';
+import { WbsCompletenessBanner } from '@/components/wbs/wbs-completeness-banner';
 import { computeDomainHealth } from '@/lib/domain-health';
 import {
   createTask,
@@ -100,6 +103,7 @@ import {
   deleteTask,
   updateTaskStatus,
 } from '@/actions/tasks';
+import { setProjectWbsMode, dismissWbsNudge } from '@/actions/wbs';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -1439,6 +1443,7 @@ export function ProjectDetailClient({
   initialChangeRequests,
   initialLessonsLearned,
   initialIssues,
+  initialWbsElements,
 }: {
   project: Project;
   portfolioContext?: { id: number; name: string } | null;
@@ -1450,12 +1455,15 @@ export function ProjectDetailClient({
   initialChangeRequests: ChangeRequest[];
   initialLessonsLearned: Lesson[];
   initialIssues: Issue[];
+  initialWbsElements: typeof import('@/db/schema').wbsElements.$inferSelect[];
 }) {
   const router = useRouter();
   const [project, setProject] = React.useState(initialProject);
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [advanceOpen, setAdvanceOpen] = React.useState(false);
+  const [wbsNudgeOpen, setWbsNudgeOpen] = React.useState(false);
+  const [pendingAdvanceFocusArea, setPendingAdvanceFocusArea] = React.useState<string | null>(null);
   const [isDeleting, startDeleteTransition] = React.useTransition();
 
   const currentIdx = FOCUS_AREA_SEQUENCE.indexOf(project.currentFocusArea ?? 'initiating');
@@ -1540,7 +1548,18 @@ export function ProjectDetailClient({
                   variant="outline"
                   size="sm"
                   className="h-7 gap-1 text-xs border-primary/30 text-primary hover:bg-primary/5"
-                  onClick={() => setAdvanceOpen(true)}
+                  onClick={() => {
+                    const currentIdx = FOCUS_AREA_SEQUENCE.indexOf(project.currentFocusArea ?? '');
+                    const nextArea = FOCUS_AREA_SEQUENCE[currentIdx + 1];
+                    const isExecutingOrLater = ['executing', 'monitoring_controlling', 'closing'].includes(nextArea ?? '');
+
+                    if (!project.useWbs && !project.wbsNudgeDismissed && isExecutingOrLater) {
+                      setPendingAdvanceFocusArea(nextArea ?? null);
+                      setWbsNudgeOpen(true);
+                    } else {
+                      setAdvanceOpen(true);
+                    }
+                  }}
                 >
                   Advance <ChevronRightIcon className="size-3" />
                 </Button>
@@ -1590,10 +1609,23 @@ export function ProjectDetailClient({
           summary={project.legacySummary as Parameters<typeof LegacySummaryTab>[0]['summary']}
         />
       ) : (
+        <>
+          {!project.useWbs && (
+            <WbsCompletenessBanner
+              projectId={project.id}
+              tasks={(initialTasks ?? []).map((t: any) => ({ wbsElementId: t.wbsElementId ?? null }))}
+              nudgeDismissed={project.wbsNudgeDismissed ?? false}
+            />
+          )}
         <Tabs defaultValue="overview">
           <TabsList className="h-auto flex-wrap gap-1 bg-muted/60 p-1 rounded-xl w-fit">
             <TabsTrigger value="overview" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Overview</TabsTrigger>
             <TabsTrigger value="charter" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Charter</TabsTrigger>
+            {project.useWbs && (
+              <TabsTrigger value="wbs" className="rounded-lg px-3 py-1.5 text-xs font-semibold">
+                WBS
+              </TabsTrigger>
+            )}
             <TabsTrigger value="tasks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Tasks</TabsTrigger>
             <TabsTrigger value="notes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Notes</TabsTrigger>
             <TabsTrigger value="stakeholders" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Stakeholders</TabsTrigger>
@@ -1618,6 +1650,12 @@ export function ProjectDetailClient({
           <TabsContent value="charter" className="mt-4">
             <CharterTab project={project} />
           </TabsContent>
+
+          {project.useWbs && (
+            <TabsContent value="wbs" className="mt-4">
+              <WbsTab projectId={project.id} initialElements={initialWbsElements as any} />
+            </TabsContent>
+          )}
 
           <TabsContent value="tasks" className="mt-4">
             <TasksTab projectId={project.id} initialTasks={initialTasks} />
@@ -1666,6 +1704,7 @@ export function ProjectDetailClient({
             />
           </TabsContent>
         </Tabs>
+        </>
       )}
 
       {/* Edit dialog */}
@@ -1678,6 +1717,53 @@ export function ProjectDetailClient({
         onOpenChange={setAdvanceOpen}
         onAdvanced={handleFocusAreaAdvanced}
       />
+
+      {/* WBS upgrade nudge — shown for Use Tasks projects advancing to Executing or later */}
+      <Dialog open={wbsNudgeOpen} onOpenChange={setWbsNudgeOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <NetworkIcon className="size-5 text-primary" />
+              Build your WBS before Executing
+            </DialogTitle>
+            <DialogDescription>
+              PMBOK 8 recommends a baselined WBS before execution begins.
+              Building your WBS now takes about 5 minutes and gives you clear scope
+              boundaries, traceable activities, and a baseline to measure change against.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              className="w-full"
+              onClick={async () => {
+                await setProjectWbsMode(project.id, true);
+                setWbsNudgeOpen(false);
+                router.refresh();
+              }}
+            >
+              Build WBS Now
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => { setWbsNudgeOpen(false); setAdvanceOpen(true); }}
+            >
+              Remind Me Later
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full text-muted-foreground text-xs"
+              onClick={async () => {
+                await dismissWbsNudge(project.id);
+                setWbsNudgeOpen(false);
+                setAdvanceOpen(true);
+              }}
+            >
+              Skip — I understand the risk
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete confirmation */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>

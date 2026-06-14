@@ -98,6 +98,8 @@ export const projects = pgTable('projects', {
   coverImage: text('cover_image'), // Supabase Storage URL
   isPublic: boolean('is_public').default(false), // portfolio visibility
   isLegacy: boolean('is_legacy').notNull().default(false),
+  useWbs: boolean('use_wbs').notNull().default(true),
+  wbsNudgeDismissed: boolean('wbs_nudge_dismissed').notNull().default(false),
   legacySummary: jsonb('legacy_summary').$type<{
     clientOrg?: string;
     yourRole?: string;
@@ -125,6 +127,32 @@ export const projects = pgTable('projects', {
   updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
 });
 
+// ============ WBS ELEMENTS ============
+export const wbsElements = pgTable('wbs_elements', {
+  id: serial('id').primaryKey(),
+  projectId: integer('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id', { length: 36 }).notNull(),
+  parentId: integer('parent_id'),
+  wbsCode: varchar('wbs_code', { length: 30 }).notNull().default(''),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  acceptanceCriteria: text('acceptance_criteria'),
+  responsibleParty: varchar('responsible_party', { length: 255 }),
+  estimatedCost: numeric('estimated_cost', { precision: 12, scale: 2 }),
+  dictionaryDetails: jsonb('dictionary_details').$type<{
+    milestones?: string;
+    resourcesRequired?: string;
+    qualityRequirements?: string;
+    assumptionsConstraints?: string;
+  }>(),
+  orderIndex: integer('order_index').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  foreignKey({ columns: [table.parentId], foreignColumns: [table.id] }).onDelete('set null'),
+  index('wbs_elements_project_idx').on(table.projectId),
+]);
+
 // ============ TASKS ============
 export const tasks = pgTable('tasks', {
   id: serial('id').primaryKey(),
@@ -146,11 +174,13 @@ export const tasks = pgTable('tasks', {
   predecessorId: integer('predecessor_id'), // task dependency (sequence activities)
   orderIndex: integer('order_index').notNull().default(0),
   parentId: integer('parent_id'),
+  wbsElementId: integer('wbs_element_id'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
 }, (table) => [
   foreignKey({ columns: [table.parentId], foreignColumns: [table.id] }).onDelete('set null'),
   foreignKey({ columns: [table.predecessorId], foreignColumns: [table.id] }).onDelete('set null'),
+  foreignKey({ columns: [table.wbsElementId], foreignColumns: [wbsElements.id] }).onDelete('set null'),
 ]);
 
 // ============ NOTES ============
@@ -434,6 +464,14 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   chatSessions: many(chatSessions),
   issues: many(issues),
   projectReports: many(projectReports),
+  wbsElements: many(wbsElements),
+}));
+
+export const wbsElementsRelations = relations(wbsElements, ({ one, many }) => ({
+  project: one(projects, { fields: [wbsElements.projectId], references: [projects.id] }),
+  parent: one(wbsElements, { fields: [wbsElements.parentId], references: [wbsElements.id], relationName: 'children' }),
+  children: many(wbsElements, { relationName: 'children' }),
+  tasks: many(tasks),
 }));
 
 export const tasksRelations = relations(tasks, ({ one, many }) => ({
@@ -444,6 +482,7 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
   successors: many(tasks, { relationName: 'predecessor' }),
   taskTags: many(taskTags),
   relatedRisks: many(risks, { relationName: 'relatedRisks' }),
+  wbsElement: one(wbsElements, { fields: [tasks.wbsElementId], references: [wbsElements.id] }),
 }));
 
 export const notesRelations = relations(notes, ({ one }) => ({

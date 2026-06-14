@@ -17,6 +17,7 @@ interface CardProps {
   project: Project;
   taskCount: number;
   isFeatured: boolean;
+  wbsUnassigned?: number;
 }
 
 // ─── Color maps ───────────────────────────────────────────────────────────────
@@ -138,7 +139,7 @@ function PinButton({ projectId, isFeatured, visible }: { projectId: number; isFe
 // VARIANT C — DARK DATA CARD (theme-aware)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function CardC_Featured({ project, taskCount, isFeatured }: CardProps) {
+export function CardC_Featured({ project, taskCount, isFeatured, wbsUnassigned }: CardProps) {
   const initial    = project.name?.[0]?.toUpperCase() ?? '?';
   const headerTint = STATUS_HEADER_TINT[project.status] ?? 'dark:bg-transparent';
   const [hovered, setHovered] = useState(false);
@@ -177,6 +178,14 @@ export function CardC_Featured({ project, taskCount, isFeatured }: CardProps) {
                   )}
                 </div>
                 <CardBadge status={project.status} />
+                {!project.useWbs && (wbsUnassigned ?? 0) > 0 && (
+                  <span
+                    title={`${wbsUnassigned} tasks have no WBS assignment`}
+                    className="shrink-0 inline-flex items-center rounded-sm bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.08em] text-amber-700 dark:text-amber-400"
+                  >
+                    WBS
+                  </span>
+                )}
                 {project.isLegacy && (
                   <span className="text-[9px] font-bold tracking-[0.12em] rounded-sm px-1.5 py-0.5 uppercase bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 shrink-0">
                     Legacy
@@ -226,7 +235,7 @@ export function CardC_Featured({ project, taskCount, isFeatured }: CardProps) {
   );
 }
 
-export function CardC_Standard({ project, taskCount, isFeatured }: CardProps) {
+export function CardC_Standard({ project, taskCount, isFeatured, wbsUnassigned }: CardProps) {
   const initial    = project.name?.[0]?.toUpperCase() ?? '?';
   const headerTint = STATUS_HEADER_TINT[project.status] ?? 'dark:bg-transparent';
   const [hovered, setHovered] = useState(false);
@@ -263,6 +272,14 @@ export function CardC_Standard({ project, taskCount, isFeatured }: CardProps) {
                 )}
               </div>
               <CardBadge status={project.status} />
+              {!project.useWbs && (wbsUnassigned ?? 0) > 0 && (
+                <span
+                  title={`${wbsUnassigned} tasks have no WBS assignment`}
+                  className="shrink-0 inline-flex items-center rounded-sm bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.08em] text-amber-700 dark:text-amber-400"
+                >
+                  WBS
+                </span>
+              )}
             </div>
 
             <div className="p-4 flex flex-col gap-4">

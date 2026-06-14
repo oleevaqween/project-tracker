@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { eq, count } from 'drizzle-orm';
+import { eq, count, inArray } from 'drizzle-orm';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbLink } from '@/components/ui/breadcrumb';
@@ -38,6 +38,22 @@ export default async function ProjectsPage() {
     .groupBy(tasks.projectId);
 
   const taskCountMap = new Map(taskCounts.map((t) => [t.projectId, t.count]));
+
+  // Build WBS unassigned map: projectId → count of tasks with no wbsElementId
+  const userProjectIds = userProjects.map((p) => p.id);
+  const wbsUnassignedMap = new Map<number, number>();
+  if (userProjectIds.length > 0) {
+    const taskWbsData = await db
+      .select({ projectId: tasks.projectId, wbsElementId: tasks.wbsElementId })
+      .from(tasks)
+      .where(inArray(tasks.projectId, userProjectIds));
+
+    taskWbsData.forEach(({ projectId, wbsElementId }) => {
+      if (projectId != null && !wbsElementId) {
+        wbsUnassignedMap.set(projectId, (wbsUnassignedMap.get(projectId) ?? 0) + 1);
+      }
+    });
+  }
 
   const [pref] = await db
     .select({ featuredProjectId: userPreferences.featuredProjectId })
@@ -114,7 +130,7 @@ export default async function ProjectsPage() {
       {/* ── CONTENT ZONE ─────────────────────────────────────────────────── */}
       <div className="flex flex-1 flex-col gap-6 px-6 pt-8 pb-8 md:px-12 lg:px-16">
         <PMBOKGuide context="projects" />
-        <ProjectGrid projects={userProjects} taskCountMap={taskCountMap} featuredProjectId={featuredProjectId} />
+        <ProjectGrid projects={userProjects} taskCountMap={taskCountMap} wbsUnassignedMap={wbsUnassignedMap} featuredProjectId={featuredProjectId} />
       </div>
     </>
   );

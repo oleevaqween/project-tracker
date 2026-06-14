@@ -58,6 +58,7 @@ export default async function TasksPage() {
         predecessorId: tasks.predecessorId,
         orderIndex: tasks.orderIndex,
         parentId: tasks.parentId,
+        wbsElementId: tasks.wbsElementId,
         createdAt: tasks.createdAt,
         updatedAt: tasks.updatedAt,
         projectName: projects.name,

@@ -40,10 +40,16 @@ export const PROVIDER_MODELS: Record<AIProvider, { id: string; name: string }[]>
     { id: 'meta-llama/llama-4-maverick', name: 'Llama 4 Maverick (via OpenRouter)' },
   ],
   ollama: [
-    { id: 'llama3.1:8b', name: 'Llama 3.1 8B' },
-    { id: 'llama3.1:70b', name: 'Llama 3.1 70B' },
-    { id: 'mistral:7b', name: 'Mistral 7B' },
-    { id: 'codellama:13b', name: 'Code Llama 13B' },
+    { id: 'qwen2.5:7b', name: 'Qwen 2.5 7B' },
+    { id: 'qwen2.5:14b', name: 'Qwen 2.5 14B' },
+    { id: 'qwen2.5:32b', name: 'Qwen 2.5 32B' },
+    { id: 'gemma3:9b', name: 'Gemma 3 9B' },
+    { id: 'gemma3:27b', name: 'Gemma 3 27B' },
+    { id: 'deepseek-r1:8b', name: 'DeepSeek R1 8B' },
+    { id: 'deepseek-r1:32b', name: 'DeepSeek R1 32B' },
+    { id: 'llama3.3:70b', name: 'Llama 3.3 70B' },
+    { id: 'llama3.1:8b', name: 'Llama 3.1 8B (local)' },
+    { id: 'mistral:7b', name: 'Mistral 7B (local)' },
   ],
 };
 
@@ -52,7 +58,7 @@ export const PROVIDER_LABELS: Record<AIProvider, string> = {
   openrouter: 'OpenRouter',
   google: 'Google AI',
   anthropic: 'Anthropic',
-  ollama: 'Ollama (Local)',
+  ollama: 'Ollama (Local / Cloud)',
 };
 
 export const PROVIDER_KEY_LABELS: Record<AIProvider, string> = {
@@ -60,7 +66,7 @@ export const PROVIDER_KEY_LABELS: Record<AIProvider, string> = {
   anthropic: 'ANTHROPIC_API_KEY',
   google: 'GOOGLE_AI_API_KEY',
   openrouter: 'OPENROUTER_API_KEY',
-  ollama: '(not required — runs locally)',
+  ollama: 'OLLAMA_API_KEY (leave blank for local)',
 };
 
 // ---------- Embedding Model (locked to OpenAI) ----------
@@ -102,7 +108,7 @@ function getApiKey(config: AIConfig): string | undefined {
     case 'anthropic': return process.env.ANTHROPIC_API_KEY;
     case 'google': return process.env.GOOGLE_AI_API_KEY;
     case 'openrouter': return process.env.OPENROUTER_API_KEY;
-    case 'ollama': return 'unused';
+    case 'ollama': return process.env.OLLAMA_API_KEY ?? undefined;
     default: return undefined;
   }
 }
@@ -131,9 +137,14 @@ export function getLanguageModel(config: AIConfig): LanguageModel {
       return provider.chat(config.model);
     }
     case 'ollama': {
+      // If an API key is present (user key or env var), route to Ollama Cloud.
+      // Otherwise fall back to local Ollama at localhost.
+      const ollamaKey = apiKey;
       const provider = createOpenAI({
-        apiKey: 'unused',
-        baseURL: config.baseUrl || 'http://localhost:11434/v1',
+        apiKey: ollamaKey ?? 'unused',
+        baseURL: ollamaKey
+          ? 'https://ollama.com/v1'
+          : (config.baseUrl || 'http://localhost:11434/v1'),
       });
       return provider.chat(config.model);
     }

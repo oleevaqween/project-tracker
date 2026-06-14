@@ -93,6 +93,8 @@ import { ReportsTab } from '@/components/tabs/reports-tab';
 import { IssuesTab } from '@/components/tabs/issues-tab';
 import { MeasurementTab } from '@/components/tabs/measurement-tab';
 import { DomainHealthDashboard } from '@/components/domain-health-dashboard';
+import { WbsTab } from '@/components/wbs/wbs-tab';
+import { WbsCompletenessBanner } from '@/components/wbs/wbs-completeness-banner';
 import { computeDomainHealth } from '@/lib/domain-health';
 import {
   createTask,
@@ -1439,6 +1441,7 @@ export function ProjectDetailClient({
   initialChangeRequests,
   initialLessonsLearned,
   initialIssues,
+  initialWbsElements,
 }: {
   project: Project;
   portfolioContext?: { id: number; name: string } | null;
@@ -1450,6 +1453,7 @@ export function ProjectDetailClient({
   initialChangeRequests: ChangeRequest[];
   initialLessonsLearned: Lesson[];
   initialIssues: Issue[];
+  initialWbsElements: typeof import('@/db/schema').wbsElements.$inferSelect[];
 }) {
   const router = useRouter();
   const [project, setProject] = React.useState(initialProject);
@@ -1590,10 +1594,23 @@ export function ProjectDetailClient({
           summary={project.legacySummary as Parameters<typeof LegacySummaryTab>[0]['summary']}
         />
       ) : (
+        <>
+          {!project.useWbs && (
+            <WbsCompletenessBanner
+              projectId={project.id}
+              tasks={(initialTasks ?? []).map((t: any) => ({ wbsElementId: t.wbsElementId ?? null }))}
+              nudgeDismissed={project.wbsNudgeDismissed ?? false}
+            />
+          )}
         <Tabs defaultValue="overview">
           <TabsList className="h-auto flex-wrap gap-1 bg-muted/60 p-1 rounded-xl w-fit">
             <TabsTrigger value="overview" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Overview</TabsTrigger>
             <TabsTrigger value="charter" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Charter</TabsTrigger>
+            {project.useWbs && (
+              <TabsTrigger value="wbs" className="rounded-lg px-3 py-1.5 text-xs font-semibold">
+                WBS
+              </TabsTrigger>
+            )}
             <TabsTrigger value="tasks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Tasks</TabsTrigger>
             <TabsTrigger value="notes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Notes</TabsTrigger>
             <TabsTrigger value="stakeholders" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Stakeholders</TabsTrigger>
@@ -1618,6 +1635,12 @@ export function ProjectDetailClient({
           <TabsContent value="charter" className="mt-4">
             <CharterTab project={project} />
           </TabsContent>
+
+          {project.useWbs && (
+            <TabsContent value="wbs" className="mt-4">
+              <WbsTab projectId={project.id} initialElements={initialWbsElements as any} />
+            </TabsContent>
+          )}
 
           <TabsContent value="tasks" className="mt-4">
             <TasksTab projectId={project.id} initialTasks={initialTasks} />
@@ -1666,6 +1689,7 @@ export function ProjectDetailClient({
             />
           </TabsContent>
         </Tabs>
+        </>
       )}
 
       {/* Edit dialog */}

@@ -5,7 +5,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbLink } from '@/components/ui/breadcrumb';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { profiles, projects, portfolios, programs, tasks, notes, stakeholders, risks, changeRequests, lessonsLearned, issues } from '@/db/schema';
+import { profiles, projects, portfolios, programs, tasks, notes, stakeholders, risks, changeRequests, lessonsLearned, issues, wbsElements } from '@/db/schema';
 import { ProjectDetailClient } from '@/components/project-detail-client';
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -65,6 +65,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       ]);
   }
 
+  // Fetch WBS elements if project uses WBS mode
+  const projectWbsElements = (project as any).useWbs
+    ? await db.select().from(wbsElements).where(eq(wbsElements.projectId, id)).orderBy(wbsElements.orderIndex)
+    : [];
+
   return (
     <>
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -98,6 +103,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         initialChangeRequests={projectChangeRequests}
         initialLessonsLearned={projectLessonsLearned}
         initialIssues={projectIssues}
+        initialWbsElements={projectWbsElements}
       />
     </>
   );

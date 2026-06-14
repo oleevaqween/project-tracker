@@ -101,18 +101,10 @@ export async function deleteWbsElement(id: number) {
 
   if (!toDelete) return;
 
-  // Re-parent direct children to the deleted node's parent before deleting
-  // (parentId FK is set null on delete, but we want to preserve children, not orphan them)
-  const children = await db
-    .select({ id: wbsElements.id })
-    .from(wbsElements)
+  // Re-parent direct children to this node's parent before deleting
+  await db.update(wbsElements)
+    .set({ parentId: toDelete.parentId ?? null })
     .where(eq(wbsElements.parentId, id));
-
-  for (const child of children) {
-    await db.update(wbsElements)
-      .set({ parentId: toDelete.parentId ?? null })
-      .where(eq(wbsElements.id, child.id));
-  }
 
   await db.delete(wbsElements).where(eq(wbsElements.id, id));
   await recomputeAndSaveWbsCodes(toDelete.projectId, user.id);
@@ -134,6 +126,7 @@ export async function dismissWbsNudge(projectId: number) {
     .update(projects)
     .set({ wbsNudgeDismissed: true, updatedAt: new Date() })
     .where(and(eq(projects.id, projectId), eq(projects.userId, user.id)));
+  revalidatePath(`/projects/${projectId}`);
 }
 
 async function recomputeAndSaveWbsCodes(projectId: number, userId: string) {

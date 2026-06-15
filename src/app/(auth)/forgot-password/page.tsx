@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -18,7 +18,7 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
   const [sent, setSent] = useState(false);
   const searchParams = useSearchParams();
   const linkExpired = searchParams.get('error') === 'link_expired';
@@ -108,5 +108,13 @@ export default function ForgotPasswordPage() {
         )}
       </Card>
     </motion.div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense>
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }

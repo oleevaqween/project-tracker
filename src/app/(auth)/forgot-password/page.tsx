@@ -50,15 +50,10 @@ function ForgotPasswordContent() {
                 Check your email
               </CardTitle>
               <CardDescription className="text-sm leading-relaxed">
-                If that address has an account, a password reset link is on its way from{' '}
+                If that address has an account, a magic link is on its way from{' '}
                 <span className="font-medium text-foreground">projectracker@projects.aboveone.net</span>.
               </CardDescription>
             </CardHeader>
-            <CardFooter className="justify-center text-sm text-muted-foreground pt-0">
-              <Link href="/login" className="text-primary underline-offset-4 hover:underline font-medium">
-                Back to sign in
-              </Link>
-            </CardFooter>
           </>
         ) : (
           <>

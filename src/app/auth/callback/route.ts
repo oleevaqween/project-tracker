@@ -23,6 +23,10 @@ export async function GET(request: Request) {
     if (error) {
       return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
     }
+    // Recovery flow: session is active, send to reset-password
+    if (type === 'recovery') {
+      return NextResponse.redirect(`${origin}/reset-password`);
+    }
   } else if (code) {
     // OAuth / PKCE code exchange flow: ?code=xxx
     const { error } = await supabase.auth.exchangeCodeForSession(code);

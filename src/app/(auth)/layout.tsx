@@ -17,13 +17,12 @@ export default function AuthLayout({
 
       {/* Brand mark */}
       <div className="absolute top-6 left-6 flex items-center gap-2.5">
-        <div className="flex size-8 items-center justify-center rounded-lg dark:bg-primary">
+        <div className="flex size-8 items-center justify-center rounded-lg overflow-hidden">
           <Image
-            src="/icon.png"
-            width={28}
-            height={28}
+            src="/logo2.png"
+            width={32}
+            height={32}
             alt="Project Tracker"
-            className="rounded-md"
           />
         </div>
         <div className="leading-none">

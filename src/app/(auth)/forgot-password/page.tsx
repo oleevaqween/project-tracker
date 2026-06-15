@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
         {sent ? (
           <>
             <CardHeader className="space-y-1 pb-4">
-              <CardTitle className="text-2xl font-black font-heading tracking-[-0.02em] leading-tight">
+              <CardTitle className="text-2xl font-bold font-heading tracking-tight leading-tight">
                 Check your email
               </CardTitle>
               <CardDescription className="text-sm leading-relaxed">
@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
         ) : (
           <>
             <CardHeader className="space-y-1 pb-4">
-              <CardTitle className="text-2xl font-black font-heading tracking-[-0.02em] leading-tight">
+              <CardTitle className="text-2xl font-bold font-heading tracking-tight leading-tight">
                 Forgot password?
               </CardTitle>
               <CardDescription className="text-sm leading-relaxed">

@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
     >
       <Card className="border-border/50 bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10">
         <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-2xl font-black font-heading tracking-[-0.02em] leading-tight">
+          <CardTitle className="text-2xl font-bold font-heading tracking-tight leading-tight">
             Set new password
           </CardTitle>
           <CardDescription className="text-sm leading-relaxed">

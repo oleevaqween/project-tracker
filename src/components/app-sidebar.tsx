@@ -115,7 +115,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           >
             <SidebarMenuButton size="lg" render={<Link href="/dashboard" />}>
               <motion.div
-                className="flex aspect-square size-8 items-center justify-center rounded-lg dark:bg-primary"
+                className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden"
                 animate={{
                   scale: logoPressed ? 0.88 : logoHovered ? 1.12 : 1,
                   rotate: logoPressed ? 0 : logoHovered ? 10 : 0,
@@ -123,11 +123,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 transition={{ type: 'spring', stiffness: 500, damping: 20 }}
               >
                 <Image
-                  src="/icon.png"
-                  width={24}
-                  height={24}
+                  src="/logo2.png"
+                  width={32}
+                  height={32}
                   alt="Project Tracker"
-                  className="rounded-sm"
                 />
               </motion.div>
               <div className="flex flex-col gap-0.5 leading-none">

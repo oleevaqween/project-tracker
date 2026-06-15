@@ -72,7 +72,7 @@ export default function SignupPage() {
   return (
     <Card>
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-black font-heading tracking-[-0.02em] leading-tight">Create an account</CardTitle>
+        <CardTitle className="text-2xl font-bold font-heading tracking-tight leading-tight">Create an account</CardTitle>
         <CardDescription className="text-sm leading-relaxed">Start managing your projects with PMBOK 8 structure</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -96,7 +96,7 @@ export default function SignupPage() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">or continue with email</span>
+            <span className="bg-card px-2 text-muted-foreground">or</span>
           </div>
         </div>
 

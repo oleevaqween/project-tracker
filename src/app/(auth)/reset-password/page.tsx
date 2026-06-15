@@ -99,6 +99,7 @@ export default function ResetPasswordPage() {
                         ))}
                       </ul>
                     )}
+                    <FormMessage />
                   </FormItem>
                 )}
               />

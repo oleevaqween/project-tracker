@@ -414,6 +414,7 @@ interface PMBOKGuideProps {
 
 export function PMBOKGuide({ context, focusArea, className }: PMBOKGuideProps) {
   const [open, setOpen] = React.useState(false);
+  const [hovered, setHovered] = React.useState(false);
   const guide = GUIDE[context];
   const phaseGuide =
     guide.phaseGuide && focusArea ? guide.phaseGuide[focusArea] ?? null : null;
@@ -429,8 +430,19 @@ export function PMBOKGuide({ context, focusArea, className }: PMBOKGuideProps) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors text-left"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="relative w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors text-left"
       >
+        {/* Left border accent */}
+        <motion.span
+          aria-hidden
+          className="absolute left-0 top-0 bottom-0 w-0.5 rounded-full bg-primary"
+          animate={{ opacity: hovered ? 1 : 0, scaleY: hovered ? 1 : 0.4 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+          style={{ originY: 0.5 }}
+        />
+
         <div className="flex items-center gap-2.5 min-w-0">
           <BookOpenIcon className="size-3.5 shrink-0 text-muted-foreground/50" />
           <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest whitespace-nowrap">
@@ -450,17 +462,28 @@ export function PMBOKGuide({ context, focusArea, className }: PMBOKGuideProps) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 ml-2 shrink-0">
+        <motion.div
+          className="flex items-center gap-1.5 ml-2 shrink-0"
+          animate={{ x: hovered ? 2 : 0 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+        >
           <span className="text-[11px] text-muted-foreground/50 hidden sm:block">
             {open ? 'Hide guide' : 'Show guide'}
           </span>
-          <ChevronDownIcon
-            className={cn(
-              'size-3.5 text-muted-foreground/50 transition-transform duration-200',
-              open && 'rotate-180'
-            )}
-          />
-        </div>
+          <motion.span
+            initial={{ y: 0 }}
+            animate={{ y: [0, 4, 0, 3, 0] }}
+            transition={{ duration: 0.9, ease: 'easeInOut', delay: 0.8 }}
+            className="inline-flex items-center"
+          >
+            <ChevronDownIcon
+              className={cn(
+                'size-3.5 text-muted-foreground/50 transition-colors duration-200',
+                open && 'rotate-180'
+              )}
+            />
+          </motion.span>
+        </motion.div>
       </button>
 
       {/* Expandable body */}

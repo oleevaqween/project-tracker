@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     if (error) {
       return NextResponse.redirect(`${origin}/forgot-password?error=link_expired`);
     }
-    return NextResponse.redirect(`${origin}/reset-password`);
+    return NextResponse.redirect(`${origin}/dashboard`);
   }
 
   if (tokenHash) {
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     if (error) {
       return NextResponse.redirect(`${origin}/forgot-password?error=link_expired`);
     }
-    return NextResponse.redirect(`${origin}/reset-password`);
+    return NextResponse.redirect(`${origin}/dashboard`);
   }
 
   return NextResponse.redirect(`${origin}/forgot-password`);

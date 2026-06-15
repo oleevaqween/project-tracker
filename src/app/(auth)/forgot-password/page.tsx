@@ -69,7 +69,7 @@ function ForgotPasswordContent() {
               <CardDescription className="text-sm leading-relaxed">
                 {linkExpired
                   ? 'That link has expired. Enter your email to receive a new one.'
-                  : "Enter your email and we'll send a reset link."}
+                  : "Enter your email to receive a magic link. Once signed in, update your password in settings."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

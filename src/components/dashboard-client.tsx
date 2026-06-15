@@ -48,7 +48,7 @@ interface DashboardClientProps {
 const KPI_CONFIG = [
   {
     label: 'Total Projects',
-    sublabel: 'in portfolio',
+    sublabel: '',
     href: '/projects',
     icon: FolderKanbanIcon,
     gradient: 'from-primary/20 via-primary/5 to-transparent',
@@ -156,7 +156,7 @@ function KpiCard({
                   <span className={`font-semibold text-muted-foreground ${featured ? 'text-base' : 'text-sm'}`}>{suffix}</span>
                 )}
               </motion.div>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">{sublabel}</p>
+              {sublabel && <p className="mt-0.5 text-[11px] text-muted-foreground">{sublabel}</p>}
               {extra}
             </div>
 
@@ -409,22 +409,6 @@ export function DashboardClient({
                 );
               })}
 
-              {/* Unassigned projects warning */}
-              {unassignedCount > 0 && (
-                <StaggerItem>
-                  <Link href="/projects" className="block focus:outline-none group">
-                    <div className="rounded-lg border border-dashed border-amber-500/40 bg-amber-500/5 p-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <AlertTriangleIcon className="size-3.5 text-amber-500 shrink-0" />
-                        <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Unassigned</p>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        {unassignedCount} project{unassignedCount !== 1 ? 's' : ''} not assigned to a portfolio — no governance coverage.
-                      </p>
-                    </div>
-                  </Link>
-                </StaggerItem>
-              )}
             </StaggerContainer>
           </section>
         )}

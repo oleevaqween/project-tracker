@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +20,8 @@ type FormValues = z.infer<typeof schema>;
 
 export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
+  const searchParams = useSearchParams();
+  const linkExpired = searchParams.get('error') === 'link_expired';
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -28,7 +31,7 @@ export default function ForgotPasswordPage() {
   async function onSubmit({ email }: FormValues) {
     const supabase = createClient();
     await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: `${window.location.origin}/auth/reset-callback`,
     });
     setSent(true);
   }
@@ -64,7 +67,9 @@ export default function ForgotPasswordPage() {
                 Forgot password?
               </CardTitle>
               <CardDescription className="text-sm leading-relaxed">
-                Enter your email and we&apos;ll send a reset link.
+                {linkExpired
+                  ? 'That link has expired. Enter your email to receive a new one.'
+                  : "Enter your email and we'll send a reset link."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

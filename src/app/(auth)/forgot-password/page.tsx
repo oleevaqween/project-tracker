@@ -93,7 +93,7 @@ function ForgotPasswordContent() {
                     className="w-full shadow-lg shadow-primary/20"
                     disabled={form.formState.isSubmitting}
                   >
-                    {form.formState.isSubmitting ? 'Sending…' : 'Send reset link'}
+                    {form.formState.isSubmitting ? 'Sending…' : 'Send magic link'}
                   </Button>
                 </form>
               </Form>

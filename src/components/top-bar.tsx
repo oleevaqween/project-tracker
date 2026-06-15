@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { SunIcon, MoonIcon, LogOutIcon, ChevronDownIcon } from 'lucide-react';
+import { SunIcon, MoonIcon, LogOutIcon, ChevronDownIcon, UserIcon } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -59,6 +59,11 @@ export function TopBar({ username }: { username: string }) {
             </Avatar>
             <span className="text-sm font-medium truncate">@{username}</span>
           </div>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => router.push('/profile')}>
+            <UserIcon className="size-4" />
+            Profile
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut} variant="destructive">
             <LogOutIcon className="size-4" />

@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { profiles } from '@/db/schema';
 import { createClient } from '@/lib/supabase/server';
+import { AuthCenteredShell } from '@/components/auth-centered-shell';
 import OnboardingForm from './onboarding-form';
 
 export default async function OnboardingPage() {
@@ -22,14 +23,16 @@ export default async function OnboardingPage() {
   if (existingProfile) redirect('/dashboard');
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold">One last step</h1>
-        <p className="text-muted-foreground">
-          Choose a username for your public portfolio URL
-        </p>
+    <AuthCenteredShell>
+      <div className="flex flex-col gap-6">
+        <div className="text-center space-y-1">
+          <h1 className="text-2xl font-bold font-heading">One last step</h1>
+          <p className="text-muted-foreground">
+            Choose a username for your public portfolio URL
+          </p>
+        </div>
+        <OnboardingForm />
       </div>
-      <OnboardingForm />
-    </div>
+    </AuthCenteredShell>
   );
 }

@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
+import { AuthCenteredShell } from '@/components/auth-centered-shell';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -44,17 +45,15 @@ function ForgotPasswordContent() {
     >
       <Card className="border-border/50 bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10">
         {sent ? (
-          <>
-            <CardHeader className="space-y-1 pb-4">
-              <CardTitle className="text-2xl font-bold font-heading tracking-tight leading-tight">
-                Check your email
-              </CardTitle>
-              <CardDescription className="text-sm leading-relaxed">
-                If that address has an account, a magic link is on its way from{' '}
-                <span className="font-medium text-foreground">projectracker@projects.aboveone.net</span>.
-              </CardDescription>
-            </CardHeader>
-          </>
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-2xl font-bold font-heading tracking-tight leading-tight">
+              Check your email
+            </CardTitle>
+            <CardDescription className="text-sm leading-relaxed">
+              If that address has an account, a magic link is on its way from{' '}
+              <span className="font-medium text-foreground">projectracker@projects.aboveone.net</span>.
+            </CardDescription>
+          </CardHeader>
         ) : (
           <>
             <CardHeader className="space-y-1 pb-4">
@@ -64,7 +63,7 @@ function ForgotPasswordContent() {
               <CardDescription className="text-sm leading-relaxed">
                 {linkExpired
                   ? 'That link has expired. Enter your email to receive a new one.'
-                  : "Enter your email to receive a magic link. Once signed in, update your password in settings."}
+                  : 'Enter your email to receive a magic link. Once signed in, update your password in settings.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -108,8 +107,10 @@ function ForgotPasswordContent() {
 
 export default function ForgotPasswordPage() {
   return (
-    <Suspense>
-      <ForgotPasswordContent />
-    </Suspense>
+    <AuthCenteredShell>
+      <Suspense>
+        <ForgotPasswordContent />
+      </Suspense>
+    </AuthCenteredShell>
   );
 }

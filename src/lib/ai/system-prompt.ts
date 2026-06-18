@@ -79,11 +79,19 @@ ${PMBOK_CONTEXT}
 
 ## User's Projects
 
-The user has the following projects. When they mention a project by name, match it here and use its numeric ID for any tool calls — **never ask the user to provide a project ID**:
+The user has the following projects. When they mention a project by name, silently match it and use its numeric ID for tool calls.
 
-${allProjects.map((p) => `- **${p.name}** (ID: ${p.id}, status: ${p.status})`).join('\n')}
+**CRITICAL RULES:**
+- NEVER show project IDs (numbers) to the user — they are internal only.
+- NEVER ask the user to provide a project ID.
+- When listing project names to the user, show ONLY the name and status, not the ID.
+- If the user asks about "this project" without selecting one, list just the project names and ask which one they mean.
 
-To work on a specific project, the user can also select it from the project dropdown at the top of the chat panel.`;
+| Name | ID (internal only) | Status |
+|------|-------------------|--------|
+${allProjects.map((p) => `| ${p.name} | ${p.id} | ${p.status} |`).join('\n')}
+
+The user can also lock the chat to a specific project using the dropdown at the top of the chat.`;
   }
 
   if (!projectContext && (!allProjects || allProjects.length === 0)) {

@@ -4,6 +4,8 @@ import * as React from 'react';
 import type { UIMessage, ChatStatus } from 'ai';
 import { isToolUIPart, getToolName } from 'ai';
 import { BotIcon, UserIcon, Loader2Icon, CheckIcon, XIcon, ShieldAlertIcon, CheckSquareIcon, BookOpenIcon } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -168,9 +170,41 @@ export function MessageList({
             {message.parts.map((part, i) => {
               if (part.type === 'text') {
                 const isLastPart = i === message.parts.length - 1;
+                const isUser = message.role === 'user';
                 return (
-                  <div key={i} className="whitespace-pre-wrap leading-relaxed">
-                    {part.text}
+                  <div key={i} className="leading-relaxed">
+                    {isUser ? (
+                      <span className="whitespace-pre-wrap">{part.text}</span>
+                    ) : (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1">{children}</ul>,
+                          ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1">{children}</ol>,
+                          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                          em: ({ children }) => <em className="italic">{children}</em>,
+                          code: ({ children, className }) => {
+                            const isBlock = className?.includes('language-');
+                            return isBlock
+                              ? <code className="block rounded bg-background/60 p-2 text-xs font-mono my-2 overflow-x-auto">{children}</code>
+                              : <code className="rounded bg-background/60 px-1 py-0.5 text-xs font-mono">{children}</code>;
+                          },
+                          pre: ({ children }) => <pre className="my-2">{children}</pre>,
+                          h1: ({ children }) => <h1 className="text-base font-bold mb-1 mt-2">{children}</h1>,
+                          h2: ({ children }) => <h2 className="text-sm font-bold mb-1 mt-2">{children}</h2>,
+                          h3: ({ children }) => <h3 className="text-sm font-semibold mb-1 mt-2">{children}</h3>,
+                          table: ({ children }) => <table className="w-full text-xs border-collapse my-2">{children}</table>,
+                          th: ({ children }) => <th className="border border-border px-2 py-1 text-left font-semibold bg-background/40">{children}</th>,
+                          td: ({ children }) => <td className="border border-border px-2 py-1">{children}</td>,
+                          blockquote: ({ children }) => <blockquote className="border-l-2 border-primary/40 pl-3 italic text-muted-foreground my-2">{children}</blockquote>,
+                          hr: () => <hr className="my-3 border-border" />,
+                        }}
+                      >
+                        {part.text}
+                      </ReactMarkdown>
+                    )}
                     {isStreamingThisMsg && isLastPart && <BlinkingCursor />}
                   </div>
                 );

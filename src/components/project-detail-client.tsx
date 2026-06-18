@@ -81,8 +81,7 @@ import {
 } from '@/lib/project-helpers';
 import { FocusAreaStepper } from '@/components/focus-area-stepper';
 import { SortableTaskItem } from '@/components/sortable-task-item';
-import { updateProject, deleteProject } from '@/actions/projects';
-import { updateFocusArea } from '@/actions/projects';
+import { updateProject, deleteProject, updateFocusArea, completeProject } from '@/actions/projects';
 import { NotesTab } from '@/components/tabs/notes-tab';
 import { StakeholdersTab } from '@/components/tabs/stakeholders-tab';
 import { RisksTab } from '@/components/tabs/risks-tab';
@@ -1600,7 +1599,7 @@ function AdvanceFocusAreaDialog({
   wbsElements: typeof import('@/db/schema').wbsElements.$inferSelect[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdvanced: (newArea: string, progressPercent: number | null) => void;
+  onAdvanced: (newArea: string, progressPercent: number | null, status: string | null) => void;
 }) {
   const [isPending, startTransition] = React.useTransition();
   const currentIdx = FOCUS_AREA_SEQUENCE.indexOf(project.currentFocusArea ?? 'initiating');
@@ -1613,9 +1612,9 @@ function AdvanceFocusAreaDialog({
     if (!nextArea) return;
     startTransition(async () => {
       try {
-        const { progressPercent } = await updateFocusArea(project.id, nextArea);
+        const { progressPercent, status } = await updateFocusArea(project.id, nextArea);
         toast.success(`Advanced to ${nextLabel}`);
-        onAdvanced(nextArea, progressPercent);
+        onAdvanced(nextArea, progressPercent, status);
         onOpenChange(false);
 
         // Fire confetti
@@ -1725,13 +1724,31 @@ export function ProjectDetailClient({
     });
   }
 
-  function handleFocusAreaAdvanced(newArea: string, progressPercent: number | null) {
+  function handleFocusAreaAdvanced(newArea: string, progressPercent: number | null, status: string | null) {
     setProject((p) => ({
       ...p,
       currentFocusArea: newArea,
       progressPercent: progressPercent ?? p.progressPercent,
+      ...(status ? { status } : {}),
     }));
     router.refresh();
+  }
+
+  const [isCompleting, startCompleteTransition] = React.useTransition();
+
+  function handleCompleteProject() {
+    startCompleteTransition(async () => {
+      try {
+        const updated = await completeProject(project.id);
+        if (updated) {
+          setProject((p) => ({ ...p, status: 'completed', completedDate: updated.completedDate }));
+          toast.success('Project marked as completed');
+          confetti({ particleCount: 160, spread: 100, origin: { y: 0.5 }, colors: ['#10b981', '#6366f1', '#f59e0b'] });
+        }
+      } catch {
+        toast.error('Failed to complete project');
+      }
+    });
   }
 
   return (
@@ -1809,6 +1826,19 @@ export function ProjectDetailClient({
                   }}
                 >
                   Advance <ChevronRightIcon className="size-3" />
+                </Button>
+              )}
+              {!canAdvance &&
+               project.currentFocusArea === 'closing' &&
+               project.status !== 'completed' &&
+               project.status !== 'archived' && (
+                <Button
+                  size="sm"
+                  className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={handleCompleteProject}
+                  disabled={isCompleting}
+                >
+                  {isCompleting ? 'Completing…' : 'Complete Project'}
                 </Button>
               )}
             </div>

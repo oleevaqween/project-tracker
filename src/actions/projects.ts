@@ -94,17 +94,40 @@ export async function updateProjectStatus(id: number, status: string) {
 }
 
 export async function updateFocusArea(id: number, currentFocusArea: string) {
-  await updateProject(id, { currentFocusArea });
+  // Auto-advance status: planning → in_progress when entering execution phases
+  // Never overwrite on_hold or archived — those are intentional manual states
+  const [current] = await db.select({ status: projects.status }).from(projects).where(eq(projects.id, id));
+  const autoStatus =
+    current?.status === 'planning' &&
+    ['executing', 'monitoring_controlling', 'closing'].includes(currentFocusArea)
+      ? 'in_progress'
+      : undefined;
+
+  await updateProject(id, { currentFocusArea, ...(autoStatus ? { status: autoStatus } : {}) });
   await recomputeProjectProgress(id);
-  // Re-fetch after recompute so the returned value reflects the new progressPercent
   const [updated] = await db
-    .select({ progressPercent: projects.progressPercent })
+    .select({ progressPercent: projects.progressPercent, status: projects.status })
     .from(projects)
     .where(eq(projects.id, id));
-  // Revalidate after recompute so the cache serves the final value
   revalidatePath(`/projects/${id}`);
   revalidatePath('/projects');
-  return { progressPercent: updated?.progressPercent ?? null };
+  return { progressPercent: updated?.progressPercent ?? null, status: updated?.status ?? null };
+}
+
+export async function completeProject(id: number) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const [project] = await db
+    .update(projects)
+    .set({ status: 'completed', completedDate: new Date() })
+    .where(and(eq(projects.id, id), eq(projects.userId, user.id)))
+    .returning();
+
+  revalidatePath(`/projects/${id}`);
+  revalidatePath('/projects');
+  return project;
 }
 
 type LegacySummary = NonNullable<typeof projects.$inferSelect['legacySummary']>;

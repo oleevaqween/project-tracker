@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCorners } from '@dnd-kit/core';
+import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCorners, useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -1309,6 +1309,53 @@ function WbsTreeNode({
 
 // ---------- Tasks Tab ----------
 
+function KanbanColumn({
+  status, label, items, onStatusChange, onDelete, onEdit,
+}: {
+  status: string;
+  label: string;
+  items: Task[];
+  onStatusChange: (id: number, status: string) => void;
+  onDelete: (id: number) => void;
+  onEdit: (task: Task) => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: status });
+  const taskIds = items.map((t) => t.id);
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <h3 className="text-sm font-medium">{label}</h3>
+        <Badge variant="secondary" className="text-xs">{items.length}</Badge>
+      </div>
+      <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+        <div
+          ref={setNodeRef}
+          className={cn(
+            'space-y-2 min-h-[80px] rounded-lg p-1 transition-colors',
+            isOver && 'bg-primary/5 ring-1 ring-primary/20',
+          )}
+        >
+          {items.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+              No tasks
+            </div>
+          ) : (
+            items.map((task) => (
+              <SortableTaskItem
+                key={task.id}
+                task={task}
+                onStatusChange={onStatusChange}
+                onDelete={onDelete}
+                onEdit={onEdit}
+              />
+            ))
+          )}
+        </div>
+      </SortableContext>
+    </div>
+  );
+}
+
 function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks: Task[] }) {
   const [tasks, setTasks] = React.useState<Task[]>(initialTasks);
   const [showCreate, setShowCreate] = React.useState(false);
@@ -1353,28 +1400,27 @@ function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks
     setEditingTask(null);
   }
 
+  const KANBAN_COLUMN_IDS = ['todo', 'in_progress', 'review', 'done'] as const;
+
   function handleDragEnd(event: { active: { id: number | string }; over: { id: number | string } | null }) {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
 
     const activeTask = tasks.find((t) => t.id === Number(active.id));
     if (!activeTask) return;
 
-    // Find which column the item was dropped into by checking which column contains the over target
-    const columns: Record<string, Task[]> = {
-      todo: todoTasks,
-      in_progress: inProgressTasks,
-      review: reviewTasks,
-      done: doneTasks,
-    };
+    const overId = String(over.id);
 
-    for (const [status, colTasks] of Object.entries(columns)) {
-      if (colTasks.some((t) => t.id === Number(over.id))) {
-        if (activeTask.status !== status) {
-          handleStatusChange(activeTask.id, status);
-        }
-        break;
-      }
+    // Dropped directly onto a column droppable (works for empty columns too)
+    if ((KANBAN_COLUMN_IDS as readonly string[]).includes(overId)) {
+      if (activeTask.status !== overId) handleStatusChange(activeTask.id, overId);
+      return;
+    }
+
+    // Dropped onto another task card — move to that task's column
+    const overTask = tasks.find((t) => t.id === Number(over.id));
+    if (overTask && activeTask.status !== overTask.status) {
+      handleStatusChange(activeTask.id, overTask.status);
     }
   }
 
@@ -1385,8 +1431,7 @@ function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks
     { key: 'done' as const, label: 'Done', items: doneTasks },
   ];
 
-  // Collect all task IDs for SortableContext
-  const allTaskIds = tasks.map((t) => t.id);
+  // (allTaskIds removed — each column now has its own SortableContext)
 
   // WBS tree data (computed on view switch)
   const treeRoots = React.useMemo(() => {
@@ -1458,31 +1503,15 @@ function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks
         <div className="overflow-x-auto -mx-2 px-2">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 min-w-[640px]">
           {columns.map((col) => (
-            <div key={col.key} className="space-y-2">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-medium">{col.label}</h3>
-                <Badge variant="secondary" className="text-xs">{col.items.length}</Badge>
-              </div>
-              <SortableContext items={allTaskIds} strategy={verticalListSortingStrategy}>
-                <div className="space-y-2 min-h-[60px]">
-                  {col.items.length === 0 ? (
-                    <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-                      No tasks
-                    </div>
-                  ) : (
-                    col.items.map((task) => (
-                      <SortableTaskItem
-                        key={task.id}
-                        task={task}
-                        onStatusChange={handleStatusChange}
-                        onDelete={handleDelete}
-                        onEdit={setEditingTask}
-                      />
-                    ))
-                  )}
-                </div>
-              </SortableContext>
-            </div>
+            <KanbanColumn
+              key={col.key}
+              status={col.key}
+              label={col.label}
+              items={col.items}
+              onStatusChange={handleStatusChange}
+              onDelete={handleDelete}
+              onEdit={setEditingTask}
+            />
           ))}
         </div>
         </div>

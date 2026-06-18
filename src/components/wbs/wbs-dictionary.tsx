@@ -13,9 +13,20 @@ interface WbsDictionaryProps {
   onUpdate: (data: Partial<WbsElement>) => void;
 }
 
+function formatCost(value: string | null): string {
+  if (!value) return '';
+  const n = Number(value.replace(/,/g, ''));
+  return isNaN(n) ? value : n.toLocaleString('en-US');
+}
+
 export function WbsDictionary({ element, onUpdate }: WbsDictionaryProps) {
   const [tier3Open, setTier3Open] = React.useState(false);
+  const [costDisplay, setCostDisplay] = React.useState(() => formatCost(element.estimatedCost));
   const d = element.dictionaryDetails ?? {};
+
+  React.useEffect(() => {
+    setCostDisplay(formatCost(element.estimatedCost));
+  }, [element.estimatedCost]);
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-4 pt-2 border-t border-border/30">
@@ -62,10 +73,18 @@ export function WbsDictionary({ element, onUpdate }: WbsDictionaryProps) {
           </Label>
           <Input
             className="h-8 text-xs"
-            type="number"
-            value={element.estimatedCost ?? ''}
-            onChange={(e) => onUpdate({ estimatedCost: e.target.value || null })}
-            placeholder="0.00"
+            type="text"
+            inputMode="numeric"
+            value={costDisplay}
+            onChange={(e) => {
+              const raw = e.target.value;
+              setCostDisplay(raw);
+              const stripped = raw.replace(/,/g, '').trim();
+              if (stripped === '') { onUpdate({ estimatedCost: null }); return; }
+              if (/^\d*\.?\d*$/.test(stripped)) onUpdate({ estimatedCost: stripped });
+            }}
+            onBlur={() => setCostDisplay(formatCost(element.estimatedCost))}
+            placeholder="0"
           />
         </div>
       </div>

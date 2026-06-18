@@ -109,19 +109,23 @@ function ratingLabel(rating: number | undefined): string {
 }
 
 function PerformanceDomainsPanel({
-  projectId, initial,
+  projectId, initial, onSaved,
 }: {
   projectId: number;
   initial: PerformanceDomains;
+  onSaved?: (domains: PerformanceDomains) => void;
 }) {
   const [domains, setDomains] = React.useState<PerformanceDomains>(initial);
   const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => { setDomains(initial); }, [initial]);
 
   async function handleSave() {
     setSaving(true);
     try {
       await updateProject(projectId, { performanceDomains: domains });
       toast.success('Performance domain ratings saved');
+      onSaved?.(domains);
     } catch {
       toast.error('Failed to save ratings');
     } finally {
@@ -180,11 +184,22 @@ function PerformanceDomainsPanel({
 }
 
 // Main tab
-export function MeasurementTab({ project }: { project: Project }) {
+export function MeasurementTab({
+  project,
+  onProjectUpdated,
+}: {
+  project: Project;
+  onProjectUpdated?: (updates: Partial<Project>) => void;
+}) {
   const [pvInput, setPvInput] = React.useState(
     project.plannedValue ? String(project.plannedValue) : ''
   );
   const [savingPv, setSavingPv] = React.useState(false);
+
+  // Sync pvInput when parent project state changes (e.g. after tab switch)
+  React.useEffect(() => {
+    setPvInput(project.plannedValue ? String(project.plannedValue) : '');
+  }, [project.plannedValue]);
 
   const BAC = Number(project.budget ?? 0);
   const AC  = Number(project.budgetSpent ?? 0);
@@ -207,6 +222,7 @@ export function MeasurementTab({ project }: { project: Project }) {
     try {
       await updateProject(project.id, { plannedValue: pvInput || null });
       toast.success('Planned Value saved');
+      onProjectUpdated?.({ plannedValue: pvInput || null });
     } catch {
       toast.error('Failed to save Planned Value');
     } finally {
@@ -247,7 +263,7 @@ export function MeasurementTab({ project }: { project: Project }) {
               <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">PV (Planned Value)</p>
                 <p className="text-[10px] text-muted-foreground">
-                  Budget approved for work scheduled to be done by today. Formula: Budget × (elapsed days ÷ total project days). E.g. a project 40% through its timeline with a £50,000 budget → enter £20,000.
+                  Budget approved for work scheduled to be done by today. Formula: Budget × (elapsed days ÷ total project days). E.g. a project 40% through its timeline with a {fmt(50000, currency)} budget → enter {fmt(20000, currency)}.
                 </p>
                 <div className="flex gap-2">
                   <Input
@@ -336,6 +352,7 @@ export function MeasurementTab({ project }: { project: Project }) {
       <PerformanceDomainsPanel
         projectId={project.id}
         initial={(project.performanceDomains as PerformanceDomains) ?? {}}
+        onSaved={(domains) => onProjectUpdated?.({ performanceDomains: domains })}
       />
     </div>
   );

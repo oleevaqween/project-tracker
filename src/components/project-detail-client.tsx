@@ -668,14 +668,22 @@ function EditTaskDialog({
   open,
   onOpenChange,
   onTaskUpdated,
+  currency,
 }: {
   projectId: number;
   task: Task | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTaskUpdated: (task: Task) => void;
+  currency?: string;
 }) {
   const [isPending, startTransition] = React.useTransition();
+  const currencySymbol = React.useMemo(() => {
+    try {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency ?? 'USD' })
+        .formatToParts(0).find((p) => p.type === 'currency')?.value ?? '$';
+    } catch { return '$'; }
+  }, [currency]);
   type ChecklistItem = { id: string; text: string; done: boolean };
   const [checklistItems, setChecklistItems] = React.useState<ChecklistItem[]>([]);
   const [newChecklistText, setNewChecklistText] = React.useState('');
@@ -910,7 +918,7 @@ function EditTaskDialog({
                 )} />
                 <FormField control={form.control} name="estimatedCost" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Est. Cost ($)</FormLabel>
+                    <FormLabel>Est. Cost ({currencySymbol})</FormLabel>
                     <FormControl><Input type="number" placeholder="0" min="0" step="0.01" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -931,7 +939,7 @@ function EditTaskDialog({
                 )} />
                 <FormField control={form.control} name="actualCost" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Actual Cost ($)</FormLabel>
+                    <FormLabel>Actual Cost ({currencySymbol})</FormLabel>
                     <FormControl><Input type="number" placeholder="0" min="0" step="0.01" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1356,7 +1364,7 @@ function KanbanColumn({
   );
 }
 
-function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks: Task[] }) {
+function TasksTab({ projectId, initialTasks, currency }: { projectId: number; initialTasks: Task[]; currency?: string }) {
   const [tasks, setTasks] = React.useState<Task[]>(initialTasks);
   const [showCreate, setShowCreate] = React.useState(false);
   const [editingTask, setEditingTask] = React.useState<Task | null>(null);
@@ -1530,6 +1538,7 @@ function TasksTab({ projectId, initialTasks }: { projectId: number; initialTasks
         open={!!editingTask}
         onOpenChange={(open) => { if (!open) setEditingTask(null); }}
         onTaskUpdated={handleTaskUpdated}
+        currency={currency}
       />
     </div>
   );
@@ -1877,7 +1886,7 @@ export function ProjectDetailClient({
           )}
 
           <TabsContent value="tasks" className="mt-4">
-            <TasksTab projectId={project.id} initialTasks={initialTasks} />
+            <TasksTab projectId={project.id} initialTasks={initialTasks} currency={project.currency ?? 'USD'} />
           </TabsContent>
 
           <TabsContent value="notes" className="mt-4">
@@ -1905,7 +1914,10 @@ export function ProjectDetailClient({
           </TabsContent>
 
           <TabsContent value="measurement" className="mt-4">
-            <MeasurementTab project={project} />
+            <MeasurementTab
+              project={project}
+              onProjectUpdated={(updates) => setProject((p) => ({ ...p, ...updates }))}
+            />
           </TabsContent>
 
           <TabsContent value="reports" className="mt-4">

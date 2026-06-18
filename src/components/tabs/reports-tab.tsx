@@ -336,43 +336,208 @@ function GanttTimeline({ project, tasks }: { project: ProjectSnap; tasks: GanttT
 
 // ── PDF export ───────────────────────────────────────────────────────────────
 
-function exportToPdf(title: string, markdownContent: string) {
-  const bodyHtml = markdownContent.split('\n').map((line) => {
-    if (line.startsWith('## '))  return `<h2>${line.slice(3).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</h2>`;
-    if (line.startsWith('### ')) return `<h3>${line.slice(4).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</h3>`;
-    if (line === '---')           return '<hr>';
-    if (line.startsWith('- '))   return `<li>${line.slice(2).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</li>`;
-    if (/^\d+\.\s/.test(line))   return `<li>${line.replace(/^\d+\.\s/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</li>`;
-    if (line.trim() === '')      return '<br>';
-    return `<p>${line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</p>`;
-  }).join('\n');
+function exportToPdf(
+  title: string,
+  markdownContent: string,
+  meta?: { domain?: string; category?: string },
+) {
+  const inline = (t: string) => t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:Georgia,serif;font-size:12pt;line-height:1.7;color:#111;background:#fff;padding:48px 64px;max-width:860px;margin:0 auto}
-  h1{font-size:20pt;font-weight:700;margin-bottom:24px;padding-bottom:10px;border-bottom:2px solid #111}
-  h2{font-size:14pt;font-weight:700;margin-top:28px;margin-bottom:8px}
-  h3{font-size:12pt;font-weight:700;margin-top:18px;margin-bottom:4px}
-  p{margin-bottom:8px;color:#222}
-  li{margin-left:24px;margin-bottom:4px;color:#222}
-  hr{border:none;border-top:1px solid #ccc;margin:20px 0}
-  strong{font-weight:700;color:#111}
-  @media print{body{padding:0;max-width:100%}}
-</style></head><body>
-<h1>${title}</h1>
-${bodyHtml}
-</body></html>`;
+  // Convert markdown → semantic HTML with proper list wrapping
+  const lines = markdownContent.split('\n');
+  let bodyHtml = '';
+  let inUl = false;
+  let inOl = false;
+
+  for (const line of lines) {
+    if (line.startsWith('## ')) {
+      if (inUl) { bodyHtml += '</ul>'; inUl = false; }
+      if (inOl) { bodyHtml += '</ol>'; inOl = false; }
+      bodyHtml += `<h2>${inline(line.slice(3))}</h2>`;
+    } else if (line.startsWith('### ')) {
+      if (inUl) { bodyHtml += '</ul>'; inUl = false; }
+      if (inOl) { bodyHtml += '</ol>'; inOl = false; }
+      bodyHtml += `<h3>${inline(line.slice(4))}</h3>`;
+    } else if (line === '---') {
+      if (inUl) { bodyHtml += '</ul>'; inUl = false; }
+      if (inOl) { bodyHtml += '</ol>'; inOl = false; }
+      bodyHtml += '<hr>';
+    } else if (line.startsWith('- ')) {
+      if (inOl) { bodyHtml += '</ol>'; inOl = false; }
+      if (!inUl) { bodyHtml += '<ul>'; inUl = true; }
+      bodyHtml += `<li>${inline(line.slice(2))}</li>`;
+    } else if (/^\d+\.\s/.test(line)) {
+      if (inUl) { bodyHtml += '</ul>'; inUl = false; }
+      if (!inOl) { bodyHtml += '<ol>'; inOl = true; }
+      bodyHtml += `<li>${inline(line.replace(/^\d+\.\s/, ''))}</li>`;
+    } else if (line.trim() === '') {
+      if (inUl) { bodyHtml += '</ul>'; inUl = false; }
+      if (inOl) { bodyHtml += '</ol>'; inOl = false; }
+    } else {
+      if (inUl) { bodyHtml += '</ul>'; inUl = false; }
+      if (inOl) { bodyHtml += '</ol>'; inOl = false; }
+      bodyHtml += `<p>${inline(line)}</p>`;
+    }
+  }
+  if (inUl) bodyHtml += '</ul>';
+  if (inOl) bodyHtml += '</ol>';
+
+  const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const domainLabel = meta?.domain ? `PMBOK 8 · ${meta.domain}` : 'PMBOK 8';
+  const categoryLabel = meta?.category === 'document' ? 'Document' : 'Report';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Project Tracker — ${title}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2.2cm 2cm 2.8cm;
+    }
+    @page {
+      @top-left   { content: ""; }
+      @top-center { content: ""; }
+      @top-right  { content: ""; }
+      @bottom-center { content: ""; }
+      @bottom-left {
+        content: "Project Tracker";
+        font-family: system-ui, sans-serif;
+        font-size: 7.5pt;
+        color: #9ca3af;
+      }
+      @bottom-right {
+        content: "Page " counter(page);
+        font-family: system-ui, sans-serif;
+        font-size: 7.5pt;
+        color: #9ca3af;
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont,
+                   'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.72;
+      color: #1a202c;
+      background: white;
+    }
+
+    /* ── Cover block ── */
+    .cover {
+      background: #0f172a;
+      color: white;
+      padding: 38px 44px 32px;
+      border-radius: 10px;
+      margin-bottom: 38px;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+    .cover-eyebrow {
+      font-size: 7.5pt;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 14px;
+    }
+    .cover-title {
+      font-size: 26pt;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: #f8fafc;
+      margin-bottom: 22px;
+    }
+    .cover-rule {
+      width: 56px;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #6366f1 0%, #f59e0b 100%);
+      margin-bottom: 22px;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+    .cover-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      display: inline-block;
+      padding: 3px 11px;
+      border-radius: 20px;
+      font-size: 8pt;
+      font-weight: 600;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #cbd5e1;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    /* ── Headings ── */
+    h2 {
+      font-size: 12.5pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      padding: 8px 14px 8px 16px;
+      background: #f8fafc;
+      border-left: 4px solid #6366f1;
+      border-radius: 0 6px 6px 0;
+      page-break-after: avoid;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+    h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 20px;
+      margin-bottom: 5px;
+      page-break-after: avoid;
+    }
+
+    /* ── Body text ── */
+    p  { color: #374151; margin-bottom: 9px; }
+    ul { margin: 6px 0 12px 22px; }
+    ol { margin: 6px 0 12px 24px; }
+    li { color: #374151; margin-bottom: 5px; }
+    li::marker { color: #6366f1; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
+    strong { font-weight: 700; color: #0f172a; }
+  </style>
+</head>
+<body>
+  <div class="cover">
+    <div class="cover-eyebrow">${domainLabel} &nbsp;·&nbsp; ${categoryLabel}</div>
+    <div class="cover-title">${title}</div>
+    <div class="cover-rule"></div>
+    <div class="cover-chips">
+      <span class="chip">Generated ${date}</span>
+      <span class="chip">Project Tracker</span>
+    </div>
+  </div>
+  ${bodyHtml}
+</body>
+</html>`;
 
   const win = window.open('', '_blank');
   if (!win) {
     toast.error('Pop-up blocked — allow pop-ups for this site to export PDF.');
     return;
   }
+  win.document.title = `Project Tracker — ${title}`;
   win.document.write(html);
   win.document.close();
   win.focus();
-  setTimeout(() => { win.print(); }, 400);
+  setTimeout(() => win.print(), 500);
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -507,7 +672,11 @@ export function ReportsTab({ projectId, project, data, onProjectUpdated }: Repor
             </Button>
             <Button
               variant="outline" size="sm" className="gap-1.5"
-              onClick={() => exportToPdf(activeDefinition?.title ?? 'Report', content)}
+              onClick={() => exportToPdf(
+                activeDefinition?.title ?? 'Report',
+                content,
+                { domain: activeDefinition?.pmbok8Domain, category: activeDefinition?.category },
+              )}
               disabled={streaming || !content}
             >
               <PrinterIcon className="size-3.5" />

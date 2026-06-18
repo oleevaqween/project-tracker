@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRightIcon, ChevronDownIcon, Trash2Icon, BookOpenIcon } from 'lucide-react';
+import { ChevronRightIcon, ChevronDownIcon, Trash2Icon, BookOpenIcon, IndentIcon, OutdentIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WbsDictionary } from '@/components/wbs/wbs-dictionary';
 import { isWorkPackage, type WbsNode as WbsNodeType, type WbsElement } from '@/lib/wbs-utils';
@@ -10,12 +10,15 @@ import { isWorkPackage, type WbsNode as WbsNodeType, type WbsElement } from '@/l
 interface WbsNodeProps {
   node: WbsNodeType;
   depth?: number;
+  hasPrevSibling?: boolean;
   onUpdate: (id: number, data: Partial<WbsElement>) => void;
   onDelete: (id: number) => void;
   onSave: (id: number) => void;
+  onPromote?: (id: number) => void;
+  onDemote?: (id: number) => void;
 }
 
-export function WbsNodeComponent({ node, depth = 0, onUpdate, onDelete, onSave }: WbsNodeProps) {
+export function WbsNodeComponent({ node, depth = 0, hasPrevSibling = false, onUpdate, onDelete, onSave, onPromote, onDemote }: WbsNodeProps) {
   const [childrenOpen, setChildrenOpen] = React.useState(true);
   const [dictOpen, setDictOpen] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
@@ -90,6 +93,28 @@ export function WbsNodeComponent({ node, depth = 0, onUpdate, onDelete, onSave }
 
         {/* Actions — visible on hover */}
         <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          {/* Promote: move up one level */}
+          {depth > 0 && onPromote && (
+            <button
+              type="button"
+              onClick={() => onPromote(node.id)}
+              className="p-1 rounded hover:bg-muted text-muted-foreground/50 hover:text-foreground transition-colors"
+              title="Promote — move up one level"
+            >
+              <OutdentIcon className="size-3.5" />
+            </button>
+          )}
+          {/* Demote: move under previous sibling */}
+          {hasPrevSibling && onDemote && (
+            <button
+              type="button"
+              onClick={() => onDemote(node.id)}
+              className="p-1 rounded hover:bg-muted text-muted-foreground/50 hover:text-foreground transition-colors"
+              title="Demote — move under previous item"
+            >
+              <IndentIcon className="size-3.5" />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setDictOpen((o) => !o)}
@@ -139,14 +164,17 @@ export function WbsNodeComponent({ node, depth = 0, onUpdate, onDelete, onSave }
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            {node.children.map((child) => (
+            {node.children.map((child, index) => (
               <WbsNodeComponent
                 key={child.id}
                 node={child}
                 depth={depth + 1}
+                hasPrevSibling={index > 0}
                 onUpdate={onUpdate}
                 onDelete={onDelete}
                 onSave={onSave}
+                onPromote={onPromote}
+                onDemote={onDemote}
               />
             ))}
           </motion.div>

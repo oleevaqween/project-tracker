@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { WbsKeyboardStrip } from '@/components/wbs/wbs-keyboard-strip';
 import { WbsNodeComponent } from '@/components/wbs/wbs-node';
 import { buildWbsTree, resolveParentId, resolveOrderIndex, type WbsElement, type EditRow } from '@/lib/wbs-utils';
-import { createWbsElement, updateWbsElement, deleteWbsElement } from '@/actions/wbs';
+import { createWbsElement, updateWbsElement, deleteWbsElement, getWbsElements } from '@/actions/wbs';
 import { toast } from 'sonner';
 
 interface WbsTreeEditorProps {
@@ -137,6 +137,41 @@ export function WbsTreeEditor({ projectId, initialElements }: WbsTreeEditorProps
     }
   }
 
+  async function handlePromote(nodeId: number) {
+    const node = elements.find((e) => e.id === nodeId);
+    if (!node || node.parentId === null) return;
+    const parent = elements.find((e) => e.id === node.parentId);
+    const newParentId = parent?.parentId ?? null;
+    setElements((prev) => prev.map((e) => e.id === nodeId ? { ...e, parentId: newParentId } : e));
+    try {
+      await updateWbsElement(nodeId, { parentId: newParentId });
+      const fresh = await getWbsElements(projectId);
+      setElements(fresh as WbsElement[]);
+    } catch {
+      toast.error('Failed to promote element');
+      setElements(initialElements);
+    }
+  }
+
+  async function handleDemote(nodeId: number) {
+    const node = elements.find((e) => e.id === nodeId);
+    if (!node) return;
+    const siblings = elements
+      .filter((e) => e.parentId === node.parentId && e.id !== nodeId)
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+    const prevSibling = siblings.filter((s) => s.orderIndex < node.orderIndex).pop();
+    if (!prevSibling) return;
+    setElements((prev) => prev.map((e) => e.id === nodeId ? { ...e, parentId: prevSibling.id } : e));
+    try {
+      await updateWbsElement(nodeId, { parentId: prevSibling.id });
+      const fresh = await getWbsElements(projectId);
+      setElements(fresh as WbsElement[]);
+    } catch {
+      toast.error('Failed to indent element');
+      setElements(initialElements);
+    }
+  }
+
   async function handleDelete(id: number) {
     setElements((prev) => prev.filter((e) => e.id !== id));
     try {
@@ -160,14 +195,17 @@ export function WbsTreeEditor({ projectId, initialElements }: WbsTreeEditorProps
       {tree.length > 0 && (
         <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
           <div className="p-3">
-            {tree.map((node) => (
+            {tree.map((node, index) => (
               <WbsNodeComponent
                 key={node.id}
                 node={node}
                 depth={0}
+                hasPrevSibling={index > 0}
                 onUpdate={handleDictionaryUpdate}
                 onDelete={handleDelete}
                 onSave={handleSave}
+                onPromote={handlePromote}
+                onDemote={handleDemote}
               />
             ))}
           </div>

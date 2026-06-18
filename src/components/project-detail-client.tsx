@@ -194,6 +194,8 @@ const editProjectSchema = z.object({
   budget: z.string().optional(),
   startDate: z.string().optional(),
   targetEndDate: z.string().optional(),
+  baselineStartDate: z.string().optional(),
+  baselineEndDate: z.string().optional(),
   portfolioId: z.string().optional(),
   programId: z.string().optional(),
 });
@@ -239,6 +241,8 @@ function EditProjectDialog({
       budget: project.budget ?? '',
       startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
       targetEndDate: project.targetEndDate ? new Date(project.targetEndDate).toISOString().split('T')[0] : '',
+      baselineStartDate: project.baselineStartDate ? new Date(project.baselineStartDate).toISOString().split('T')[0] : '',
+      baselineEndDate: project.baselineEndDate ? new Date(project.baselineEndDate).toISOString().split('T')[0] : '',
       portfolioId: project.portfolioId ? String(project.portfolioId) : '',
       programId: project.programId ? String(project.programId) : '',
     },
@@ -256,6 +260,8 @@ function EditProjectDialog({
       budget: project.budget ?? '',
       startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
       targetEndDate: project.targetEndDate ? new Date(project.targetEndDate).toISOString().split('T')[0] : '',
+      baselineStartDate: project.baselineStartDate ? new Date(project.baselineStartDate).toISOString().split('T')[0] : '',
+      baselineEndDate: project.baselineEndDate ? new Date(project.baselineEndDate).toISOString().split('T')[0] : '',
       portfolioId: project.portfolioId ? String(project.portfolioId) : '',
       programId: project.programId ? String(project.programId) : '',
     });
@@ -284,6 +290,8 @@ function EditProjectDialog({
           budget: data.budget ? parseBudgetInput(data.budget) : null,
           startDate: data.startDate ? new Date(data.startDate) : null,
           targetEndDate: data.targetEndDate ? new Date(data.targetEndDate) : null,
+          baselineStartDate: data.baselineStartDate ? new Date(data.baselineStartDate) : null,
+          baselineEndDate: data.baselineEndDate ? new Date(data.baselineEndDate) : null,
           portfolioId: data.portfolioId ? Number(data.portfolioId) : null,
           programId: data.programId ? Number(data.programId) : null,
         });
@@ -479,6 +487,22 @@ function EditProjectDialog({
               <FormField control={form.control} name="targetEndDate" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Target End Date</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField control={form.control} name="baselineStartDate" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Baseline Start</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="baselineEndDate" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Baseline End</FormLabel>
                   <FormControl><Input type="date" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -1921,6 +1945,7 @@ export function ProjectDetailClient({
             <ReportsTab
               projectId={project.id}
               project={project as Parameters<typeof ReportsTab>[0]['project']}
+              onProjectUpdated={(updates) => setProject((p) => ({ ...p, ...updates } as typeof p))}
               data={{
                 tasks: initialTasks.map((t) => ({
                   id: t.id,

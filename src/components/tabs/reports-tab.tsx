@@ -65,6 +65,7 @@ interface ReportsTabProps {
   projectId: number;
   project: ProjectSnap;
   data: DataSnap;
+  onProjectUpdated?: (updates: Partial<ProjectSnap>) => void;
 }
 
 // ── Readiness Badge ──────────────────────────────────────────────────────────
@@ -166,7 +167,7 @@ function renderInline(text: string): React.ReactNode {
 
 // ── Schedule Baseline Strip ──────────────────────────────────────────────────
 
-function BaselineStrip({ project }: { project: ProjectSnap }) {
+function BaselineStrip({ project, onProjectUpdated }: { project: ProjectSnap; onProjectUpdated?: (updates: Partial<ProjectSnap>) => void }) {
   const [saving, setSaving] = React.useState(false);
 
   async function handleSetBaseline() {
@@ -176,11 +177,11 @@ function BaselineStrip({ project }: { project: ProjectSnap }) {
     }
     setSaving(true);
     try {
-      await updateProject(project.id, {
-        baselineStartDate: project.startDate ?? undefined,
-        baselineEndDate: project.targetEndDate ?? undefined,
-      });
+      const baselineStartDate = project.startDate ?? undefined;
+      const baselineEndDate = project.targetEndDate ?? undefined;
+      await updateProject(project.id, { baselineStartDate, baselineEndDate });
       toast.success('Schedule baseline set');
+      onProjectUpdated?.({ baselineStartDate: baselineStartDate ?? null, baselineEndDate: baselineEndDate ?? null });
     } catch {
       toast.error('Failed to set baseline');
     } finally {
@@ -325,7 +326,7 @@ function GanttTimeline({ project, tasks }: { project: ProjectSnap; tasks: GanttT
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-export function ReportsTab({ projectId, project, data }: ReportsTabProps) {
+export function ReportsTab({ projectId, project, data, onProjectUpdated }: ReportsTabProps) {
   const [view, setView] = React.useState<'grid' | 'report'>('grid');
   const [activeType, setActiveType] = React.useState<ReportType | null>(null);
   const [streaming, setStreaming] = React.useState(false);
@@ -479,7 +480,7 @@ export function ReportsTab({ projectId, project, data }: ReportsTabProps) {
   return (
     <div className="space-y-6">
       {/* Baseline strip */}
-      <BaselineStrip project={project} />
+      <BaselineStrip project={project} onProjectUpdated={onProjectUpdated} />
 
       {/* Gantt timeline */}
       <GanttTimeline project={project} tasks={ganttTasks} />

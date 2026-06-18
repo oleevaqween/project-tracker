@@ -1,11 +1,47 @@
 'use server';
 
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, avg } from 'drizzle-orm';
 import { db } from '@/db';
 import { tasks, projects } from '@/db/schema';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+
+const PHASE_WEIGHTS: Record<string, number> = {
+  initiating: 10,
+  planning: 25,
+  executing: 50,
+  monitoring_controlling: 75,
+  closing: 90,
+};
+
+export async function recomputeProjectProgress(projectId: number) {
+  const [project] = await db
+    .select({ currentFocusArea: projects.currentFocusArea })
+    .from(projects)
+    .where(eq(projects.id, projectId));
+  if (!project) return;
+
+  const [result] = await db
+    .select({ avgPct: avg(tasks.percentComplete) })
+    .from(tasks)
+    .where(eq(tasks.projectId, projectId));
+
+  const taskCount = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(tasks)
+    .where(eq(tasks.projectId, projectId));
+
+  const phaseProgress = PHASE_WEIGHTS[project.currentFocusArea ?? 'initiating'] ?? 10;
+  const hasTasks = Number(taskCount[0]?.count ?? 0) > 0;
+  const taskProgress = hasTasks ? Math.round(Number(result?.avgPct ?? 0)) : 0;
+
+  const progress = hasTasks
+    ? Math.min(100, Math.round(taskProgress * 0.7 + phaseProgress * 0.3))
+    : phaseProgress;
+
+  await db.update(projects).set({ progressPercent: progress }).where(eq(projects.id, projectId));
+}
 
 type TaskInsert = typeof tasks.$inferInsert;
 type TaskUpdate = Partial<Omit<typeof tasks.$inferInsert, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>>;
@@ -78,6 +114,7 @@ export async function createTask(data: Omit<TaskInsert, 'id' | 'createdAt' | 'up
     .values({ ...data, orderIndex } as TaskInsert)
     .returning();
 
+  await recomputeProjectProgress(data.projectId!);
   revalidatePath(`/projects/${data.projectId}`);
   return task;
 }
@@ -102,6 +139,7 @@ export async function updateTask(id: number, projectId: number, data: TaskUpdate
     .where(eq(tasks.id, id))
     .returning();
 
+  await recomputeProjectProgress(projectId);
   revalidatePath(`/projects/${projectId}`);
   return task;
 }
@@ -121,6 +159,7 @@ export async function deleteTask(id: number, projectId: number) {
   if (!owned) return;
 
   await db.delete(tasks).where(eq(tasks.id, id));
+  await recomputeProjectProgress(projectId);
   revalidatePath(`/projects/${projectId}`);
 }
 
@@ -128,6 +167,9 @@ export async function updateTaskStatus(id: number, projectId: number, status: st
   const updateData: TaskUpdate = { status };
   if (status === 'done') {
     updateData.completedDate = new Date();
+    updateData.percentComplete = 100;
+  } else if (status === 'todo') {
+    updateData.percentComplete = 0;
   }
   return updateTask(id, projectId, updateData);
 }

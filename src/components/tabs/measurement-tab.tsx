@@ -82,16 +82,15 @@ function fmtIndex(n: number) {
   return n.toFixed(2);
 }
 
-// Performance domains self-assessment
+// Performance domains self-assessment — PMBOK 8 (7 domains)
 const DOMAINS = [
-  { key: 'stakeholders',        label: 'Stakeholders',                  color: 'from-rose-500 to-rose-400'     },
-  { key: 'team',                label: 'Team',                          color: 'from-violet-500 to-violet-400' },
-  { key: 'developmentApproach', label: 'Development Approach',          color: 'from-sky-500 to-sky-400'       },
-  { key: 'planning',            label: 'Planning',                      color: 'from-blue-500 to-blue-400'     },
-  { key: 'projectWork',         label: 'Project Work',                  color: 'from-amber-500 to-amber-400'   },
-  { key: 'delivery',            label: 'Delivery',                      color: 'from-emerald-500 to-emerald-400' },
-  { key: 'measurement',         label: 'Measurement',                   color: 'from-teal-500 to-teal-400'     },
-  { key: 'uncertainty',         label: 'Uncertainty',                   color: 'from-orange-500 to-orange-400' },
+  { key: 'governance',   label: 'Governance',   color: 'from-violet-500 to-violet-400'  },
+  { key: 'scope',        label: 'Scope',        color: 'from-sky-500 to-sky-400'        },
+  { key: 'schedule',     label: 'Schedule',     color: 'from-amber-500 to-amber-400'    },
+  { key: 'finance',      label: 'Finance',      color: 'from-emerald-500 to-emerald-400'},
+  { key: 'stakeholders', label: 'Stakeholders', color: 'from-rose-500 to-rose-400'      },
+  { key: 'resources',    label: 'Resources',    color: 'from-blue-500 to-blue-400'      },
+  { key: 'risk',         label: 'Risk',         color: 'from-orange-500 to-orange-400'  },
 ] as const;
 
 type DomainKey = typeof DOMAINS[number]['key'];
@@ -247,7 +246,9 @@ export function MeasurementTab({ project }: { project: Project }) {
               {/* PV input */}
               <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">PV (Planned Value)</p>
-                <p className="text-[10px] text-muted-foreground">Value of work planned to be done by today</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Budget approved for work scheduled to be done by today. Formula: Budget × (elapsed days ÷ total project days). E.g. a project 40% through its timeline with a £50,000 budget → enter £20,000.
+                </p>
                 <div className="flex gap-2">
                   <Input
                     type="number"
@@ -269,51 +270,51 @@ export function MeasurementTab({ project }: { project: Project }) {
             {PV > 0 && (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
-                  label="SPI"
+                  label="SPI (Schedule Performance Index)"
                   value={fmtIndex(SPI)}
-                  description="Values above 1.0 mean ahead of schedule. Below 0.85 requires a corrective action plan."
+                  description="Are you on schedule? ≥ 1.0 = ahead. 0.85–0.99 = slightly behind — review plan. < 0.85 = significantly behind — corrective action required."
                   status={indexStatus(SPI)}
                   formula="SPI = EV ÷ PV"
                 />
                 <MetricCard
-                  label="CPI"
+                  label="CPI (Cost Performance Index)"
                   value={fmtIndex(CPI)}
-                  description="Values above 1.0 mean under budget. Below 0.80 is a critical warning — escalate immediately."
+                  description="Are you within budget? ≥ 1.0 = under budget (good). 0.80–0.99 = slight overrun — monitor closely. < 0.80 = critical overrun — escalate to sponsor."
                   status={indexStatus(CPI)}
                   formula="CPI = EV ÷ AC"
                 />
                 <MetricCard
                   label="SV (Schedule Variance)"
                   value={isFinite(SV) ? fmt(SV, currency) : '—'}
-                  description="Positive = ahead of schedule. Negative = behind."
+                  description="Budget value of being ahead or behind schedule. Positive = ahead of plan. Negative = behind — identify delayed tasks and recover."
                   status={varianceStatus(SV)}
                   formula="SV = EV − PV"
                 />
                 <MetricCard
                   label="CV (Cost Variance)"
                   value={isFinite(CV) ? fmt(CV, currency) : '—'}
-                  description="Positive = under budget. Negative = over budget."
+                  description="How much you are over or under budget for work completed. Positive = under budget. Negative = over budget — review actual spend."
                   status={varianceStatus(CV)}
                   formula="CV = EV − AC"
                 />
                 <MetricCard
-                  label="EAC (Est. at Completion)"
+                  label="EAC (Estimate at Completion)"
                   value={isFinite(EAC) ? fmt(EAC, currency) : '—'}
-                  description="Projected total cost if current CPI continues to project end."
+                  description="Projected final cost if current spending efficiency continues. If EAC > BAC, you will likely overrun your budget."
                   status={isFinite(EAC) ? (EAC <= BAC ? 'good' : 'bad') : 'neutral'}
                   formula="EAC = BAC ÷ CPI"
                 />
                 <MetricCard
-                  label="ETC (Est. to Complete)"
+                  label="ETC (Estimate to Complete)"
                   value={isFinite(ETC) ? fmt(ETC, currency) : '—'}
-                  description="Remaining cost to finish the project at the current CPI."
+                  description="How much more money is needed to finish the project from today, based on current CPI."
                   status="neutral"
                   formula="ETC = EAC − AC"
                 />
                 <MetricCard
                   label="VAC (Variance at Completion)"
                   value={isFinite(VAC) ? fmt(VAC, currency) : '—'}
-                  description="Projected surplus (positive) or overrun (negative) at project end."
+                  description="Expected budget surplus (positive) or overrun (negative) when project closes. Share with sponsor if negative."
                   status={isFinite(VAC) ? (VAC >= 0 ? 'good' : 'bad') : 'neutral'}
                   formula="VAC = BAC − EAC"
                 />

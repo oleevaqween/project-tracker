@@ -3,6 +3,7 @@
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '@/db';
 import { projects } from '@/db/schema';
+import { recomputeProjectProgress } from './tasks';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -93,7 +94,9 @@ export async function updateProjectStatus(id: number, status: string) {
 }
 
 export async function updateFocusArea(id: number, currentFocusArea: string) {
-  return updateProject(id, { currentFocusArea });
+  const result = await updateProject(id, { currentFocusArea });
+  await recomputeProjectProgress(id);
+  return result;
 }
 
 type LegacySummary = NonNullable<typeof projects.$inferSelect['legacySummary']>;

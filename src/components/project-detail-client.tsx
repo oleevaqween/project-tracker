@@ -121,13 +121,66 @@ type Issue = typeof import('@/db/schema').issues.$inferSelect;
 
 // FOCUS_AREAS order for advancement
 const FOCUS_AREA_SEQUENCE = ['initiating', 'planning', 'executing', 'monitoring_controlling', 'closing'];
-const FOCUS_AREA_CHECKLIST: Record<string, string[]> = {
-  initiating: ['Project Charter drafted and approved', 'Key stakeholders identified', 'High-level scope documented', 'Project authorized to proceed'],
-  planning: ['Project Management Plan complete', 'WBS and task list created', 'Risk Register populated', 'Schedule baseline set', 'Stakeholders engaged'],
-  executing: ['Deliverables are being produced', 'Team coordinated on active tasks', 'Change requests being logged', 'Stakeholder communications ongoing'],
-  monitoring_controlling: ['All deliverables validated against acceptance criteria', 'All change requests resolved', 'Performance metrics reported', 'Risks monitored and closed'],
-  closing: ['Project is complete. No further advancement.'],
-};
+
+function PrincipleBadge({ principles }: { principles: string[] }) {
+  return (
+    <span
+      title={`PMBOK 8: ${principles.join(' · ')}`}
+      className="ml-1 inline-flex items-center rounded-full bg-amber-500/10 px-1 py-0 text-[9px] font-bold text-amber-700 dark:text-amber-400 cursor-help"
+    >
+      P8
+    </span>
+  );
+}
+
+type GateItem = { text: string; done: boolean; optional?: boolean };
+
+function computeGateItems(
+  phase: string,
+  project: Project,
+  tasks: Task[],
+  risks: Risk[],
+  stakeholders: Stakeholder[],
+  changeRequests: ChangeRequest[],
+  wbsElements: typeof import('@/db/schema').wbsElements.$inferSelect[],
+): GateItem[] {
+  const hasCharter = Object.values((project.charter ?? {}) as Record<string, unknown>).some(v => v && String(v).trim().length > 0);
+  switch (phase) {
+    case 'initiating':
+      return [
+        { text: 'Project Charter drafted', done: hasCharter },
+        { text: 'Key stakeholders identified', done: stakeholders.length > 0 },
+        { text: 'Scope documented (project description)', done: (project.description ?? '').trim().length > 0 },
+        { text: 'Project authorized to proceed', done: true },
+      ];
+    case 'planning':
+      return [
+        { text: 'WBS or task list created', done: wbsElements.length > 0 || tasks.length > 0 },
+        { text: 'Risk register populated', done: risks.length > 0 },
+        { text: 'Schedule baseline set', done: project.baselineStartDate != null },
+        { text: 'Stakeholders engaged', done: stakeholders.length > 0 },
+        { text: 'Charter complete', done: hasCharter },
+      ];
+    case 'executing':
+      return [
+        { text: 'Deliverables are being produced (tasks in progress or done)', done: tasks.some(t => ['in_progress', 'done'].includes(t.status)) },
+        { text: 'Active tasks in progress', done: tasks.some(t => t.status === 'in_progress') },
+        { text: 'Change requests logged (if applicable)', done: changeRequests.length > 0, optional: true },
+        { text: 'Stakeholders identified for communications', done: stakeholders.length > 0 },
+      ];
+    case 'monitoring_controlling':
+      return [
+        { text: 'All tasks completed', done: tasks.length > 0 && tasks.every(t => t.status === 'done') },
+        { text: 'No pending change requests', done: changeRequests.every(cr => cr.status !== 'pending') },
+        { text: 'Progress reported (progress > 0%)', done: (project.progressPercent ?? 0) > 0 },
+        { text: 'High-risk open items addressed (score < 12)', done: !risks.some(r => (r.riskScore ?? 0) >= 12 && r.status === 'open') },
+      ];
+    case 'closing':
+      return [{ text: 'Project is complete. No further advancement.', done: true }];
+    default:
+      return [];
+  }
+}
 
 // ---------- Edit Project Dialog ----------
 
@@ -450,6 +503,7 @@ const createTaskSchema = z.object({
   description: z.string().optional(),
   status: z.string(),
   priority: z.string(),
+  startDate: z.string().optional(),
   dueDate: z.string().optional(),
   estimatedHours: z.string().optional(),
 });
@@ -476,6 +530,7 @@ function CreateTaskDialog({
       description: '',
       status: 'todo',
       priority: 'medium',
+      startDate: '',
       dueDate: '',
       estimatedHours: '',
     },
@@ -490,6 +545,7 @@ function CreateTaskDialog({
           description: data.description || null,
           status: data.status,
           priority: data.priority,
+          startDate: data.startDate ? new Date(data.startDate) : null,
           dueDate: data.dueDate ? new Date(data.dueDate) : null,
           estimatedHours: data.estimatedHours || null,
         });
@@ -554,6 +610,13 @@ function CreateTaskDialog({
               )} />
             </div>
             <div className="grid grid-cols-2 gap-4">
+              <FormField control={form.control} name="startDate" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Date</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <FormField control={form.control} name="dueDate" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Due Date</FormLabel>
@@ -561,14 +624,14 @@ function CreateTaskDialog({
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={form.control} name="estimatedHours" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Est. Hours</FormLabel>
-                  <FormControl><Input type="number" placeholder="0" min="0" step="0.5" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
             </div>
+            <FormField control={form.control} name="estimatedHours" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Est. Hours</FormLabel>
+                <FormControl><Input type="number" placeholder="0" min="0" step="0.5" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
             <DialogFooter showCloseButton>
               <Button type="submit" disabled={isPending}>
                 {isPending ? 'Creating...' : 'Add Task'}
@@ -588,6 +651,7 @@ const editTaskSchema = z.object({
   description: z.string().optional(),
   status: z.string(),
   priority: z.string(),
+  startDate: z.string().optional(),
   dueDate: z.string().optional(),
   estimatedHours: z.string().optional(),
   estimatedCost: z.string().optional(),
@@ -612,6 +676,12 @@ function EditTaskDialog({
   onTaskUpdated: (task: Task) => void;
 }) {
   const [isPending, startTransition] = React.useTransition();
+  type ChecklistItem = { id: string; text: string; done: boolean };
+  const [checklistItems, setChecklistItems] = React.useState<ChecklistItem[]>([]);
+  const [newChecklistText, setNewChecklistText] = React.useState('');
+
+  const toDateStr = (d: Date | null | undefined) =>
+    d ? new Date(d).toISOString().split('T')[0] : '';
 
   const form = useForm<EditTaskForm>({
     resolver: zodResolver(editTaskSchema),
@@ -620,7 +690,8 @@ function EditTaskDialog({
       description: task?.description ?? '',
       status: task?.status ?? 'todo',
       priority: task?.priority ?? 'medium',
-      dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      startDate: toDateStr(task?.startDate),
+      dueDate: toDateStr(task?.dueDate),
       estimatedHours: task?.estimatedHours ?? '',
       estimatedCost: task?.estimatedCost ?? '',
       actualHours: task?.actualHours ?? '',
@@ -635,13 +706,16 @@ function EditTaskDialog({
       description: task?.description ?? '',
       status: task?.status ?? 'todo',
       priority: task?.priority ?? 'medium',
-      dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      startDate: toDateStr(task?.startDate),
+      dueDate: toDateStr(task?.dueDate),
       estimatedHours: task?.estimatedHours ?? '',
       estimatedCost: task?.estimatedCost ?? '',
       actualHours: task?.actualHours ?? '',
       actualCost: task?.actualCost ?? '',
       percentComplete: task?.percentComplete ?? 0,
     });
+    setChecklistItems((task?.checklistItems ?? []) as ChecklistItem[]);
+    setNewChecklistText('');
   }, [task, form]);
 
   function onSubmit(data: EditTaskForm) {
@@ -653,12 +727,14 @@ function EditTaskDialog({
           description: data.description || null,
           status: data.status,
           priority: data.priority,
+          startDate: data.startDate ? new Date(data.startDate) : null,
           dueDate: data.dueDate ? new Date(data.dueDate) : null,
           estimatedHours: data.estimatedHours || null,
           estimatedCost: data.estimatedCost || null,
           actualHours: data.actualHours || null,
           actualCost: data.actualCost || null,
           percentComplete: data.percentComplete,
+          checklistItems,
         });
         if (!updated) return;
         toast.success('Task updated');
@@ -722,13 +798,22 @@ function EditTaskDialog({
                 </FormItem>
               )} />
             </div>
-            <FormField control={form.control} name="dueDate" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Due Date</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField control={form.control} name="startDate" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Date</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="dueDate" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Due Date</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
 
             {/* % Complete slider */}
             <FormField control={form.control} name="percentComplete" render={({ field }) => (
@@ -751,6 +836,66 @@ function EditTaskDialog({
                 <FormMessage />
               </FormItem>
             )} />
+
+            {/* Checklist */}
+            <div className="rounded-lg border p-3 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Checklist</p>
+              {checklistItems.map((item) => (
+                <div key={item.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={item.done}
+                    onChange={() =>
+                      setChecklistItems((prev) =>
+                        prev.map((i) => (i.id === item.id ? { ...i, done: !i.done } : i))
+                      )
+                    }
+                    className="accent-primary size-3.5 shrink-0"
+                  />
+                  <span className={cn('flex-1 text-xs', item.done && 'line-through text-muted-foreground')}>
+                    {item.text}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setChecklistItems((prev) => prev.filter((i) => i.id !== item.id))}
+                    className="text-muted-foreground/40 hover:text-destructive transition-colors text-xs"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-2 pt-1">
+                <Input
+                  placeholder="Add item..."
+                  value={newChecklistText}
+                  onChange={(e) => setNewChecklistText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const text = newChecklistText.trim();
+                      if (!text) return;
+                      setChecklistItems((prev) => [...prev, { id: crypto.randomUUID(), text, done: false }]);
+                      setNewChecklistText('');
+                    }
+                  }}
+                  className="h-7 text-xs"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 shrink-0 text-xs"
+                  onClick={() => {
+                    const text = newChecklistText.trim();
+                    if (!text) return;
+                    setChecklistItems((prev) => [...prev, { id: crypto.randomUUID(), text, done: false }]);
+                    setNewChecklistText('');
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
 
             {/* Planned (estimate) */}
             <div className="rounded-lg border p-3 space-y-3">
@@ -845,17 +990,28 @@ function TaskItem({
       </button>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className={cn('text-sm font-medium', task.status === 'done' && 'line-through text-muted-foreground')}>
             {task.title}
           </span>
           <span className={cn('inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium', priorityMeta.color)}>
             {priorityMeta.label}
           </span>
+          {task.wbsElementId && (
+            <span className="inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+              WBS
+            </span>
+          )}
         </div>
         {task.description && (
           <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{task.description}</p>
         )}
+        {(() => {
+          const items = (task.checklistItems ?? []) as { done: boolean }[];
+          if (items.length === 0) return null;
+          const done = items.filter((i) => i.done).length;
+          return <p className="mt-0.5 text-[10px] text-muted-foreground">{done}/{items.length} ✓</p>;
+        })()}
         <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
           <span className={cn('inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium', statusMeta.color)}>
             {statusMeta.label}
@@ -1365,11 +1521,21 @@ function PlaceholderTab({ title, description }: { title: string; description: st
 
 function AdvanceFocusAreaDialog({
   project,
+  tasks,
+  risks,
+  stakeholders,
+  changeRequests,
+  wbsElements,
   open,
   onOpenChange,
   onAdvanced,
 }: {
   project: Project;
+  tasks: Task[];
+  risks: Risk[];
+  stakeholders: Stakeholder[];
+  changeRequests: ChangeRequest[];
+  wbsElements: typeof import('@/db/schema').wbsElements.$inferSelect[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdvanced: (newArea: string) => void;
@@ -1378,7 +1544,8 @@ function AdvanceFocusAreaDialog({
   const currentIdx = FOCUS_AREA_SEQUENCE.indexOf(project.currentFocusArea ?? 'initiating');
   const nextArea = FOCUS_AREA_SEQUENCE[currentIdx + 1];
   const nextLabel = nextArea?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) ?? '';
-  const checklist = FOCUS_AREA_CHECKLIST[project.currentFocusArea ?? 'initiating'] ?? [];
+  const gateItems = computeGateItems(project.currentFocusArea ?? 'initiating', project, tasks, risks, stakeholders, changeRequests, wbsElements);
+  const hasIncomplete = gateItems.some(item => !item.done && !item.optional);
 
   function handleAdvance() {
     if (!nextArea) return;
@@ -1408,14 +1575,28 @@ function AdvanceFocusAreaDialog({
         <DialogHeader>
           <DialogTitle>Advance to {nextLabel}</DialogTitle>
           <DialogDescription>
-            Before advancing, confirm the following PMBOK 8 recommended activities are complete:
+            PMBOK 8 recommended activities for this phase:
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2 py-2">
-          {checklist.map((item, i) => (
+
+        {hasIncomplete && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+            Some activities are incomplete. Review the flagged items before advancing — or proceed if you are satisfied this is acceptable.
+          </div>
+        )}
+
+        <div className="space-y-2 py-1">
+          {gateItems.map((item, i) => (
             <div key={i} className="flex items-start gap-2 text-sm">
-              <CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-emerald-500" />
-              <span>{item}</span>
+              {item.done ? (
+                <CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+              ) : (
+                <AlertCircleIcon className={cn('mt-0.5 size-4 shrink-0', item.optional ? 'text-muted-foreground/50' : 'text-amber-500')} />
+              )}
+              <span className={cn(item.done ? 'text-foreground' : item.optional ? 'text-muted-foreground/70' : 'text-amber-700 dark:text-amber-400')}>
+                {item.text}
+                {item.optional && <span className="ml-1 text-[10px] text-muted-foreground">(optional)</span>}
+              </span>
             </div>
           ))}
         </div>
@@ -1620,21 +1801,21 @@ export function ProjectDetailClient({
         <Tabs defaultValue="overview">
           <TabsList className="h-auto flex-wrap gap-1 bg-muted/60 p-1 rounded-xl w-fit">
             <TabsTrigger value="overview" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Overview</TabsTrigger>
-            <TabsTrigger value="charter" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Charter</TabsTrigger>
+            <TabsTrigger value="charter" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Charter<PrincipleBadge principles={['Be an accountable leader', 'Focus on value']} /></TabsTrigger>
             {project.useWbs && (
               <TabsTrigger value="wbs" className="rounded-lg px-3 py-1.5 text-xs font-semibold">
-                WBS
+                WBS<PrincipleBadge principles={['Embed quality into processes & deliverables']} />
               </TabsTrigger>
             )}
             <TabsTrigger value="tasks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Tasks</TabsTrigger>
             <TabsTrigger value="notes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Notes</TabsTrigger>
-            <TabsTrigger value="stakeholders" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Stakeholders</TabsTrigger>
-            <TabsTrigger value="risks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Risks</TabsTrigger>
+            <TabsTrigger value="stakeholders" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Stakeholders<PrincipleBadge principles={['Build an empowered culture']} /></TabsTrigger>
+            <TabsTrigger value="risks" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Risks<PrincipleBadge principles={['Adopt a holistic view', 'Integrate sustainability']} /></TabsTrigger>
             <TabsTrigger value="changes" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Changes</TabsTrigger>
             <TabsTrigger value="lessons" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Lessons</TabsTrigger>
             <TabsTrigger value="issues" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Issues</TabsTrigger>
-            <TabsTrigger value="measurement" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Measurement</TabsTrigger>
-            <TabsTrigger value="reports" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Reports</TabsTrigger>
+            <TabsTrigger value="measurement" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Measurement<PrincipleBadge principles={['Adopt a holistic view', 'Focus on value']} /></TabsTrigger>
+            <TabsTrigger value="reports" className="rounded-lg px-3 py-1.5 text-xs font-semibold">Documents & Reports</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-4">
@@ -1648,7 +1829,12 @@ export function ProjectDetailClient({
           </TabsContent>
 
           <TabsContent value="charter" className="mt-4">
-            <CharterTab project={project} />
+            <CharterTab
+              project={project}
+              onSaved={(charter) =>
+                setProject((p) => ({ ...p, charter: charter as Record<string, unknown> }))
+              }
+            />
           </TabsContent>
 
           {project.useWbs && (
@@ -1694,7 +1880,15 @@ export function ProjectDetailClient({
               projectId={project.id}
               project={project as Parameters<typeof ReportsTab>[0]['project']}
               data={{
-                tasks: initialTasks,
+                tasks: initialTasks.map((t) => ({
+                  id: t.id,
+                  title: t.title,
+                  status: t.status,
+                  startDate: t.startDate,
+                  dueDate: t.dueDate,
+                  estimatedHours: t.estimatedHours,
+                  actualHours: t.actualHours,
+                })),
                 risks: initialRisks,
                 stakeholders: initialStakeholders,
                 changeRequests: initialChangeRequests,
@@ -1713,6 +1907,11 @@ export function ProjectDetailClient({
       {/* Advance Focus Area dialog */}
       <AdvanceFocusAreaDialog
         project={project}
+        tasks={initialTasks}
+        risks={initialRisks}
+        stakeholders={initialStakeholders}
+        changeRequests={initialChangeRequests}
+        wbsElements={initialWbsElements}
         open={advanceOpen}
         onOpenChange={setAdvanceOpen}
         onAdvanced={handleFocusAreaAdvanced}

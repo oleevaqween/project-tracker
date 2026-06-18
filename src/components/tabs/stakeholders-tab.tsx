@@ -66,6 +66,14 @@ const ENGAGEMENT_LEVELS = [
 const INTEREST_LABELS = ['Very Low', 'Low', 'Medium', 'High', 'Very High'] as const;
 const INFLUENCE_LABELS = ['Very Low', 'Low', 'Medium', 'High', 'Very High'] as const;
 
+function formatLastEngaged(date: Date | null | undefined): string {
+  if (!date) return 'Never engaged';
+  const days = Math.floor((Date.now() - new Date(date).getTime()) / 86_400_000);
+  if (days === 0) return 'Engaged today';
+  if (days === 1) return 'Engaged 1 day ago';
+  return `Engaged ${days} days ago`;
+}
+
 function getEngagementMeta(value: string | null) {
   return ENGAGEMENT_LEVELS.find((e) => e.value === value) ?? ENGAGEMENT_LEVELS[2]; // default neutral
 }
@@ -97,6 +105,7 @@ const stakeholderSchema = z.object({
   influence: z.number().min(1).max(5),
   engagementLevel: z.string(),
   engagementStrategy: z.string().optional(),
+  lastEngagedDate: z.string().optional(),
 });
 
 type StakeholderForm = z.infer<typeof stakeholderSchema>;
@@ -119,6 +128,9 @@ function StakeholderFormDialog({
   const [isPending, startTransition] = React.useTransition();
   const isEditing = !!stakeholder;
 
+  const toDateInputValue = (d: Date | null | undefined) =>
+    d ? new Date(d).toISOString().slice(0, 10) : '';
+
   const form = useForm<StakeholderForm>({
     resolver: zodResolver(stakeholderSchema),
     defaultValues: {
@@ -130,6 +142,7 @@ function StakeholderFormDialog({
       influence: stakeholder?.influence ?? 3,
       engagementLevel: stakeholder?.engagementLevel ?? 'neutral',
       engagementStrategy: stakeholder?.engagementStrategy ?? '',
+      lastEngagedDate: toDateInputValue(stakeholder?.lastEngagedDate),
     },
   });
 
@@ -143,6 +156,7 @@ function StakeholderFormDialog({
       influence: stakeholder?.influence ?? 3,
       engagementLevel: stakeholder?.engagementLevel ?? 'neutral',
       engagementStrategy: stakeholder?.engagementStrategy ?? '',
+      lastEngagedDate: toDateInputValue(stakeholder?.lastEngagedDate),
     });
   }, [stakeholder, form]);
 
@@ -150,6 +164,7 @@ function StakeholderFormDialog({
     startTransition(async () => {
       try {
         let saved: Stakeholder;
+        const lastEngagedDate = data.lastEngagedDate ? new Date(data.lastEngagedDate) : null;
         if (isEditing && stakeholder) {
           const result = await updateStakeholder(stakeholder.id, projectId, {
             name: data.name,
@@ -160,6 +175,7 @@ function StakeholderFormDialog({
             influence: data.influence,
             engagementLevel: data.engagementLevel,
             engagementStrategy: data.engagementStrategy || null,
+            lastEngagedDate,
           });
           if (!result) return;
           saved = result;
@@ -174,6 +190,7 @@ function StakeholderFormDialog({
             influence: data.influence,
             engagementLevel: data.engagementLevel,
             engagementStrategy: data.engagementStrategy || null,
+            lastEngagedDate,
           });
         }
         toast.success(isEditing ? 'Stakeholder updated' : 'Stakeholder added');
@@ -312,6 +329,19 @@ function StakeholderFormDialog({
                       placeholder="How to engage this stakeholder..."
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastEngagedDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Engaged</FormLabel>
+                  <FormControl>
+                    <Input type="date" max={new Date().toISOString().slice(0, 10)} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -527,6 +557,9 @@ function StakeholderItem({
             {getQuadrant(stakeholder.interest ?? 3, stakeholder.influence ?? 3)}
           </span>
         </div>
+        <p className={cn('mt-0.5 text-[10px]', stakeholder.lastEngagedDate ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground/60 italic')}>
+          {formatLastEngaged(stakeholder.lastEngagedDate)}
+        </p>
       </div>
 
       <DropdownMenu>

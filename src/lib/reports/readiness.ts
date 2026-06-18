@@ -139,6 +139,51 @@ export function computeReadiness(
       else missing.push('Test coverage or quality score');
       break;
     }
+    case 'project_management_plan': {
+      if (hasCharter(project)) score += 30; else missing.push('Project charter');
+      if (data.tasks.length > 0) score += 15; else missing.push('Tasks / WBS');
+      if (data.risks.length > 0) score += 15; else missing.push('Risk register');
+      if (data.stakeholders.length > 0) score += 15; else missing.push('Stakeholders');
+      if (project.budget) score += 10; else missing.push('Project budget');
+      if (project.startDate && project.targetEndDate) score += 15; else missing.push('Project dates');
+      break;
+    }
+    case 'scope_management_plan': {
+      if (hasCharter(project)) score += 50; else missing.push('Project charter (scope, deliverables, acceptance criteria)');
+      if (data.tasks.length > 0) score += 30; else missing.push('Tasks / WBS elements');
+      if (project.description) score += 20; else missing.push('Project description');
+      break;
+    }
+    case 'communications_management_plan': {
+      if (data.stakeholders.length > 0) score += 40; else missing.push('Stakeholders');
+      const withComms = data.stakeholders.filter((s) => s.communicationPlan).length;
+      if (withComms > 0) score += clamp((withComms / Math.max(data.stakeholders.length, 1)) * 40);
+      else missing.push('Communication plans on stakeholders');
+      const withStrategy = data.stakeholders.filter((s) => s.engagementStrategy).length;
+      if (withStrategy > 0) score += clamp((withStrategy / Math.max(data.stakeholders.length, 1)) * 20);
+      else missing.push('Engagement strategies on stakeholders');
+      break;
+    }
+    case 'risk_management_plan': {
+      if (data.risks.length > 0) score += 40; else missing.push('Risk register entries');
+      const withScores = data.risks.filter((r) => r.probability && r.impact).length;
+      if (withScores > 0) score += clamp((withScores / Math.max(data.risks.length, 1)) * 30);
+      else missing.push('Probability and impact on risks');
+      const withResponse = data.risks.filter((r) => r.responseAction).length;
+      if (withResponse > 0) score += clamp((withResponse / Math.max(data.risks.length, 1)) * 30);
+      else missing.push('Response actions on risks');
+      break;
+    }
+    case 'stakeholder_engagement_plan': {
+      if (data.stakeholders.length > 0) score += 40; else missing.push('Stakeholders');
+      const withGrid = data.stakeholders.filter((s) => s.influence && s.interest).length;
+      if (withGrid > 0) score += clamp((withGrid / Math.max(data.stakeholders.length, 1)) * 30);
+      else missing.push('Influence and interest ratings');
+      const withStrategy = data.stakeholders.filter((s) => s.engagementStrategy).length;
+      if (withStrategy > 0) score += clamp((withStrategy / Math.max(data.stakeholders.length, 1)) * 30);
+      else missing.push('Engagement strategies on stakeholders');
+      break;
+    }
   }
 
   return { score: clamp(score), tier: tier(score), missingItems: missing };

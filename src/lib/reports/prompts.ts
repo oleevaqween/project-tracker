@@ -164,6 +164,104 @@ Structure:
 ## Recommended Quality Improvement Actions
 
 ${context}`,
+
+    project_management_plan: `Generate a formal PMBOK 8 Project Management Plan. This is the master governing document for the project.
+Aim for 1200–2000 tokens. Use formal PM document language.
+
+Structure:
+## 1. Project Overview
+## 2. Scope Management Summary
+- Scope statement, deliverables, exclusions, acceptance criteria
+## 3. Schedule Management Summary
+- Key milestones, schedule approach, baseline dates
+## 4. Financial Management Summary
+- Budget baseline, cost control approach, EVM methodology
+## 5. Risk Management Summary
+- Risk tolerance, response strategy framework, top risks
+## 6. Communications Management Summary
+- Stakeholder communication requirements and channels
+## 7. Resource Management Summary
+- Key roles and responsibilities
+## 8. Quality Management Summary
+- Quality standards, inspection criteria, quality metrics
+## 9. Change Control Approach
+- Change request process, approval authority
+## 10. Stakeholder Engagement Summary
+## 11. Project Governance
+
+${context}`,
+
+    scope_management_plan: `Generate a formal PMBOK 8 Scope Management Plan.
+Aim for 800–1500 tokens. Use formal PM document language.
+
+Structure:
+## 1. Scope Management Approach
+## 2. Scope Definition
+- Project objectives
+- In-scope items
+- Out-of-scope exclusions
+- Assumptions and constraints
+## 3. Work Breakdown Structure (WBS) Approach
+- WBS structure summary and decomposition level
+## 4. Deliverables and Acceptance Criteria
+## 5. Scope Validation Process
+- How deliverables will be inspected and accepted
+## 6. Scope Control
+- Change request process for scope changes
+- How to handle scope creep
+
+${context}`,
+
+    communications_management_plan: `Generate a formal PMBOK 8 Communications Management Plan.
+Aim for 800–1400 tokens. Use formal PM document language.
+
+Structure:
+## 1. Communications Overview
+## 2. Stakeholder Communication Requirements
+- For each stakeholder: information needed, format, frequency, channel, responsible party
+## 3. Communication Methods and Technology
+## 4. Communication Escalation Path
+## 5. Meeting Cadence and Agenda Templates
+## 6. Document Management and Distribution
+## 7. Communication Constraints and Assumptions
+
+${context}`,
+
+    risk_management_plan: `Generate a formal PMBOK 8 Risk Management Plan.
+Aim for 1000–1800 tokens. Use formal PM document language.
+
+Structure:
+## 1. Risk Management Approach
+- Risk methodology, tools, and data sources
+## 2. Risk Roles and Responsibilities
+## 3. Risk Categories
+## 4. Risk Appetite and Tolerance
+## 5. Risk Probability and Impact Definitions
+- Probability scale (1–5) and impact scale (1–5) definitions
+## 6. Risk Register Summary
+- All identified risks: title, category, probability, impact, score, status, owner, response
+## 7. Risk Response Strategies Applied
+## 8. Risk Monitoring and Review Cadence
+## 9. Contingency Reserves
+
+${context}`,
+
+    stakeholder_engagement_plan: `Generate a formal PMBOK 8 Stakeholder Engagement Plan.
+Aim for 800–1400 tokens. Use formal PM document language.
+
+Structure:
+## 1. Stakeholder Engagement Approach
+## 2. Stakeholder Register Summary
+- Name, role, organization, influence, interest, current engagement, desired engagement
+## 3. Power-Interest Grid Analysis
+## 4. Engagement Strategies by Stakeholder
+- For each key stakeholder: strategy to move from current to desired engagement level, last engaged date
+## 5. Engagement Activities and Timeline
+## 6. Communication and Engagement Channels
+## 7. Monitoring Stakeholder Engagement
+## 8. Risks from Stakeholder Disengagement
+
+${context}`,
   };
 
   return prompts[type];

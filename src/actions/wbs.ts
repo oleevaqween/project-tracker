@@ -1,8 +1,8 @@
 'use server';
 
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { wbsElements, projects } from '@/db/schema';
+import { wbsElements, projects, tasks } from '@/db/schema';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -50,6 +50,36 @@ export async function createWbsElement(data: {
     .select({ id: wbsElements.id, wbsCode: wbsElements.wbsCode })
     .from(wbsElements)
     .where(eq(wbsElements.id, element.id));
+
+  // Auto-create task (top-level) or checklist item (child)
+  if (data.parentId === null) {
+    const [maxOrder] = await db
+      .select({ val: sql<number>`coalesce(max(${tasks.orderIndex}), -1) + 1` })
+      .from(tasks)
+      .where(eq(tasks.projectId, data.projectId));
+
+    await db.insert(tasks).values({
+      projectId: data.projectId,
+      title: data.name.trim(),
+      status: 'todo',
+      priority: 'medium',
+      wbsElementId: element.id,
+      orderIndex: maxOrder?.val ?? 0,
+    });
+  } else {
+    const [parentTask] = await db
+      .select({ id: tasks.id, checklistItems: tasks.checklistItems })
+      .from(tasks)
+      .where(eq(tasks.wbsElementId, data.parentId));
+
+    if (parentTask) {
+      const existing = (parentTask.checklistItems ?? []) as { id: string; text: string; done: boolean }[];
+      const newItem = { id: crypto.randomUUID(), text: data.name.trim(), done: false };
+      await db.update(tasks)
+        .set({ checklistItems: [...existing, newItem] })
+        .where(eq(tasks.id, parentTask.id));
+    }
+  }
 
   revalidatePath(`/projects/${data.projectId}`);
   return { id: element.id, wbsCode: updated.wbsCode };

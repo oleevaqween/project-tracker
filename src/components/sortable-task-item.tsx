@@ -84,17 +84,32 @@ export function SortableTaskItem({ task, onStatusChange, onDelete, onEdit }: Sor
       </button>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className={cn('text-sm font-medium', task.status === 'done' && 'line-through text-muted-foreground')}>
             {task.title}
           </span>
           <span className={cn('inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium', priorityMeta.color)}>
             {priorityMeta.label}
           </span>
+          {task.wbsElementId && (
+            <span className="inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+              WBS
+            </span>
+          )}
         </div>
         {task.description && (
           <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{task.description}</p>
         )}
+        {(() => {
+          const items = (task.checklistItems ?? []) as { done: boolean }[];
+          if (items.length === 0) return null;
+          const done = items.filter((i) => i.done).length;
+          return (
+            <p className="mt-0.5 text-[10px] text-muted-foreground">
+              {done}/{items.length} ✓
+            </p>
+          );
+        })()}
         <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
           <span className={cn('inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium', statusMeta.color)}>
             {statusMeta.label}

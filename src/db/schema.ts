@@ -83,16 +83,15 @@ export const projects = pgTable('projects', {
   plannedValue: numeric('planned_value', { precision: 12, scale: 2 }),
   // PV: what value of work was planned to be done by today
   // EV is computed: (progressPercent / 100) × budget (no stored override needed)
-  // Phase 5: PMBOK 8 Performance Domains self-assessment (1-5 per domain)
+  // PMBOK 8 Performance Domains self-assessment (1-5 per domain) — 7 domains
   performanceDomains: jsonb('performance_domains').$type<{
+    governance?: number;
+    scope?: number;
+    schedule?: number;
+    finance?: number;
     stakeholders?: number;
-    team?: number;
-    developmentApproach?: number;
-    planning?: number;
-    projectWork?: number;
-    delivery?: number;
-    measurement?: number;
-    uncertainty?: number;
+    resources?: number;
+    risk?: number;
   }>(),
   progressPercent: integer('progress_percent').default(0),
   coverImage: text('cover_image'), // Supabase Storage URL
@@ -175,6 +174,8 @@ export const tasks = pgTable('tasks', {
   orderIndex: integer('order_index').notNull().default(0),
   parentId: integer('parent_id'),
   wbsElementId: integer('wbs_element_id'),
+  startDate: timestamp('start_date'),
+  checklistItems: jsonb('checklist_items').$type<{ id: string; text: string; done: boolean }[]>().default([]),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
 }, (table) => [
@@ -289,6 +290,7 @@ export const stakeholders = pgTable('stakeholders', {
   engagementStrategy: text('engagement_strategy'), // how to move to desired level
   communicationPlan: text('communication_plan'),   // frequency, method, content
   notes: text('notes'),
+  lastEngagedDate: timestamp('last_engaged_date'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
 });
@@ -420,6 +422,7 @@ export const aiUsageLog = pgTable('ai_usage_log', {
 export const userPreferences = pgTable('user_preferences', {
   userId: varchar('user_id', { length: 36 }).primaryKey().references(() => profiles.id, { onDelete: 'cascade' }),
   featuredProjectId: integer('featured_project_id').references(() => projects.id, { onDelete: 'set null' }),
+  principlesReflection: jsonb('principles_reflection').$type<Record<string, number>>(),
   updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
 });
 

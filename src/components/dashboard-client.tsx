@@ -1,8 +1,10 @@
 'use client';
 
+import * as React from 'react';
 import { StaggerContainer, StaggerItem, NumberTicker, Reveal, GradientMesh, LightRays } from '@/components/motion';
 import { StatusPieChart, ProgressRing, WeeklyVelocityChart } from '@/components/progress-charts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { PMBOKGuide } from '@/components/pmbok';
 import Link from 'next/link';
 import {
@@ -15,6 +17,9 @@ import {
   AlertTriangleIcon,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
+import { savePrinciplesReflection } from '@/actions/preferences';
+import { cn } from '@/lib/utils';
 
 type PortfolioStat = {
   id: number;
@@ -43,6 +48,136 @@ interface DashboardClientProps {
   weeklyVelocity: { week: string; completed: number; created: number }[];
   portfolioBreakdown: PortfolioStat[];
   unassignedCount: number;
+  initialPrinciples: Record<string, number>;
+}
+
+// ── PMBOK 8 Principles Scorecard ─────────────────────────────────────────────
+
+const PRINCIPLES = [
+  { key: 'holistic',       label: 'Adopt a holistic view',                         desc: 'Consider the broader organisational and environmental context.' },
+  { key: 'value',          label: 'Focus on value',                                 desc: 'Continually evaluate and deliver outcomes that create value.' },
+  { key: 'quality',        label: 'Embed quality into processes & deliverables',    desc: 'Maintain a focus on quality throughout the project lifecycle.' },
+  { key: 'accountable',    label: 'Be an accountable leader',                       desc: 'Demonstrate commitment, integrity, and accountability at all times.' },
+  { key: 'sustainability', label: 'Integrate sustainability within all project areas', desc: 'Address short- and long-term sustainability impacts of the project.' },
+  { key: 'empowered',      label: 'Build an empowered culture',                     desc: 'Foster a collaborative environment where team members can thrive.' },
+] as const;
+
+function ratingLabel(n: number) {
+  return ['', 'Critical', 'At Risk', 'Needs Work', 'Good', 'Excellent'][n] ?? '';
+}
+
+function PrinciplesScorecard({ initial }: { initial: Record<string, number> }) {
+  const [scores, setScores] = React.useState<Record<string, number>>(initial);
+  const [saving, setSaving] = React.useState(false);
+  const [saved, setSaved] = React.useState(Object.keys(initial).length > 0);
+  const [collapsed, setCollapsed] = React.useState(Object.keys(initial).length > 0);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await savePrinciplesReflection(scores);
+      toast.success('PMBOK 8 principles assessment saved');
+      setSaved(true);
+      setCollapsed(true);
+    } catch {
+      toast.error('Failed to save principles assessment');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (collapsed && saved) {
+    return (
+      <Card className="border-amber-500/20 bg-amber-500/[0.02]">
+        <CardContent className="pt-4 pb-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                P8
+              </span>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">PMBOK 8 Principles</p>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {PRINCIPLES.map((p) => {
+                const score = scores[p.key] ?? 0;
+                return score > 0 ? (
+                  <span
+                    key={p.key}
+                    title={p.label}
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                      score >= 4 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' :
+                      score >= 3 ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400' :
+                      'bg-rose-500/10 text-rose-700 dark:text-rose-400'
+                    )}
+                  >
+                    {p.label.split(' ').slice(0, 2).join(' ')} · {score}/5
+                  </span>
+                ) : null;
+              })}
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setCollapsed(false)} className="shrink-0 text-xs h-7">
+              Re-assess
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-amber-500/20 bg-amber-500/[0.02]">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+              P8
+            </span>
+            <CardTitle className="text-sm font-black uppercase tracking-wider">PMBOK 8 Principles Self-Assessment</CardTitle>
+          </div>
+          <Button size="sm" onClick={handleSave} disabled={saving} className="shrink-0">
+            {saving ? 'Saving…' : 'Save Assessment'}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">Rate each principle 1 (Critical) → 5 (Excellent) based on how well the project is applying it.</p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {PRINCIPLES.map((p) => {
+            const score = scores[p.key] ?? 0;
+            return (
+              <div key={p.key} className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate">{p.label}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{p.desc}</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      title={ratingLabel(n)}
+                      onClick={() => setScores((prev) => ({ ...prev, [p.key]: n === prev[p.key] ? 0 : n }))}
+                      className={cn(
+                        'size-7 rounded-md border-2 text-xs font-bold transition-all',
+                        scores[p.key] === n
+                          ? n >= 4 ? 'border-emerald-500 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                            : n >= 3 ? 'border-amber-500 bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                            : 'border-rose-500 bg-rose-500/20 text-rose-700 dark:text-rose-400'
+                          : 'border-border bg-background hover:border-primary/50 text-muted-foreground'
+                      )}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 const KPI_CONFIG = [
@@ -192,6 +327,7 @@ export function DashboardClient({
   weeklyVelocity,
   portfolioBreakdown,
   unassignedCount,
+  initialPrinciples,
 }: DashboardClientProps) {
   const firstName = displayName ? displayName.split(' ')[0] : (username ?? null);
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -412,6 +548,9 @@ export function DashboardClient({
             </StaggerContainer>
           </section>
         )}
+
+        {/* PMBOK 8 Principles Scorecard */}
+        <PrinciplesScorecard initial={initialPrinciples} />
 
         {/* Charts — 5-column grid: Status (col 1–2) | Progress (col 3) | Velocity (col 4–5).
             Explicitly different structure from the 4-col KPI row above.

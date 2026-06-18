@@ -43,7 +43,13 @@ const CHARTER_FIELDS: { key: keyof CharterData; label: string; description: stri
   { key: 'successMetrics', label: 'Success Metrics', description: 'KPIs that define project success' },
 ];
 
-export function CharterTab({ project }: { project: Project }) {
+export function CharterTab({
+  project,
+  onSaved,
+}: {
+  project: Project;
+  onSaved?: (charter: CharterData) => void;
+}) {
   const router = useRouter();
   const existingCharter = (project.charter ?? {}) as CharterData;
   const [fields, setFields] = React.useState<CharterData>(existingCharter);
@@ -96,6 +102,7 @@ export function CharterTab({ project }: { project: Project }) {
     setIsSaving(true);
     try {
       await saveCharter(project.id, fields);
+      onSaved?.(fields);
       router.refresh();
       toast.success('Charter saved');
     } catch {

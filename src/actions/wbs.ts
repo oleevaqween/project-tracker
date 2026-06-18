@@ -121,6 +121,105 @@ export async function updateWbsElement(
   revalidatePath(`/projects/${element.projectId}`);
 }
 
+type ChecklistItem = { id: string; text: string; done: boolean };
+
+// Called when the user promotes/demotes a saved node. Handles all three
+// reparenting cases and keeps the task/checklist in sync.
+export async function reparentWbsElement(
+  nodeId: number,
+  newParentId: number | null,
+  oldParentId: number | null,
+) {
+  const user = await getAuthUser();
+
+  const [element] = await db
+    .select({ id: wbsElements.id, name: wbsElements.name, projectId: wbsElements.projectId })
+    .from(wbsElements)
+    .where(and(eq(wbsElements.id, nodeId), eq(wbsElements.userId, user.id)));
+  if (!element) return;
+
+  await db.update(wbsElements)
+    .set({ parentId: newParentId, updatedAt: new Date() })
+    .where(eq(wbsElements.id, nodeId));
+
+  await recomputeAndSaveWbsCodes(element.projectId, user.id);
+
+  if (oldParentId === null && newParentId !== null) {
+    // root → child: remove task card, add checklist item to new parent's task
+    await db.delete(tasks).where(eq(tasks.wbsElementId, nodeId));
+
+    const [parentTask] = await db
+      .select({ id: tasks.id, checklistItems: tasks.checklistItems })
+      .from(tasks)
+      .where(eq(tasks.wbsElementId, newParentId));
+
+    if (parentTask) {
+      const existing = (parentTask.checklistItems ?? []) as ChecklistItem[];
+      await db.update(tasks)
+        .set({ checklistItems: [...existing, { id: crypto.randomUUID(), text: element.name, done: false }] })
+        .where(eq(tasks.id, parentTask.id));
+    }
+  } else if (oldParentId !== null && newParentId === null) {
+    // child → root: remove checklist item from old parent's task, create new task card
+    const [oldParentTask] = await db
+      .select({ id: tasks.id, checklistItems: tasks.checklistItems })
+      .from(tasks)
+      .where(eq(tasks.wbsElementId, oldParentId));
+
+    if (oldParentTask) {
+      const existing = (oldParentTask.checklistItems ?? []) as ChecklistItem[];
+      const idx = existing.findIndex((c) => c.text === element.name);
+      const updated = idx >= 0 ? [...existing.slice(0, idx), ...existing.slice(idx + 1)] : existing;
+      await db.update(tasks)
+        .set({ checklistItems: updated })
+        .where(eq(tasks.id, oldParentTask.id));
+    }
+
+    const [maxOrder] = await db
+      .select({ val: sql<number>`coalesce(max(${tasks.orderIndex}), -1) + 1` })
+      .from(tasks)
+      .where(eq(tasks.projectId, element.projectId));
+
+    await db.insert(tasks).values({
+      projectId: element.projectId,
+      title: element.name,
+      status: 'todo',
+      priority: 'medium',
+      wbsElementId: nodeId,
+      orderIndex: maxOrder?.val ?? 0,
+    });
+  } else if (oldParentId !== null && newParentId !== null && oldParentId !== newParentId) {
+    // moved between two parents: shift checklist item across
+    const [oldParentTask] = await db
+      .select({ id: tasks.id, checklistItems: tasks.checklistItems })
+      .from(tasks)
+      .where(eq(tasks.wbsElementId, oldParentId));
+
+    if (oldParentTask) {
+      const existing = (oldParentTask.checklistItems ?? []) as ChecklistItem[];
+      const idx = existing.findIndex((c) => c.text === element.name);
+      const updated = idx >= 0 ? [...existing.slice(0, idx), ...existing.slice(idx + 1)] : existing;
+      await db.update(tasks)
+        .set({ checklistItems: updated })
+        .where(eq(tasks.id, oldParentTask.id));
+    }
+
+    const [newParentTask] = await db
+      .select({ id: tasks.id, checklistItems: tasks.checklistItems })
+      .from(tasks)
+      .where(eq(tasks.wbsElementId, newParentId));
+
+    if (newParentTask) {
+      const existing = (newParentTask.checklistItems ?? []) as ChecklistItem[];
+      await db.update(tasks)
+        .set({ checklistItems: [...existing, { id: crypto.randomUUID(), text: element.name, done: false }] })
+        .where(eq(tasks.id, newParentTask.id));
+    }
+  }
+
+  revalidatePath(`/projects/${element.projectId}`);
+}
+
 export async function deleteWbsElement(id: number) {
   const user = await getAuthUser();
 

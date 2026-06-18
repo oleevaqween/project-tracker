@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { WbsKeyboardStrip } from '@/components/wbs/wbs-keyboard-strip';
 import { WbsNodeComponent } from '@/components/wbs/wbs-node';
 import { buildWbsTree, resolveParentId, resolveOrderIndex, type WbsElement, type EditRow } from '@/lib/wbs-utils';
-import { createWbsElement, updateWbsElement, deleteWbsElement, getWbsElements } from '@/actions/wbs';
+import { createWbsElement, updateWbsElement, deleteWbsElement, getWbsElements, reparentWbsElement } from '@/actions/wbs';
 import { toast } from 'sonner';
 
 interface WbsTreeEditorProps {
@@ -140,11 +140,12 @@ export function WbsTreeEditor({ projectId, initialElements }: WbsTreeEditorProps
   async function handlePromote(nodeId: number) {
     const node = elements.find((e) => e.id === nodeId);
     if (!node || node.parentId === null) return;
-    const parent = elements.find((e) => e.id === node.parentId);
+    const oldParentId = node.parentId;
+    const parent = elements.find((e) => e.id === oldParentId);
     const newParentId = parent?.parentId ?? null;
     setElements((prev) => prev.map((e) => e.id === nodeId ? { ...e, parentId: newParentId } : e));
     try {
-      await updateWbsElement(nodeId, { parentId: newParentId });
+      await reparentWbsElement(nodeId, newParentId, oldParentId);
       const fresh = await getWbsElements(projectId);
       setElements(fresh as WbsElement[]);
     } catch {
@@ -156,14 +157,15 @@ export function WbsTreeEditor({ projectId, initialElements }: WbsTreeEditorProps
   async function handleDemote(nodeId: number) {
     const node = elements.find((e) => e.id === nodeId);
     if (!node) return;
+    const oldParentId = node.parentId;
     const siblings = elements
-      .filter((e) => e.parentId === node.parentId && e.id !== nodeId)
+      .filter((e) => e.parentId === oldParentId && e.id !== nodeId)
       .sort((a, b) => a.orderIndex - b.orderIndex);
     const prevSibling = siblings.filter((s) => s.orderIndex < node.orderIndex).pop();
     if (!prevSibling) return;
     setElements((prev) => prev.map((e) => e.id === nodeId ? { ...e, parentId: prevSibling.id } : e));
     try {
-      await updateWbsElement(nodeId, { parentId: prevSibling.id });
+      await reparentWbsElement(nodeId, prevSibling.id, oldParentId);
       const fresh = await getWbsElements(projectId);
       setElements(fresh as WbsElement[]);
     } catch {

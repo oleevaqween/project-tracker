@@ -1788,9 +1788,6 @@ export function ProjectDetailClient({
                 </Button>
               )}
             </div>
-            {project.description && (
-              <p className="text-sm text-muted-foreground/80 line-clamp-2 max-w-xl">{project.description}</p>
-            )}
           </div>
 
           {/* Right: data sidebar — progress stat + actions */}

@@ -93,6 +93,14 @@ export const projects = pgTable('projects', {
     resources?: number;
     risk?: number;
   }>(),
+  principlesReflection: jsonb('principles_reflection').$type<{
+    holistic?: number;
+    value?: number;
+    quality?: number;
+    accountable?: number;
+    sustainability?: number;
+    empowered?: number;
+  }>(),
   progressPercent: integer('progress_percent').default(0),
   coverImage: text('cover_image'), // Supabase Storage URL
   isPublic: boolean('is_public').default(false), // portfolio visibility

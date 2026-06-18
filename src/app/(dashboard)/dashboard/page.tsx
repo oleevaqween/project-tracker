@@ -7,7 +7,6 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { profiles, portfolios, projects, tasks, risks } from '@/db/schema';
 import { DashboardClient } from '@/components/dashboard-client';
-import { getPrinciplesReflection } from '@/actions/preferences';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -26,7 +25,7 @@ export default async function DashboardPage() {
   if (!profile) redirect('/onboarding');
 
   // Fetch dashboard data — all queries in parallel for performance
-  const [userPortfolios, userProjects, userTaskRows, userRisks, principlesReflection] = await Promise.all([
+  const [userPortfolios, userProjects, userTaskRows, userRisks] = await Promise.all([
     db.select().from(portfolios).where(eq(portfolios.userId, user.id)).orderBy(portfolios.createdAt),
     db.select().from(projects).where(eq(projects.userId, user.id)).orderBy(projects.updatedAt),
     db.select().from(tasks)
@@ -36,7 +35,6 @@ export default async function DashboardPage() {
       .from(risks)
       .innerJoin(projects, eq(risks.projectId, projects.id))
       .where(eq(projects.userId, user.id)),
-    getPrinciplesReflection(),
   ]);
 
   const userTasks = userTaskRows;
@@ -75,6 +73,26 @@ export default async function DashboardPage() {
     };
   });
   const unassignedCount = userProjects.filter((p) => !p.portfolioId).length;
+
+  // Aggregate per-principle averages from all projects' principlesReflection
+  const principleKeys = ['holistic', 'value', 'quality', 'accountable', 'sustainability', 'empowered'] as const;
+  const principlesAccum: Record<string, { sum: number; count: number }> = {};
+  for (const project of userProjects) {
+    const pr = project.principlesReflection as Record<string, number> | null;
+    if (!pr) continue;
+    for (const key of principleKeys) {
+      const val = pr[key];
+      if (val && val > 0) {
+        if (!principlesAccum[key]) principlesAccum[key] = { sum: 0, count: 0 };
+        principlesAccum[key].sum += val;
+        principlesAccum[key].count += 1;
+      }
+    }
+  }
+  const principlesData: Record<string, { avg: number; count: number }> = {};
+  for (const [key, { sum, count }] of Object.entries(principlesAccum)) {
+    principlesData[key] = { avg: Math.round((sum / count) * 10) / 10, count };
+  }
 
   // Status distribution for pie chart
   const statusCounts = Object.entries(
@@ -135,7 +153,7 @@ export default async function DashboardPage() {
         weeklyVelocity={weeklyVelocity}
         portfolioBreakdown={portfolioBreakdown}
         unassignedCount={unassignedCount}
-        initialPrinciples={principlesReflection}
+        principlesData={principlesData}
       />
     </>
   );

@@ -94,9 +94,17 @@ export async function updateProjectStatus(id: number, status: string) {
 }
 
 export async function updateFocusArea(id: number, currentFocusArea: string) {
-  const result = await updateProject(id, { currentFocusArea });
+  await updateProject(id, { currentFocusArea });
   await recomputeProjectProgress(id);
-  return result;
+  // Re-fetch after recompute so the returned value reflects the new progressPercent
+  const [updated] = await db
+    .select({ progressPercent: projects.progressPercent })
+    .from(projects)
+    .where(eq(projects.id, id));
+  // Revalidate after recompute so the cache serves the final value
+  revalidatePath(`/projects/${id}`);
+  revalidatePath('/projects');
+  return { progressPercent: updated?.progressPercent ?? null };
 }
 
 type LegacySummary = NonNullable<typeof projects.$inferSelect['legacySummary']>;

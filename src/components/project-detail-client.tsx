@@ -1538,7 +1538,7 @@ function AdvanceFocusAreaDialog({
   wbsElements: typeof import('@/db/schema').wbsElements.$inferSelect[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdvanced: (newArea: string) => void;
+  onAdvanced: (newArea: string, progressPercent: number | null) => void;
 }) {
   const [isPending, startTransition] = React.useTransition();
   const currentIdx = FOCUS_AREA_SEQUENCE.indexOf(project.currentFocusArea ?? 'initiating');
@@ -1551,9 +1551,9 @@ function AdvanceFocusAreaDialog({
     if (!nextArea) return;
     startTransition(async () => {
       try {
-        await updateFocusArea(project.id, nextArea);
+        const { progressPercent } = await updateFocusArea(project.id, nextArea);
         toast.success(`Advanced to ${nextLabel}`);
-        onAdvanced(nextArea);
+        onAdvanced(nextArea, progressPercent);
         onOpenChange(false);
 
         // Fire confetti
@@ -1663,8 +1663,12 @@ export function ProjectDetailClient({
     });
   }
 
-  function handleFocusAreaAdvanced(newArea: string) {
-    setProject((p) => ({ ...p, currentFocusArea: newArea }));
+  function handleFocusAreaAdvanced(newArea: string, progressPercent: number | null) {
+    setProject((p) => ({
+      ...p,
+      currentFocusArea: newArea,
+      progressPercent: progressPercent ?? p.progressPercent,
+    }));
     router.refresh();
   }
 

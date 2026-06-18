@@ -101,32 +101,42 @@ export async function POST(request: Request) {
     }
   }
 
+  // Fetch all user projects (used for name resolution when no project is selected)
+  const userProjects = await db
+    .select({ id: projects.id, name: projects.name, status: projects.status })
+    .from(projects)
+    .where(eq(projects.userId, user.id))
+    .orderBy(projects.name);
+
   // Get project context if projectId is provided
   let projectContext:
     | { id: number; name: string; status: string; focusArea: string | null; description: string | null; progressPercent: number | null }
     | undefined;
 
   if (projectId) {
-    const [project] = await db
-      .select()
-      .from(projects)
-      .where(eq(projects.id, projectId));
+    const match = userProjects.find((p) => p.id === projectId);
+    if (match) {
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, projectId));
 
-    if (project && project.userId === user.id) {
-      projectContext = {
-        id: project.id,
-        name: project.name,
-        status: project.status,
-        focusArea: project.currentFocusArea,
-        description: project.description,
-        progressPercent: project.progressPercent,
-      };
+      if (project) {
+        projectContext = {
+          id: project.id,
+          name: project.name,
+          status: project.status,
+          focusArea: project.currentFocusArea,
+          description: project.description,
+          progressPercent: project.progressPercent,
+        };
+      }
     }
   }
 
   // Get the LLM model from user's config
   const { model, config } = getEffectiveConfig(aiConfig);
-  const systemPrompt = buildSystemPrompt(aiConfig as any, projectContext);
+  const systemPrompt = buildSystemPrompt(aiConfig as any, projectContext, userProjects);
   const startTime = Date.now();
 
   // Convert UIMessages to model messages

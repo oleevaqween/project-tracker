@@ -26,7 +26,8 @@ export function buildSystemPrompt(
     focusArea: string | null;
     description: string | null;
     progressPercent: number | null;
-  }
+  },
+  allProjects?: { id: number; name: string; status: string }[]
 ): string {
   let prompt = `You are an expert AI project management assistant aligned with PMBOK 8th Edition principles. You help users manage their projects by:
 
@@ -71,6 +72,26 @@ ${PMBOK_CONTEXT}
       };
       prompt += `\n\n**Phase Guidance**: ${focusGuidance[projectContext.focusArea] ?? ''}`;
     }
+  }
+
+  if (!projectContext && allProjects && allProjects.length > 0) {
+    prompt += `
+
+## User's Projects
+
+The user has the following projects. When they mention a project by name, match it here and use its numeric ID for any tool calls — **never ask the user to provide a project ID**:
+
+${allProjects.map((p) => `- **${p.name}** (ID: ${p.id}, status: ${p.status})`).join('\n')}
+
+To work on a specific project, the user can also select it from the project dropdown at the top of the chat panel.`;
+  }
+
+  if (!projectContext && (!allProjects || allProjects.length === 0)) {
+    prompt += `
+
+## No Projects Yet
+
+The user has not created any projects yet. Guide them to create their first project from the Projects page.`;
   }
 
   prompt += `

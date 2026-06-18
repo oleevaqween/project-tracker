@@ -11,6 +11,9 @@ import {
   FileTextIcon,
   FileIcon,
   CalendarIcon,
+  TrashIcon,
+  DownloadIcon,
+  FolderOpenIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,6 +62,13 @@ type DataSnap = {
   changeRequests: { impactDescription?: string | null }[];
   lessonsLearned: { recommendation?: string | null }[];
   issues: { impact?: string | null; owner?: string | null }[];
+};
+
+type SavedReport = {
+  id: number;
+  type: string;
+  content: string;
+  createdAt: string;
 };
 
 interface ReportsTabProps {
@@ -324,6 +334,47 @@ function GanttTimeline({ project, tasks }: { project: ProjectSnap; tasks: GanttT
   );
 }
 
+// ── PDF export ───────────────────────────────────────────────────────────────
+
+function exportToPdf(title: string, markdownContent: string) {
+  const bodyHtml = markdownContent.split('\n').map((line) => {
+    if (line.startsWith('## '))  return `<h2>${line.slice(3).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</h2>`;
+    if (line.startsWith('### ')) return `<h3>${line.slice(4).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</h3>`;
+    if (line === '---')           return '<hr>';
+    if (line.startsWith('- '))   return `<li>${line.slice(2).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</li>`;
+    if (/^\d+\.\s/.test(line))   return `<li>${line.replace(/^\d+\.\s/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</li>`;
+    if (line.trim() === '')      return '<br>';
+    return `<p>${line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</p>`;
+  }).join('\n');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Georgia,serif;font-size:12pt;line-height:1.7;color:#111;background:#fff;padding:48px 64px;max-width:860px;margin:0 auto}
+  h1{font-size:20pt;font-weight:700;margin-bottom:24px;padding-bottom:10px;border-bottom:2px solid #111}
+  h2{font-size:14pt;font-weight:700;margin-top:28px;margin-bottom:8px}
+  h3{font-size:12pt;font-weight:700;margin-top:18px;margin-bottom:4px}
+  p{margin-bottom:8px;color:#222}
+  li{margin-left:24px;margin-bottom:4px;color:#222}
+  hr{border:none;border-top:1px solid #ccc;margin:20px 0}
+  strong{font-weight:700;color:#111}
+  @media print{body{padding:0;max-width:100%}}
+</style></head><body>
+<h1>${title}</h1>
+${bodyHtml}
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) {
+    toast.error('Pop-up blocked — allow pop-ups for this site to export PDF.');
+    return;
+  }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 400);
+}
+
 // ── Main Component ───────────────────────────────────────────────────────────
 
 export function ReportsTab({ projectId, project, data, onProjectUpdated }: ReportsTabProps) {
@@ -334,6 +385,18 @@ export function ReportsTab({ projectId, project, data, onProjectUpdated }: Repor
   const [generateError, setGenerateError] = React.useState<string | null>(null);
   const [savedAt, setSavedAt] = React.useState<Date | null>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
+  const [savedReports, setSavedReports] = React.useState<SavedReport[]>([]);
+  const [loadingSaved, setLoadingSaved] = React.useState(true);
+  const [deletingId, setDeletingId] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    setLoadingSaved(true);
+    fetch(`/api/reports/save?projectId=${projectId}`)
+      .then((r) => r.json())
+      .then((data: SavedReport[]) => setSavedReports(Array.isArray(data) ? data : []))
+      .catch(() => setSavedReports([]))
+      .finally(() => setLoadingSaved(false));
+  }, [projectId]);
 
   async function handleGenerate(type: ReportType) {
     setActiveType(type);
@@ -382,16 +445,40 @@ export function ReportsTab({ projectId, project, data, onProjectUpdated }: Repor
   async function handleSave() {
     if (!activeType || !content) return;
     try {
-      await fetch('/api/reports/save', {
+      const res = await fetch('/api/reports/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId, reportType: activeType, content }),
       });
+      const saved: SavedReport = await res.json();
       setSavedAt(new Date());
+      setSavedReports((prev) => [saved, ...prev]);
       toast.success('Saved');
     } catch {
       toast.error('Failed to save');
     }
+  }
+
+  async function handleDeleteSaved(id: number) {
+    setDeletingId(id);
+    try {
+      await fetch(`/api/reports/save?id=${id}`, { method: 'DELETE' });
+      setSavedReports((prev) => prev.filter((r) => r.id !== id));
+      toast.success('Report deleted');
+    } catch {
+      toast.error('Failed to delete report');
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  function handleViewSaved(report: SavedReport) {
+    setActiveType(report.type as ReportType);
+    setContent(report.content);
+    setGenerateError(null);
+    setSavedAt(null);
+    setStreaming(false);
+    setView('report');
   }
 
   const activeDefinition = REPORT_DEFINITIONS.find((r) => r.type === activeType);
@@ -418,9 +505,13 @@ export function ReportsTab({ projectId, project, data, onProjectUpdated }: Repor
               <SaveIcon className="size-3.5" />
               Save
             </Button>
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.print()} disabled={streaming || !content}>
+            <Button
+              variant="outline" size="sm" className="gap-1.5"
+              onClick={() => exportToPdf(activeDefinition?.title ?? 'Report', content)}
+              disabled={streaming || !content}
+            >
               <PrinterIcon className="size-3.5" />
-              Print / PDF
+              Export PDF
             </Button>
           </div>
         </div>
@@ -570,6 +661,86 @@ export function ReportsTab({ projectId, project, data, onProjectUpdated }: Repor
             );
           })}
         </div>
+      </section>
+
+      <div className="border-t border-border/50" />
+
+      {/* Saved Reports section */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <FolderOpenIcon className="size-4 text-primary" />
+          <h3 className="text-sm font-black uppercase tracking-wider">Saved Files</h3>
+          <span className="text-[10px] text-muted-foreground ml-1">Previously generated and saved</span>
+        </div>
+
+        {loadingSaved ? (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground py-4">
+            <Loader2Icon className="size-3.5 animate-spin" />
+            Loading saved files…
+          </div>
+        ) : savedReports.length === 0 ? (
+          <div className="rounded-lg border-2 border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+            No saved files yet — generate a document or report and click <strong>Save</strong> to store it here.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {savedReports.map((report) => {
+              const def = REPORT_DEFINITIONS.find((d) => d.type === report.type);
+              const title = def?.title ?? report.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+              const category = def?.category ?? 'report';
+              const domain = def?.pmbok8Domain ?? '';
+              const savedDate = new Date(report.createdAt).toLocaleDateString('en-GB', {
+                day: 'numeric', month: 'short', year: 'numeric',
+              });
+              const savedTime = new Date(report.createdAt).toLocaleTimeString('en-GB', {
+                hour: '2-digit', minute: '2-digit',
+              });
+              return (
+                <div
+                  key={report.id}
+                  className="flex items-center gap-3 rounded-lg border bg-muted/20 px-4 py-3 hover:bg-muted/40 transition-colors"
+                >
+                  {category === 'document' ? (
+                    <FileIcon className="size-4 text-primary shrink-0" />
+                  ) : (
+                    <FileTextIcon className="size-4 text-primary shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{title}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {domain && <span className="mr-2">PMBOK 8 · {domain}</span>}
+                      Saved {savedDate} at {savedTime}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1 text-xs"
+                      onClick={() => handleViewSaved(report)}
+                    >
+                      <DownloadIcon className="size-3" />
+                      Open
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-rose-500"
+                      onClick={() => handleDeleteSaved(report.id)}
+                      disabled={deletingId === report.id}
+                    >
+                      {deletingId === report.id ? (
+                        <Loader2Icon className="size-3.5 animate-spin" />
+                      ) : (
+                        <TrashIcon className="size-3.5" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );

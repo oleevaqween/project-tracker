@@ -147,7 +147,7 @@ export async function completeProject(id: number) {
 
   const [project] = await db
     .update(projects)
-    .set({ status: 'completed', completedDate: new Date() })
+    .set({ status: 'completed', completedDate: new Date(), progressPercent: 100 })
     .where(and(eq(projects.id, id), eq(projects.userId, user.id)))
     .returning();
 

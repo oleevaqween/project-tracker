@@ -7,7 +7,7 @@ import { buildEmailHtml, buildSubject } from '@/lib/notifications/template';
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
-  // Verify CRON_SECRET — QStash forwards this as the Authorization header
+  // Verify CRON_SECRET: QStash forwards this as the Authorization header
   const auth = request.headers.get('authorization') ?? request.headers.get('Authorization');
   const expected = `Bearer ${process.env.CRON_SECRET ?? ''}`;
   const provided = auth ?? '';
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       const notifData = await getNotificationData(user.id);
 
       if (!notifData) {
-        // User has no projects — no email sent
+        // User has no projects; no email sent
         results.push({ userId: user.id, email: user.email, sent: false, skipped: true });
         continue;
       }

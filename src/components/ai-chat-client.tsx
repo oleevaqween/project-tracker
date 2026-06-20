@@ -166,7 +166,7 @@ export function AiChatClient({
         if (Array.isArray(msgs)) setMessages(msgs);
       }
     } catch {
-      // leave messages empty — user can still continue the session
+      // leave messages empty; user can still continue the session
     }
   }
 
@@ -187,7 +187,7 @@ export function AiChatClient({
 
       {/* Main chat area */}
       <div className="flex flex-1 flex-col">
-        {/* Visually hidden page title for screen readers — no visible H1 in chat UI */}
+        {/* Visually hidden page title for screen readers; no visible H1 in chat UI */}
         <h1 className="sr-only">Chat</h1>
 
         {/* Top bar */}

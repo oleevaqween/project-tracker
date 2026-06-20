@@ -19,5 +19,5 @@ export const logLessonLearnedTool = tool({
       .describe('PMBOK focus area this lesson relates to'),
     category: z.string().optional().describe('Category or domain of the lesson'),
   })),
-  // No execute — requires client-side confirmation before running
+  // No execute; requires client-side confirmation before running
 });

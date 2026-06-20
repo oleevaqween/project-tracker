@@ -1460,7 +1460,7 @@ function TasksTab({ projectId, initialTasks, currency }: { projectId: number; in
       return;
     }
 
-    // Dropped onto another task card — move to that task's column
+    // Dropped onto another task card; move to that task's column
     const overTask = tasks.find((t) => t.id === Number(over.id));
     if (overTask && activeTask.status !== overTask.status) {
       handleStatusChange(activeTask.id, overTask.status);
@@ -1474,7 +1474,7 @@ function TasksTab({ projectId, initialTasks, currency }: { projectId: number; in
     { key: 'done' as const, label: 'Done', items: doneTasks },
   ];
 
-  // (allTaskIds removed — each column now has its own SortableContext)
+  // (allTaskIds removed; each column now has its own SortableContext)
 
   // WBS tree data (computed on view switch)
   const treeRoots = React.useMemo(() => {
@@ -1768,7 +1768,7 @@ export function ProjectDetailClient({
       {/* ── PROJECT HEADER BAND ───────────────────────────────────────────────
           Asymmetric two-column: identity left (name/status/stepper/desc),
           data right (progress stat + actions). The oversized progress number
-          right-anchored mirrors the dashboard avg% — consistent retro-futurist
+          right-anchored mirrors the dashboard avg%, consistent retro-futurist
           typographic moment. Full-bleed band with border-b creates a clear
           spatial break from the tab content below.
       ──────────────────────────────────────────────────────────────────── */}
@@ -1856,7 +1856,7 @@ export function ProjectDetailClient({
             </div>
           </div>
 
-          {/* Right: data sidebar — progress stat + actions */}
+          {/* Right: data sidebar, progress stat + actions */}
           <div className="flex flex-col items-start lg:items-end gap-4 shrink-0">
             <div className="lg:text-right">
               <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1">
@@ -1888,7 +1888,7 @@ export function ProjectDetailClient({
       ──────────────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-6 px-6 pt-6 pb-8 md:px-12 lg:px-16">
 
-      {/* Tabs — legacy projects get a simplified summary view */}
+      {/* Tabs: legacy projects get a simplified summary view */}
       {project.isLegacy ? (
         <LegacySummaryTab
           projectId={project.id}
@@ -2026,7 +2026,7 @@ export function ProjectDetailClient({
         onAdvanced={handleFocusAreaAdvanced}
       />
 
-      {/* WBS upgrade nudge — shown for Use Tasks projects advancing to Executing or later */}
+      {/* WBS upgrade nudge: shown for Use Tasks projects advancing to Executing or later */}
       <Dialog open={wbsNudgeOpen} onOpenChange={setWbsNudgeOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

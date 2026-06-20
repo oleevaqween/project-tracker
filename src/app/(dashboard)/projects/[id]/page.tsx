@@ -43,7 +43,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       : Promise.resolve(null),
   ]);
 
-  // Legacy projects don't use PMBOK data — skip the heavy queries
+  // Legacy projects don't use PMBOK data; skip the heavy queries
   let projectTasks: (typeof tasks.$inferSelect)[] = [];
   let projectNotes: (typeof notes.$inferSelect)[] = [];
   let projectStakeholders: (typeof stakeholders.$inferSelect)[] = [];

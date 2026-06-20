@@ -64,7 +64,7 @@ export async function uploadDocument(formData: FormData) {
     .returning();
 
   // Extract text from the in-memory File (no storage round-trip) and embed.
-  // PDF parse + embed + batch insert ≈ 4-7s — within Vercel Hobby's 10s cap.
+  // PDF parse + embed + batch insert ≈ 4-7s, within Vercel Hobby's 10s cap.
   try {
     let textContent: string;
 
@@ -110,7 +110,7 @@ export async function uploadDocument(formData: FormData) {
         .set({ processingStatus: 'failed', processingError: errorMessage })
         .where(eq(documents.id, doc.id));
     } catch {
-      // DB update failed — not much we can do
+      // DB update failed; not much we can do
     }
   }
 

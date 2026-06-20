@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { chatSessions } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 
-// GET /api/chat/sessions — List user's chat sessions
+// GET /api/chat/sessions: List user's chat sessions
 export async function GET() {
   const supabase = await createClient();
   const {
@@ -20,7 +20,7 @@ export async function GET() {
   return Response.json(sessions);
 }
 
-// POST /api/chat/sessions — Create a new chat session
+// POST /api/chat/sessions: Create a new chat session
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {

@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useTheme } from 'next-themes';
 
 const RAYS = [
-  // Primary: wide, slow — sweeps from sidebar edge across hero
+  // Primary: wide, slow; sweeps from sidebar edge across hero
   { angle: 38, delay: 0,   duration: 11, from: 0,    to: 1700, lightWidth: '3px', darkWidth: '2px',   lightOpacity: 0.18, darkOpacity: 0.22 },
   // Secondary: shallower, starts behind sidebar wall, emerges through it
   { angle: 24, delay: 3.5, duration: 16, from: -130, to: 1550, lightWidth: '2px', darkWidth: '2px',   lightOpacity: 0.10, darkOpacity: 0.14 },

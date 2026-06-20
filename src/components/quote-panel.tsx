@@ -47,7 +47,7 @@ export function QuotePanel() {
 
   return (
     <div className="relative flex flex-col h-full overflow-hidden bg-secondary dark:bg-muted border-l border-border/60">
-      {/* Subtle dot grid — adapts to theme via mix-blend */}
+      {/* Subtle dot grid: adapts to theme via mix-blend */}
       <div
         className="absolute inset-0 pointer-events-none opacity-60"
         aria-hidden="true"
@@ -61,7 +61,7 @@ export function QuotePanel() {
       {/* Top primary accent line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent pointer-events-none" aria-hidden="true" />
 
-      {/* Quote content — vertically centered */}
+      {/* Quote content: vertically centered */}
       <div className="relative z-10 flex-1 flex flex-col justify-center px-7 py-8">
         <AnimatePresence mode="wait">
           <motion.div
@@ -98,7 +98,7 @@ export function QuotePanel() {
         </AnimatePresence>
       </div>
 
-      {/* Accessible nav — visually hidden, keyboard only */}
+      {/* Accessible nav: visually hidden, keyboard only */}
       <div className="sr-only">
         <button onClick={prev} aria-label="Previous quote" />
         <span>Quote {index + 1} of {QUOTES.length}</span>

@@ -306,7 +306,7 @@ export function MessageList({
         );
       })}
 
-      {/* Thinking indicator — shown while waiting for first token */}
+      {/* Thinking indicator: shown while waiting for first token */}
       {status === 'submitted' && (
         <div className="flex gap-3 justify-start">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">

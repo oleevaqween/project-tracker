@@ -102,7 +102,7 @@ function AllocationBar({ percent }: { percent: number | null }) {
 }
 
 // ─── Pin button ───────────────────────────────────────────────────────────────
-// Sits inside the card (inside the Link) — stopPropagation prevents navigation.
+// Sits inside the card (inside the Link); stopPropagation prevents navigation.
 // Uses group-hover/card on the named group so Framer Motion nesting doesn't interfere.
 
 function PinButton({ projectId, isFeatured, visible }: { projectId: number; isFeatured: boolean; visible: boolean }) {
@@ -142,7 +142,7 @@ function PinButton({ projectId, isFeatured, visible }: { projectId: number; isFe
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VARIANT C — DARK DATA CARD (theme-aware)
+// VARIANT C: DARK DATA CARD (theme-aware)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function CardC_Featured({ project, taskCount, isFeatured, wbsUnassigned }: CardProps) {
@@ -199,7 +199,7 @@ export function CardC_Featured({ project, taskCount, isFeatured, wbsUnassigned }
                 )}
               </div>
 
-              {/* Stats — font-mono for numbers, not font-heading */}
+              {/* Stats: font-mono for numbers, not font-heading */}
               <div className="flex items-start gap-8 p-5">
                 <div>
                   <p className="font-mono text-[9px] text-muted-foreground/50 dark:text-white/30 tracking-[0.14em] uppercase mb-1">TASKS</p>
@@ -289,7 +289,7 @@ export function CardC_Standard({ project, taskCount, isFeatured, wbsUnassigned }
             </div>
 
             <div className="p-4 flex flex-col gap-4">
-              {/* Stats — font-mono for numbers */}
+              {/* Stats: font-mono for numbers */}
               <div className="flex items-start gap-6">
                 <div>
                   <p className="font-mono text-[9px] text-muted-foreground/50 dark:text-white/30 tracking-[0.14em] uppercase mb-1">TASKS</p>

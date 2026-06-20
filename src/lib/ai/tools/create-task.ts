@@ -13,5 +13,5 @@ export const createTaskTool = tool({
       .describe('Task priority (default: medium)'),
     dueDate: z.string().optional().describe('Due date in ISO format (YYYY-MM-DD)'),
   })),
-  // No execute — requires client-side confirmation before running
+  // No execute; requires client-side confirmation before running
 });

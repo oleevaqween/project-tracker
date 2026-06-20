@@ -82,7 +82,7 @@ function fmtIndex(n: number) {
   return n.toFixed(2);
 }
 
-// Performance domains self-assessment — PMBOK 8 (7 domains)
+// Performance domains self-assessment: PMBOK 8 (7 domains)
 const DOMAINS = [
   { key: 'governance',   label: 'Governance',   color: 'from-violet-500 to-violet-400'  },
   { key: 'scope',        label: 'Scope',        color: 'from-sky-500 to-sky-400'        },
@@ -183,7 +183,7 @@ function PerformanceDomainsPanel({
   );
 }
 
-// PMBOK 8 Principles self-assessment — 6 principles
+// PMBOK 8 Principles self-assessment: 6 principles
 const PRINCIPLES = [
   { key: 'holistic',       label: 'Adopt a holistic view',                            desc: 'Consider the broader organisational and environmental context.' },
   { key: 'value',          label: 'Focus on value',                                    desc: 'Continually evaluate and deliver outcomes that create value.' },

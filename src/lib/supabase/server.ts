@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 
 // Node 24 + undici keep-alive causes Supabase fetch calls to hang.
 // Forcing Connection: close prevents persistent connections from stalling the server.
-// Use the Headers constructor to copy existing headers — spreading a Headers instance
+// Use the Headers constructor to copy existing headers; spreading a Headers instance
 // yields an empty object, which would silently drop the Authorization header.
 const supabaseGlobalOptions = {
   global: {
@@ -33,7 +33,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Called from a Server Component — safe to ignore.
+            // Called from a Server Component; safe to ignore.
           }
         },
       },

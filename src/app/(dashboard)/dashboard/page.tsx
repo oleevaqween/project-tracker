@@ -24,7 +24,7 @@ export default async function DashboardPage() {
 
   if (!profile) redirect('/onboarding');
 
-  // Fetch dashboard data — all queries in parallel for performance
+  // Fetch dashboard data; all queries in parallel for performance
   const [userPortfolios, userProjects, userTaskRows, userRisks] = await Promise.all([
     db.select().from(portfolios).where(eq(portfolios.userId, user.id)).orderBy(portfolios.createdAt),
     db.select().from(projects).where(eq(projects.userId, user.id)).orderBy(projects.updatedAt),
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
     ? Math.round(userProjects.reduce((sum, p) => sum + (p.progressPercent ?? 0), 0) / totalProjects)
     : 0;
 
-  // Per-portfolio breakdown — computed from already-fetched data (no extra DB queries)
+  // Per-portfolio breakdown; computed from already-fetched data (no extra DB queries)
   const portfolioBreakdown = userPortfolios.map((p) => {
     const pProjects = userProjects.filter((pr) => pr.portfolioId === p.id);
     const projectIds = new Set(pProjects.map((pr) => pr.id));

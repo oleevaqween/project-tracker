@@ -29,7 +29,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
       .where(and(eq(programs.id, id), eq(programs.userId, user.id)))
       .limit(1);
   } catch (err) {
-    // Log the real PostgreSQL error — visible in the Next.js dev console / Vercel logs
+    // Log the real PostgreSQL error; visible in the Next.js dev console / Vercel logs
     console.error('[ProgramDetail] SELECT failed. Raw error:', err);
     console.error('[ProgramDetail] Error cause:', (err as { cause?: unknown }).cause);
     throw err;

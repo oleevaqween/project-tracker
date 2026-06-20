@@ -195,7 +195,7 @@ function KpiCard({
 
           <div className="relative flex items-start justify-between gap-3">
             <div className="min-w-0">
-              {/* ALL-CAPS spaced label — retro-futurist signal */}
+              {/* ALL-CAPS spaced label: retro-futurist signal */}
               <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
               <motion.div
                 className="mt-1 flex items-baseline gap-1"
@@ -254,7 +254,7 @@ export function DashboardClient({
   return (
     <div className="relative flex flex-1 flex-col overflow-hidden">
 
-      {/* Persistent ambient atmosphere — very-low-opacity mesh covers the entire
+      {/* Persistent ambient atmosphere: very-low-opacity mesh covers the entire
           dashboard content area, not just the hero. Creates warm haze behind
           all cards and charts at ~18% of login-screen intensity. */}
       <GradientMesh className="opacity-[0.18]" speed={22} />
@@ -291,7 +291,7 @@ export function DashboardClient({
               </p>
             </div>
 
-            {/* Right: oversized stat — the asymmetric anchor, desktop only */}
+            {/* Right: oversized stat, the asymmetric anchor, desktop only */}
             <div className="hidden lg:flex flex-col items-end shrink-0">
               <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1">
                 AVG. PROGRESS
@@ -312,15 +312,15 @@ export function DashboardClient({
       {/* ── CONTENT ZONE ───────────────────────────────────────────────────
           Distinct padding rhythm from the hero band above.
           Two layout rows below: KPI grid (4-col asymmetric) and
-          chart grid (5-col split) — different structures, no two alike.
+          chart grid (5-col split), different structures, no two alike.
       ─────────────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-6 px-6 pt-6 pb-8 md:px-12 lg:px-16">
 
         <PMBOKGuide context="dashboard" />
 
-        {/* KPI Cards — first column is 2fr (featured), rest are 1fr.
+        {/* KPI Cards: first column is 2fr (featured), rest are 1fr.
             On mobile: 2 equal columns.
-            On desktop: 2fr + 1fr + 1fr + 1fr — first card is visually dominant. */}
+            On desktop: 2fr + 1fr + 1fr + 1fr, first card is visually dominant. */}
         <StaggerContainer className="grid auto-rows-min gap-4 grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
           <KpiCard
             label={KPI_CONFIG[0].label}
@@ -468,10 +468,10 @@ export function DashboardClient({
           </section>
         )}
 
-        {/* PMBOK 8 Principles — aggregate across all projects */}
+        {/* PMBOK 8 Principles: aggregate across all projects */}
         <PrinciplesSummary principlesData={principlesData} />
 
-        {/* Charts — 5-column grid: Status (col 1–2) | Progress (col 3) | Velocity (col 4–5).
+        {/* Charts, 5-column grid: Status (col 1–2) | Progress (col 3) | Velocity (col 4–5).
             Explicitly different structure from the 4-col KPI row above.
             Velocity gets more horizontal room to breathe as the data-dense chart. */}
         <StaggerContainer className="grid gap-4 grid-cols-1 lg:grid-cols-5">

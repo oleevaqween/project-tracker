@@ -211,7 +211,7 @@ export function LoginContent() {
               </CardFooter>
             </div>
 
-            {/* Right column: quotes — hidden on small screens */}
+            {/* Right column: quotes, hidden on small screens */}
             <div className="hidden lg:flex lg:w-[42%] flex-shrink-0">
               <QuotePanel />
             </div>

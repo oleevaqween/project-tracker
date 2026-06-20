@@ -85,7 +85,7 @@ export default async function ProjectsPage() {
           Full-bleed section with wider gutters than standard p-6.
           Asymmetric grid: title left, oversized count stat + actions right.
           The count stat creates a spatial anchor mirroring the dashboard's
-          avg% stat — same retro-futurist typographic moment, different page.
+          avg% stat, same retro-futurist typographic moment, different page.
       ──────────────────────────────────────────────────────────────────── */}
       <div className="border-b px-6 pt-8 pb-6 md:px-12 lg:px-16">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -104,7 +104,7 @@ export default async function ProjectsPage() {
           </div>
 
           {/* Right: editorial counter (desktop) + action buttons.
-              TYPOGRAPHIC MOMENT — three-line stack: spaced caption / text-8xl
+              TYPOGRAPHIC MOMENT, three-line stack: spaced caption / text-8xl
               zero-padded numeral / spaced caption. The 11px:96px:11px size
               ratio (1:8.7:1) creates maximum scale contrast on one element. */}
           <div className="flex items-end gap-8">

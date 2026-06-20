@@ -62,7 +62,7 @@ export async function createProfile(
     return { error: 'Failed to create profile. Please try again.' };
   }
 
-  // Fire-and-forget — email failure must never block the user reaching the dashboard
+  // Fire-and-forget; email failure must never block the user reaching the dashboard
   if (process.env.RESEND_API_KEY && process.env.ADMIN_EMAIL) {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const provider = (user.app_metadata?.provider as string | undefined) ?? 'email';

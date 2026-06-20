@@ -78,7 +78,7 @@ export async function getAIConfig(): Promise<{ config: AIConfig | null; error?: 
 
   if (!profile) return { config: null, error: 'Profile not found' };
 
-  // Don't expose the encrypted key to the client — just whether one exists
+  // Don't expose the encrypted key to the client; just whether one exists
   const rawConfig = profile.aiConfig as AIConfig | null;
   if (!rawConfig) return { config: null };
 

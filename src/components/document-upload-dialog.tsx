@@ -83,7 +83,7 @@ export function DocumentUploadDialog({
         return;
       }
 
-      // uploadDocument now handles text extraction and embedding inline —
+      // uploadDocument now handles text extraction and embedding inline;
       // no separate API call needed. Close and refresh.
       setFile(null);
       setSelectedProjectId('');

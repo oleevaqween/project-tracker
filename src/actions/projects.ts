@@ -121,7 +121,7 @@ export async function updateProjectStatus(id: number, status: string) {
 
 export async function updateFocusArea(id: number, currentFocusArea: string) {
   // Auto-advance status: planning → in_progress when entering execution phases
-  // Never overwrite on_hold or archived — those are intentional manual states
+  // Never overwrite on_hold or archived; those are intentional manual states
   const [current] = await db.select({ status: projects.status }).from(projects).where(eq(projects.id, id));
   const autoStatus =
     current?.status === 'planning' &&

@@ -91,7 +91,7 @@ export function computeDomainHealth(
   // Risk: risks documented, critical risks mitigated
   let riskScore = 0;
   if (risks.length === 0) {
-    riskScore = 30; // neutral — may just mean no risks identified yet
+    riskScore = 30; // neutral; may just mean no risks identified yet
   } else {
     riskScore += 40;
     const criticalUnmitigated = risks.filter(r => (r.riskScore ?? 0) >= 15 && !r.responseType && r.status !== 'closed');

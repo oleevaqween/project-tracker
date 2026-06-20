@@ -30,7 +30,7 @@ export function WbsDictionary({ element, onUpdate }: WbsDictionaryProps) {
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-4 pt-2 border-t border-border/30">
-      {/* Tier 2 — always visible when expanded */}
+      {/* Tier 2: always visible when expanded */}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2 flex flex-col gap-1">
           <Label className="text-[10px] font-mono uppercase tracking-[0.1em] text-muted-foreground">
@@ -89,7 +89,7 @@ export function WbsDictionary({ element, onUpdate }: WbsDictionaryProps) {
         </div>
       </div>
 
-      {/* Tier 3 — collapsed by default */}
+      {/* Tier 3: collapsed by default */}
       <div className="border rounded-lg border-border/40">
         <button
           type="button"

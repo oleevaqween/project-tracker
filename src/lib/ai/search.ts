@@ -40,7 +40,7 @@ export async function hybridSearch(params: {
     matchCount = 8,
   } = params;
 
-  // Refuse to search globally — always require a project scope
+  // Refuse to search globally; always require a project scope
   if (projectId == null) {
     console.warn('[hybridSearch] called without projectId — returning empty to prevent cross-project data leak');
     return [];

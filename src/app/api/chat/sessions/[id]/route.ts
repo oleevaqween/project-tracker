@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { chatSessions, chatMessages } from '@/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 
-// GET /api/chat/sessions/[id] — Load session messages as UIMessage array
+// GET /api/chat/sessions/[id]: Load session messages as UIMessage array
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -37,7 +37,7 @@ export async function GET(
   return Response.json(uiMessages);
 }
 
-// PATCH /api/chat/sessions/[id] — Update session title
+// PATCH /api/chat/sessions/[id]: Update session title
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -62,7 +62,7 @@ export async function PATCH(
   return Response.json(updated);
 }
 
-// DELETE /api/chat/sessions/[id] — Delete a session
+// DELETE /api/chat/sessions/[id]: Delete a session
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

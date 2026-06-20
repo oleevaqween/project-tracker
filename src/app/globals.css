@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Syne — display/headings. IBM Plex Sans — body/UI. IBM Plex Mono — data/machine values. */
+  /* Syne: display/headings. IBM Plex Sans: body/UI. IBM Plex Mono: data/machine values. */
   --font-sans: var(--font-ibm-plex-sans);
   --font-mono: var(--font-ibm-plex-mono);
   --font-heading: var(--font-syne);
@@ -63,19 +63,19 @@
   --color-coral-danger: oklch(0.65 0.22 25);
 }
 
-/* Light mode — warm cream + amber */
+/* Light mode: warm cream + amber */
 :root {
   --background: oklch(0.975 0.008 75);
   /* Card glass shadow: inset top highlight + neo hard offset */
   --card-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.08), 3px 3px 0 0 oklch(0.22 0.028 55);
-  /* Info/Content card: inner highlight only — top + left light refraction, no hard offset */
+  /* Info/Content card: inner highlight only, top + left light refraction, no hard offset */
   --info-card-shadow: inset 0 1px 0 0 oklch(0 0 0 / 0.06), inset 1px 0 0 0 oklch(0 0 0 / 0.04);
-  /* Card C light mode: laminated plastic sheen — bright inner ring + outer frame + drop shadow */
+  /* Card C light mode: laminated plastic sheen, bright inner ring + outer frame + drop shadow */
   --card-c: inset 0 0 0 1.5px rgba(255, 255, 255, 0.85), 0 0 0 1px rgba(0, 0, 0, 0.07), 0 4px 12px rgba(0, 0, 0, 0.05);
-  /* Color drench: deep amber — dark enough (Y≈0.097) for WCAG AA white text (~7:1).
+  /* Color drench: deep amber, dark enough (Y≈0.097) for WCAG AA white text (~7:1).
      Distinct from --primary (L=0.68) which is too bright for white text. */
   --color-amber-drench: oklch(0.46 0.21 52);
-  /* Signal: electric mint-cyan — surprise accent, dark surfaces only, max 2/page. */
+  /* Signal: electric mint-cyan, surprise accent, dark surfaces only, max 2/page. */
   --color-signal: oklch(0.85 0.22 160);
   --foreground: oklch(0.13 0.022 55);
   --card: oklch(1 0 0);
@@ -109,11 +109,11 @@
   --sidebar-accent-foreground: oklch(0.25 0.04 55);
   --sidebar-border: oklch(0.87 0.012 70);
   --sidebar-ring: oklch(0.68 0.19 52);
-  /* Hero light-ray beam — dark indigo-purple on light amber/teal gradient */
+  /* Hero light-ray beam: dark indigo-purple on light amber/teal gradient */
   --ray-beam: oklch(0.28 0.25 272);
 }
 
-/* Dark mode — warm charcoal + amber */
+/* Dark mode: warm charcoal + amber */
 .dark {
   --background: oklch(0.11 0.016 60);
   --foreground: oklch(0.94 0.010 65);
@@ -143,7 +143,7 @@
   --info-card-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.10), inset 1px 0 0 0 oklch(1 0 0 / 0.06);
   /* Card C dark mode: depth shadow */
   --card-c: 0 8px 32px rgba(0, 0, 0, 0.5);
-  /* Dark amber drench — very dark (Y≈0.01) for deep burnt amber feel in dark mode. */
+  /* Dark amber drench: very dark (Y≈0.01) for deep burnt amber feel in dark mode. */
   --color-amber-drench: oklch(0.22 0.12 52);
   --sidebar: oklch(0.13 0.018 62);
   --sidebar-foreground: oklch(0.94 0.010 65);
@@ -153,7 +153,7 @@
   --sidebar-accent-foreground: oklch(0.94 0.010 65);
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.79 0.20 52);
-  /* Hero light-ray beam — bright electric violet on dark hero */
+  /* Hero light-ray beam: bright electric violet on dark hero */
   --ray-beam: oklch(0.80 0.26 290);
 }
 
@@ -187,7 +187,7 @@
     box-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.10);
   }
 
-  /* Dashboard hero — light atmospheric gradient, dark-mode aware */
+  /* Dashboard hero: light atmospheric gradient, dark-mode aware */
   .hero-gradient {
     background: linear-gradient(135deg, oklch(0.92 0.025 52) 0%, oklch(0.89 0.020 272) 60%, oklch(0.93 0.015 200) 100%);
   }
@@ -212,7 +212,7 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  /* Neobrutalist hard-shadow card — interactive */
+  /* Neobrutalist hard-shadow card: interactive */
   .neo-card {
     border: 2px solid var(--border);
     box-shadow: 4px 4px 0 0 var(--neo-shadow-color);
@@ -230,7 +230,7 @@
 
 /* ── ATMOSPHERE ─────────────────────────────────────────────────────────── */
 
-/* Global grain overlay — static SVG feTurbulence, no HTTP requests.
+/* Global grain overlay: static SVG feTurbulence, no HTTP requests.
    Adds tactile depth across all pages; pointer-events:none means no
    interaction is blocked. mix-blend-mode:overlay keeps it tone-neutral. */
 body::after {
@@ -246,7 +246,7 @@ body::after {
   mix-blend-mode: overlay;
 }
 
-/* Sidebar atmospheric gradient — reads as its own spatial zone.
+/* Sidebar atmospheric gradient: reads as its own spatial zone.
    Slightly more chromatic and vertically graded vs the flat page background.
    Inset border-right creates a warm separation edge. */
 [data-sidebar="sidebar"] {
@@ -274,7 +274,7 @@ body::after {
   box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
-/* Signal — CRT-glow on active nav item in dark mode (moment 1 of 2 per page).
+/* Signal: CRT-glow on active nav item in dark mode (moment 1 of 2 per page).
    Overrides light-mode rule above. inset bar shifts from amber to signal mint. */
 .dark [data-sidebar="menu-button"][data-active="true"] {
   box-shadow: inset 3px 0 0 var(--color-signal), 0 0 14px oklch(0.85 0.22 160 / 0.14);

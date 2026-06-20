@@ -80,7 +80,7 @@ export function ProjectCard({ project, taskCount, isFeatured = false }: ProjectC
               {/* Hover overlay */}
               <div className={cn('pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-[0.04] transition-opacity duration-300 bg-gradient-to-br to-transparent', accentGradient)} />
 
-              {/* Left: identity block — name, description, focus stepper */}
+              {/* Left: identity block, name, description, focus stepper */}
               <div className="relative flex-1 min-w-0 p-6 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0 flex-1">
@@ -101,7 +101,7 @@ export function ProjectCard({ project, taskCount, isFeatured = false }: ProjectC
                       </p>
                     )}
                   </div>
-                  {/* Status badge — visible on mobile only (desktop it's in right col) */}
+                  {/* Status badge: visible on mobile only (desktop it's in right col) */}
                   <div className="md:hidden">
                     <StatusBadge value={project.status} />
                   </div>
@@ -133,7 +133,7 @@ export function ProjectCard({ project, taskCount, isFeatured = false }: ProjectC
                 </div>
               </div>
 
-              {/* Right: data sidebar — progress stat + status (desktop) */}
+              {/* Right: data sidebar, progress stat + status (desktop) */}
               <div className="relative hidden md:flex flex-col items-end justify-between gap-4 p-6 pl-0 shrink-0 min-w-[160px]">
                 <StatusBadge value={project.status} />
 

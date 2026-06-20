@@ -69,7 +69,7 @@ export function WbsNodeComponent({ node, depth = 0, hasPrevSibling = false, onUp
           </span>
         )}
 
-        {/* Name — editable inline */}
+        {/* Name: editable inline */}
         {editing ? (
           <input
             autoFocus
@@ -91,7 +91,7 @@ export function WbsNodeComponent({ node, depth = 0, hasPrevSibling = false, onUp
           </span>
         )}
 
-        {/* Actions — visible on hover */}
+        {/* Actions: visible on hover */}
         <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           {/* Promote: move up one level */}
           {depth > 0 && onPromote && (
@@ -137,7 +137,7 @@ export function WbsNodeComponent({ node, depth = 0, hasPrevSibling = false, onUp
         </div>
       </div>
 
-      {/* Dictionary — slides in below the node */}
+      {/* Dictionary: slides in below the node */}
       <AnimatePresence>
         {dictOpen && (
           <motion.div

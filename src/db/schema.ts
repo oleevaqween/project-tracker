@@ -79,11 +79,11 @@ export const projects = pgTable('projects', {
     qualityScore?: number;
     notes?: string;
   }>(),
-  // EVM — Phase 4
+  // EVM: Phase 4
   plannedValue: numeric('planned_value', { precision: 12, scale: 2 }),
   // PV: what value of work was planned to be done by today
   // EV is computed: (progressPercent / 100) × budget (no stored override needed)
-  // PMBOK 8 Performance Domains self-assessment (1-5 per domain) — 7 domains
+  // PMBOK 8 Performance Domains self-assessment (1-5 per domain), 7 domains
   performanceDomains: jsonb('performance_domains').$type<{
     governance?: number;
     scope?: number;
@@ -281,7 +281,7 @@ export const activityLog = pgTable('activity_log', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-// ============ STAKEHOLDER REGISTER (PMBOK 8 — Stakeholders Domain) ============
+// ============ STAKEHOLDER REGISTER (PMBOK 8: Stakeholders Domain) ============
 export const stakeholders = pgTable('stakeholders', {
   id: serial('id').primaryKey(),
   projectId: integer('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
@@ -303,7 +303,7 @@ export const stakeholders = pgTable('stakeholders', {
   updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
 });
 
-// ============ RISK REGISTER (PMBOK 8 — Risk Domain) ============
+// ============ RISK REGISTER (PMBOK 8: Risk Domain) ============
 export const risks = pgTable('risks', {
   id: serial('id').primaryKey(),
   projectId: integer('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
@@ -328,7 +328,7 @@ export const risks = pgTable('risks', {
   updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
 });
 
-// ============ CHANGE REQUEST LOG (PMBOK 8 — Governance: Perform Integrated Change Control) ============
+// ============ CHANGE REQUEST LOG (PMBOK 8, Governance: Perform Integrated Change Control) ============
 export const changeRequests = pgTable('change_requests', {
   id: serial('id').primaryKey(),
   projectId: integer('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
@@ -349,7 +349,7 @@ export const changeRequests = pgTable('change_requests', {
   updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
 });
 
-// ============ LESSONS LEARNED (PMBOK 8 — Governance: Manage Project Knowledge) ============
+// ============ LESSONS LEARNED (PMBOK 8, Governance: Manage Project Knowledge) ============
 export const lessonsLearned = pgTable('lessons_learned', {
   id: serial('id').primaryKey(),
   projectId: integer('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
@@ -366,7 +366,7 @@ export const lessonsLearned = pgTable('lessons_learned', {
   updatedAt: timestamp('updated_at').notNull().$onUpdate(() => new Date()),
 });
 
-// ============ ISSUE LOG (PMBOK 8 — Monitoring & Controlling) ============
+// ============ ISSUE LOG (PMBOK 8: Monitoring & Controlling) ============
 export const issues = pgTable('issues', {
   id: serial('id').primaryKey(),
   projectId: integer('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),

@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   const isNewSession = !sessionId;
   let effectiveSessionId = sessionId;
   if (!effectiveSessionId) {
-    // Temporary title from first message — will be replaced by auto-generated title after response
+    // Temporary title from first message; will be replaced by auto-generated title after response
     const firstUserMsg = messages.find((m) => m.role === 'user');
     const tempTitle = firstUserMsg
       ? (firstUserMsg.parts

@@ -17,5 +17,5 @@ export const createRiskTool = tool({
       .describe('Impact if the risk occurs (1-5 scale: very_low=1, low=2, medium=3, high=4, very_high=5)'),
     mitigationStrategy: z.string().optional().describe('How to mitigate this risk'),
   })),
-  // No execute — requires client-side confirmation before running
+  // No execute; requires client-side confirmation before running
 });

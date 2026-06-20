@@ -23,7 +23,7 @@ export async function logAIUsage(params: {
       metadata: params.metadata ?? null,
     });
   } catch (error) {
-    // Log but don't throw — usage logging is non-critical
+    // Log but don't throw; usage logging is non-critical
     console.error('Failed to log AI usage:', error);
   }
 }

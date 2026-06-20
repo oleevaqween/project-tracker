@@ -67,11 +67,27 @@ export async function updateProject(id: number, data: ProjectUpdate) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // Clear completedDate when status is explicitly changed away from completed
+  const patch: ProjectUpdate = { ...data };
+  if (patch.status && patch.status !== 'completed') {
+    patch.completedDate = null;
+  }
+
   const [project] = await db
     .update(projects)
-    .set(data)
+    .set(patch)
     .where(and(eq(projects.id, id), eq(projects.userId, user.id)))
     .returning();
+
+  // Recompute progress whenever the focus area is explicitly set so the
+  // percentage reflects the new phase weight, not a stale completed value
+  if (data.currentFocusArea !== undefined) {
+    await recomputeProjectProgress(id);
+    const [refreshed] = await db.select().from(projects).where(eq(projects.id, id));
+    revalidatePath('/projects');
+    revalidatePath(`/projects/${id}`);
+    return refreshed ?? project;
+  }
 
   revalidatePath('/projects');
   revalidatePath(`/projects/${id}`);

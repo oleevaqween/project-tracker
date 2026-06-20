@@ -306,7 +306,7 @@ function StakeholderFormDialog({
                 <FormItem>
                   <FormLabel>Engagement Level</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue>{ENGAGEMENT_LEVELS.find((e) => e.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                     <SelectContent>
                       {ENGAGEMENT_LEVELS.map((e) => (
                         <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>

@@ -60,6 +60,14 @@ export async function createProject(data: Omit<ProjectInsert, 'id' | 'userId' | 
   return project;
 }
 
+const PHASE_WEIGHTS: Record<string, number> = {
+  initiating: 10,
+  planning: 25,
+  executing: 50,
+  monitoring_controlling: 75,
+  closing: 90,
+};
+
 export async function updateProject(id: number, data: ProjectUpdate) {
   const supabase = await createClient();
   const {
@@ -67,10 +75,22 @@ export async function updateProject(id: number, data: ProjectUpdate) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Clear completedDate when status is explicitly changed away from completed
   const patch: ProjectUpdate = { ...data };
+
+  // When reverting away from completed, clear the completion stamp and reset
+  // progress to the phase weight so it reflects the new phase, not stale tasks
   if (patch.status && patch.status !== 'completed') {
-    patch.completedDate = null;
+    const [current] = await db
+      .select({ status: projects.status })
+      .from(projects)
+      .where(and(eq(projects.id, id), eq(projects.userId, user.id)));
+
+    if (current?.status === 'completed') {
+      patch.completedDate = null;
+      if (patch.currentFocusArea) {
+        patch.progressPercent = PHASE_WEIGHTS[patch.currentFocusArea as string] ?? 10;
+      }
+    }
   }
 
   const [project] = await db
@@ -78,16 +98,6 @@ export async function updateProject(id: number, data: ProjectUpdate) {
     .set(patch)
     .where(and(eq(projects.id, id), eq(projects.userId, user.id)))
     .returning();
-
-  // Recompute progress whenever the focus area is explicitly set so the
-  // percentage reflects the new phase weight, not a stale completed value
-  if (data.currentFocusArea !== undefined) {
-    await recomputeProjectProgress(id);
-    const [refreshed] = await db.select().from(projects).where(eq(projects.id, id));
-    revalidatePath('/projects');
-    revalidatePath(`/projects/${id}`);
-    return refreshed ?? project;
-  }
 
   revalidatePath('/projects');
   revalidatePath(`/projects/${id}`);

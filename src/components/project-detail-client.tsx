@@ -344,7 +344,13 @@ function EditProjectDialog({
                 <FormItem>
                   <FormLabel>Status</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue>
+                          {PROJECT_STATUSES.find((s) => s.value === field.value)?.label ?? field.value}
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
                       {PROJECT_STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>
@@ -356,7 +362,13 @@ function EditProjectDialog({
                 <FormItem>
                   <FormLabel>Life Cycle Phase</FormLabel>
                   <Select value={field.value ?? undefined} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue>
+                          {FOCUS_AREAS.find((a) => a.value === field.value)?.label ?? field.value}
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
                       {FOCUS_AREAS.map((a) => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
                     </SelectContent>
@@ -611,7 +623,7 @@ function CreateTaskDialog({
                 <FormItem>
                   <FormLabel>Status</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue>{TASK_STATUSES.find((s) => s.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                     <SelectContent>
                       {TASK_STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>
@@ -623,7 +635,7 @@ function CreateTaskDialog({
                 <FormItem>
                   <FormLabel>Priority</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue>{TASK_PRIORITIES.find((p) => p.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                     <SelectContent>
                       {TASK_PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                     </SelectContent>
@@ -808,7 +820,7 @@ function EditTaskDialog({
                 <FormItem>
                   <FormLabel>Status</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue>{TASK_STATUSES.find((s) => s.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                     <SelectContent>
                       {TASK_STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>
@@ -820,7 +832,7 @@ function EditTaskDialog({
                 <FormItem>
                   <FormLabel>Priority</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue>{TASK_PRIORITIES.find((p) => p.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                     <SelectContent>
                       {TASK_PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                     </SelectContent>

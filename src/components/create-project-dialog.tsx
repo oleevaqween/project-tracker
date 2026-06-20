@@ -192,7 +192,9 @@ export function CreateProjectDialog() {
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Status" />
+                          <SelectValue placeholder="Status">
+                            {PROJECT_STATUSES.find((s) => s.value === field.value)?.label ?? field.value}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -217,7 +219,9 @@ export function CreateProjectDialog() {
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Focus area" />
+                          <SelectValue placeholder="Focus area">
+                            {FOCUS_AREAS.find((a) => a.value === field.value)?.label ?? field.value}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

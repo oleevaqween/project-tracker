@@ -219,7 +219,7 @@ function IssueFormDialog({
                 <FormItem>
                   <FormLabel>Impact</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue>{ISSUE_IMPACTS.find((i) => i.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                     <SelectContent>
                       {ISSUE_IMPACTS.map((i) => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
                     </SelectContent>
@@ -231,7 +231,7 @@ function IssueFormDialog({
                 <FormItem>
                   <FormLabel>Status</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue>{ISSUE_STATUSES.find((s) => s.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                     <SelectContent>
                       {ISSUE_STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>

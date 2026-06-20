@@ -330,7 +330,7 @@ function RiskFormDialog({
                 <FormItem>
                   <FormLabel>Status</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue>{RISK_STATUSES.find((s) => s.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                     <SelectContent>
                       {RISK_STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>

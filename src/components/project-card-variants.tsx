@@ -23,27 +23,33 @@ interface CardProps {
 // ─── Color maps ───────────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<string, string> = {
-  active:    'Active',
-  on_hold:   'On Hold',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
-  planning:  'Planning',
+  active:      'Active',
+  in_progress: 'In Progress',
+  on_hold:     'On Hold',
+  completed:   'Completed',
+  cancelled:   'Cancelled',
+  planning:    'Planning',
+  archived:    'Archived',
 };
 
 const STATUS_PILL: Record<string, string> = {
-  active:    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  on_hold:   'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  completed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-  cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  planning:  'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
+  active:      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  in_progress: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  on_hold:     'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300',
+  completed:   'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  cancelled:   'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  planning:    'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
+  archived:    'bg-zinc-100 text-zinc-700 dark:bg-zinc-900/30 dark:text-zinc-300',
 };
 
 const STATUS_HEADER_TINT: Record<string, string> = {
-  active:    'bg-blue-50 dark:bg-transparent',
-  on_hold:   'bg-amber-50 dark:bg-transparent',
-  completed: 'bg-emerald-50 dark:bg-transparent',
-  cancelled: 'bg-red-50 dark:bg-transparent',
-  planning:  'bg-violet-50 dark:bg-transparent',
+  active:      'bg-blue-50 dark:bg-transparent',
+  in_progress: 'bg-amber-50 dark:bg-transparent',
+  on_hold:     'bg-gray-50 dark:bg-transparent',
+  completed:   'bg-emerald-50 dark:bg-transparent',
+  cancelled:   'bg-red-50 dark:bg-transparent',
+  planning:    'bg-violet-50 dark:bg-transparent',
+  archived:    'bg-zinc-50 dark:bg-transparent',
 };
 
 // ─── Micro-components ─────────────────────────────────────────────────────────

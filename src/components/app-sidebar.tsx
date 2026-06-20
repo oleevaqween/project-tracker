@@ -129,7 +129,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   alt="Project Tracker"
                 />
               </motion.div>
-              <div className="flex flex-col gap-0.5 leading-none">
+              <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
                 <span className="font-semibold">Project Tracker</span>
               </div>
             </SidebarMenuButton>

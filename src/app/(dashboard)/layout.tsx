@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { AppSidebar } from '@/components/app-sidebar';
 import { TopBar } from '@/components/top-bar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
@@ -20,8 +21,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     username = profile?.username ?? '';
   }
 
+  const cookieStore = await cookies();
+  const sidebarOpen = cookieStore.get('sidebar_state')?.value !== 'false';
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarOpen}>
       <AppSidebar />
       <SidebarInset id="main-content">
         {/* Top-right user bar — sits over every page's header row */}

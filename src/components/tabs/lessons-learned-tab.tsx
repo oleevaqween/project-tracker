@@ -242,7 +242,7 @@ function LessonFormDialog({
                   <FormItem>
                     <FormLabel>Focus Area</FormLabel>
                     <Select value={field.value ?? ''} onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Select area" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Select area">{field.value ? (FOCUS_AREAS.find((a) => a.value === field.value)?.label ?? field.value) : null}</SelectValue></SelectTrigger></FormControl>
                       <SelectContent>
                         <SelectItem value="">None</SelectItem>
                         {FOCUS_AREAS.map((a) => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}

@@ -250,7 +250,7 @@ function ChangeRequestFormDialog({
                   <FormItem>
                     <FormLabel>Change Type *</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger className="w-full"><SelectValue>{CR_CHANGE_TYPES.find((t) => t.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                       <SelectContent>
                         {CR_CHANGE_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                       </SelectContent>
@@ -266,7 +266,7 @@ function ChangeRequestFormDialog({
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger className="w-full"><SelectValue>{CR_PRIORITIES.find((p) => p.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                       <SelectContent>
                         {CR_PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                       </SelectContent>
@@ -309,7 +309,7 @@ function ChangeRequestFormDialog({
                     <FormItem>
                       <FormLabel>Status</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger className="w-full"><SelectValue>{CR_STATUSES.find((s) => s.value === field.value)?.label ?? field.value}</SelectValue></SelectTrigger></FormControl>
                         <SelectContent>
                           {CR_STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                         </SelectContent>

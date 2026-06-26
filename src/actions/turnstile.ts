@@ -1,7 +1,8 @@
 'use server';
 
 export async function verifyTurnstile(token: string): Promise<boolean> {
-  if (!process.env.TURNSTILE_SECRET_KEY) return false;
+  // No secret key configured — Turnstile is disabled, bypass verification.
+  if (!process.env.TURNSTILE_SECRET_KEY) return true;
   try {
     const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',

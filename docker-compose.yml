@@ -1,0 +1,23 @@
+# Optional: local PostgreSQL + pgvector for development
+# Use this if you prefer a fully local database instead of Supabase's hosted DB.
+# Note: this replaces only the DATABASE_URL — Supabase Auth and Storage are still required.
+#
+# Usage:
+#   docker compose up -d
+#   Then set DATABASE_URL=postgresql://postgres:postgres@localhost:5432/project_tracker
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: project_tracker
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

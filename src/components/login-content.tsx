@@ -26,12 +26,16 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>;
 
+// Turnstile is optional. When NEXT_PUBLIC_TURNSTILE_SITE_KEY is absent the widget
+// is hidden and the server-side check is bypassed automatically.
+const TURNSTILE_ENABLED = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
 export function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
   const [loading, setLoading] = useState(false);
-  const [cfToken, setCfToken] = useState<string | null>(null);
+  const [cfToken, setCfToken] = useState<string | null>(TURNSTILE_ENABLED ? null : 'bypass');
   const turnstileRef = useRef<TurnstileInstance>(null);
 
   const form = useForm<LoginValues>({
@@ -156,17 +160,19 @@ export function LoginContent() {
                       )}
                     />
 
-                    {/* Cloudflare Turnstile */}
-                    <div className="pt-1">
-                      <Turnstile
-                        ref={turnstileRef}
-                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '1x00000000000000000000AA'}
-                        onSuccess={setCfToken}
-                        onError={() => setCfToken(null)}
-                        onExpire={() => setCfToken(null)}
-                        options={{ theme: 'auto', size: 'flexible' }}
-                      />
-                    </div>
+                    {/* Cloudflare Turnstile — only rendered when site key is configured */}
+                    {TURNSTILE_ENABLED && (
+                      <div className="pt-1">
+                        <Turnstile
+                          ref={turnstileRef}
+                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                          onSuccess={setCfToken}
+                          onError={() => setCfToken(null)}
+                          onExpire={() => setCfToken(null)}
+                          options={{ theme: 'auto', size: 'flexible' }}
+                        />
+                      </div>
+                    )}
 
                     <Button
                       type="submit"

@@ -34,10 +34,12 @@ const signupSchema = z.object({
 
 type SignupValues = z.infer<typeof signupSchema>;
 
+const TURNSTILE_ENABLED = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
 export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [cfToken, setCfToken] = useState<string | null>(null);
+  const [cfToken, setCfToken] = useState<string | null>(TURNSTILE_ENABLED ? null : 'bypass');
   const turnstileRef = useRef<TurnstileInstance>(null);
 
   const form = useForm<SignupValues>({
@@ -191,17 +193,19 @@ export default function SignupPage() {
                       )}
                     />
 
-                    {/* Cloudflare Turnstile */}
-                    <div className="pt-1">
-                      <Turnstile
-                        ref={turnstileRef}
-                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '1x00000000000000000000AA'}
-                        onSuccess={setCfToken}
-                        onError={() => setCfToken(null)}
-                        onExpire={() => setCfToken(null)}
-                        options={{ theme: 'auto', size: 'flexible' }}
-                      />
-                    </div>
+                    {/* Cloudflare Turnstile — only rendered when site key is configured */}
+                    {TURNSTILE_ENABLED && (
+                      <div className="pt-1">
+                        <Turnstile
+                          ref={turnstileRef}
+                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                          onSuccess={setCfToken}
+                          onError={() => setCfToken(null)}
+                          onExpire={() => setCfToken(null)}
+                          options={{ theme: 'auto', size: 'flexible' }}
+                        />
+                      </div>
+                    )}
 
                     <Button
                       type="submit"

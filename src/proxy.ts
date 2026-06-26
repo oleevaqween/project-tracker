@@ -1,6 +1,13 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+// ── Site access gate ──────────────────────────────────────────────────────────
+// When SITE_ACCESS_SECRET is set, the entire site is locked behind a cookie.
+// Visit /api/unlock?secret=VALUE to set the cookie and gain access.
+// Leave SITE_ACCESS_SECRET unset to disable the gate (standard self-hosted setup).
+const ACCESS_SECRET = process.env.SITE_ACCESS_SECRET;
+const ACCESS_COOKIE = 'site_access';
+
 const PROTECTED_PREFIXES = [
   '/dashboard',
   '/projects',
@@ -43,6 +50,32 @@ function checkRateLimit(userId: string, pathname: string): boolean {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Gate check — runs before everything else.
+  if (ACCESS_SECRET && !pathname.startsWith('/api/unlock')) {
+    const cookie = request.cookies.get(ACCESS_COOKIE);
+    if (!cookie || cookie.value !== ACCESS_SECRET) {
+      return new NextResponse(
+        `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Private</title>
+    <style>
+      body { margin: 0; display: flex; align-items: center; justify-content: center;
+             min-height: 100vh; background: #0a0a0f; font-family: sans-serif; }
+      .box { text-align: center; color: #888; }
+      h1 { color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem; }
+    </style>
+  </head>
+  <body><div class="box"><h1>Private</h1><p>This site is not publicly accessible.</p></div></body>
+</html>`,
+        { status: 403, headers: { 'Content-Type': 'text/html' } }
+      );
+    }
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

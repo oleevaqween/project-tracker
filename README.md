@@ -6,16 +6,16 @@ A PMBOK 8-aligned enterprise project management application. Manage your project
 
 ## Features
 
-- **PMBOK 8 Framework** — Life cycle phases (Initiating → Closing), 7 performance domains, 6 principles self-assessment
-- **Hierarchy** — Portfolio → Program → Project grouping
-- **Project Artifacts** — Charter, WBS, Risk Register, Stakeholder Register, Issue Log, Change Request Log, Lessons Learned, Notes
-- **Earned Value Management** — PV, EV, AC → SPI, CPI, SV, CV, EAC, ETC, VAC with colour-coded indicators
-- **AI Chat** — Multi-provider AI assistant (OpenAI, Claude, Gemini, OpenRouter, Ollama) with session history
-- **Knowledge Base** — Upload PDFs and Word documents; AI searches them using RAG (pgvector)
-- **AI Reports** — Generate status reports, risk reports, and more with one click; export to PDF
-- **Analytics** — Cross-project charts, budget tracking, task completion trends
-- **Public Portfolio** — Share your project history at `/portfolio/[username]`
-- **Dark / Light Mode** — Fully themed, persists across sessions
+- **PMBOK 8 Framework**: Life cycle phases (Initiating → Closing), 7 performance domains, 6 principles self-assessment
+- **Hierarchy**: Portfolio → Program → Project grouping
+- **Project Artifacts**: Charter, WBS, Risk Register, Stakeholder Register, Issue Log, Change Request Log, Lessons Learned, Notes
+- **Earned Value Management**: PV, EV, AC → SPI, CPI, SV, CV, EAC, ETC, VAC with colour-coded indicators
+- **AI Chat**: Multi-provider AI assistant (OpenAI, Claude, Gemini, OpenRouter, Ollama) with session history
+- **Knowledge Base**: Upload PDFs and Word documents; AI searches them using RAG (pgvector)
+- **AI Reports**: Generate status reports, risk reports, and more with one click; export to PDF
+- **Analytics**: Cross-project charts, budget tracking, task completion trends
+- **Public Portfolio**: Share your project history at `/portfolio/[username]`
+- **Dark / Light Mode**: Fully themed, persists across sessions
 
 ---
 
@@ -34,9 +34,9 @@ A PMBOK 8-aligned enterprise project management application. Manage your project
 
 ## Prerequisites
 
-- **Node.js 20+** — [nodejs.org](https://nodejs.org)
-- **A free Supabase account** — [supabase.com](https://supabase.com) (takes 2 minutes to set up)
-- **At least one AI provider API key** — for the chat and report features
+- **Node.js 20+**: [nodejs.org](https://nodejs.org)
+- **A free Supabase account**: [supabase.com](https://supabase.com) (takes 2 minutes to set up)
+- **At least one AI provider API key**: needed for the chat and report features
 
 ---
 
@@ -97,7 +97,7 @@ Open [http://localhost:3000](http://localhost:3000). Sign up for an account and 
 | `npm run db:push` | Sync schema to the database (use for first-time setup) |
 | `npm run db:migrate` | Run pending migrations in order (use when pulling updates) |
 | `npm run db:generate` | Generate a new migration file after schema changes |
-| `npm run db:studio` | Open Drizzle Studio — a visual database browser |
+| `npm run db:studio` | Open Drizzle Studio, a visual database browser |
 
 ---
 
@@ -143,7 +143,7 @@ After deploying, update your Supabase project's **Site URL** and **Redirect URLs
 
 ## Contributing
 
-Contributions are welcome. If you've self-hosted this and found something broken, have an idea that fits the PMBOK 8 direction, or want to improve the setup experience — open an issue or a pull request.
+Contributions are welcome. If you've self-hosted this and found something broken, have an idea that fits the PMBOK 8 direction, or want to improve the setup experience, open an issue or a pull request.
 
 A few things that would be genuinely useful:
 - Bug reports with clear reproduction steps
@@ -157,4 +157,4 @@ If you're planning something significant, open an issue first so we can discuss 
 
 ## License
 
-MIT — do whatever you want with it.
+MIT. Do whatever you want with it.

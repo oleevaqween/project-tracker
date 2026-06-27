@@ -141,6 +141,20 @@ After deploying, update your Supabase project's **Site URL** and **Redirect URLs
 
 ---
 
+## Contributing
+
+Contributions are welcome. If you've self-hosted this and found something broken, have an idea that fits the PMBOK 8 direction, or want to improve the setup experience — open an issue or a pull request.
+
+A few things that would be genuinely useful:
+- Bug reports with clear reproduction steps
+- Improvements to the self-hosting setup or documentation
+- New PMBOK 8 features or better alignment with the standard
+- UI/UX improvements
+
+If you're planning something significant, open an issue first so we can discuss the approach before you invest the time building it.
+
+---
+
 ## License
 
 MIT — do whatever you want with it.

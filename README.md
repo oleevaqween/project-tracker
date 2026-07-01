@@ -2,7 +2,7 @@
 
 Most project management tools are built for teams: assigning tasks, tracking who did what, and managing collaboration. **Project Tracker is built for you, the project manager.** It is a personal PM practice environment grounded in the **PMI PMBOK® Guide – Eighth Edition**, designed to help you internalise and apply the standard across everything you manage.
 
-No teammates required. You track the charter, the WBS, the risks, the stakeholders, the earned value — because understanding each of those is what makes you a better PM, not just a better task-assigner. Other tools help you delegate work. This one helps you master the discipline.
+No teammates required. You track the charter, the WBS, the risks, the stakeholders, the earned value, because understanding each of those is what makes you a better PM, not just a better task-assigner. Other tools help you delegate work. This one helps you master the discipline.
 
 ---
 

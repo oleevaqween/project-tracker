@@ -275,7 +275,17 @@ export function PublicPortfolioClient({
       {/* Footer */}
       <footer className="border-t pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
         <p>Portfolio powered by PMBOK 8 · Project Tracker</p>
-        <p className="font-mono">Member since {new Date(profile.createdAt).getFullYear()}</p>
+        <div className="flex items-center gap-4">
+          <a
+            href="https://github.com/oleevaqween"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors underline-offset-4 hover:underline font-mono"
+          >
+            github.com/oleevaqween
+          </a>
+          <p className="font-mono">Member since {new Date(profile.createdAt).getFullYear()}</p>
+        </div>
       </footer>
     </main>
   );

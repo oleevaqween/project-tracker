@@ -191,7 +191,7 @@ export function AiChatClient({
         <h1 className="sr-only">Chat</h1>
 
         {/* Top bar */}
-        <div className="flex items-center justify-between border-b px-4 py-2">
+        <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"

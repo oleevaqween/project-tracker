@@ -19,7 +19,7 @@ export function WbsTab({ projectId, initialElements }: WbsTabProps) {
         <div>
           <h2 className="text-base font-bold font-heading">Work Breakdown Structure</h2>
           <p className="text-sm text-muted-foreground">
-            PMBOK 8 Scope Management — Create WBS process. Decompose project scope into deliverables.
+            PMBOK 8 Scope Management: Create WBS process. Decompose project scope into deliverables.
           </p>
         </div>
       </div>

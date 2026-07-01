@@ -71,7 +71,7 @@ function PrinciplesSummary({ principlesData }: { principlesData: Record<string, 
           <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
             P8
           </span>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">PMBOK 8 Principles — Portfolio Average</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">PMBOK 8 Principles: Portfolio Average</p>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           {PRINCIPLES.map((p) => {
@@ -81,7 +81,7 @@ function PrinciplesSummary({ principlesData }: { principlesData: Record<string, 
             return (
               <span
                 key={p.key}
-                title={`${p.label} — avg ${avg.toFixed(1)}/5 across ${data.count} project${data.count !== 1 ? 's' : ''}`}
+                title={`${p.label}: avg ${avg.toFixed(1)}/5 across ${data.count} project${data.count !== 1 ? 's' : ''}`}
                 className={cn(
                   'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold',
                   avg >= 4 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' :
@@ -287,7 +287,7 @@ export function DashboardClient({
                   ? 'Create a portfolio and your first project to begin PMBOK 8 tracking.'
                   : portfolioBreakdown.length > 0
                     ? `${portfolioBreakdown.length} portfolio${portfolioBreakdown.length !== 1 ? 's' : ''}, ${totalProjects} project${totalProjects !== 1 ? 's' : ''} across your enterprise.`
-                    : `${totalProjects} project${totalProjects !== 1 ? 's' : ''} — assign them to portfolios for governance.`}
+                    : `${totalProjects} project${totalProjects !== 1 ? 's' : ''}. Assign them to portfolios for governance.`}
               </p>
             </div>
 

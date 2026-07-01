@@ -109,7 +109,7 @@ export function PortfoliosClient({ portfolios, unassignedCount }: PortfoliosClie
             <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
               {portfolios.length === 0
                 ? 'Create a portfolio to group projects by client or company.'
-                : `${portfolios.length} portfolio${portfolios.length !== 1 ? 's' : ''} — group projects by client or organisation.`}
+                : `${portfolios.length} portfolio${portfolios.length !== 1 ? 's' : ''}. Group projects by client or organisation.`}
             </p>
           </div>
           <div className="flex items-center gap-2 pb-1">

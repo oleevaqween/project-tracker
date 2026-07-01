@@ -530,7 +530,7 @@ function exportToPdf(
 
   const win = window.open('', '_blank');
   if (!win) {
-    toast.error('Pop-up blocked — allow pop-ups for this site to export PDF.');
+    toast.error('Pop-up blocked. Allow pop-ups for this site to export PDF.');
     return;
   }
   win.document.title = `Project Tracker — ${title}`;
@@ -849,7 +849,7 @@ export function ReportsTab({ projectId, project, data, onProjectUpdated }: Repor
           </div>
         ) : savedReports.length === 0 ? (
           <div className="rounded-lg border-2 border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-            No saved files yet — generate a document or report and click <strong>Save</strong> to store it here.
+            No saved files yet. Generate a document or report and click <strong>Save</strong> to store it here.
           </div>
         ) : (
           <div className="space-y-2">

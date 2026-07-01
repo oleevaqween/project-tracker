@@ -99,7 +99,7 @@ export function WbsNodeComponent({ node, depth = 0, hasPrevSibling = false, onUp
               type="button"
               onClick={() => onPromote(node.id)}
               className="p-1 rounded hover:bg-muted text-muted-foreground/50 hover:text-foreground transition-colors"
-              title="Promote — move up one level"
+              title="Promote: move up one level"
             >
               <OutdentIcon className="size-3.5" />
             </button>
@@ -110,7 +110,7 @@ export function WbsNodeComponent({ node, depth = 0, hasPrevSibling = false, onUp
               type="button"
               onClick={() => onDemote(node.id)}
               className="p-1 rounded hover:bg-muted text-muted-foreground/50 hover:text-foreground transition-colors"
-              title="Demote — move under previous item"
+              title="Demote: move under previous item"
             >
               <IndentIcon className="size-3.5" />
             </button>

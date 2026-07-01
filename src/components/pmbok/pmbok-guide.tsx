@@ -34,7 +34,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     domainColor: 'bg-violet-500/15 text-violet-400',
     title: 'Enterprise Overview',
     description:
-      'This is your enterprise-level view — above portfolios, programs, and individual projects. PMBOK 8 positions this as the organizational layer where strategic alignment is maintained across all portfolios, ensuring the right work is being done for the right reasons.',
+      'This is your enterprise-level view, above portfolios, programs, and individual projects. PMBOK 8 positions this as the organizational layer where strategic alignment is maintained across all portfolios, ensuring the right work is being done for the right reasons.',
     concepts: [
       {
         term: 'Portfolio vs. Enterprise',
@@ -53,7 +53,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
       },
     ],
     actions: [
-      'Ensure every project belongs to a portfolio — unassigned projects lack strategic alignment',
+      'Ensure every project belongs to a portfolio; unassigned projects lack strategic alignment',
       'Review portfolio health weekly; a portfolio with avg progress < 30% after mid-term needs governance intervention',
       'Balance project load across portfolios to avoid concentrating risk in one area',
       'Archive completed projects and transfer lessons learned to the knowledge base',
@@ -62,9 +62,9 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
   portfolio: {
     domain: 'Portfolio Governance',
     domainColor: 'bg-indigo-500/15 text-indigo-400',
-    title: 'Portfolio Management — PMBOK 8',
+    title: 'Portfolio Management: PMBOK 8',
     description:
-      'A Portfolio is a collection of projects and programs grouped to achieve a strategic objective. PMBOK 8 Portfolio Management is not about running the projects — it is about selecting the right projects, allocating resources strategically, and governing value delivery at the collection level.',
+      'A Portfolio is a collection of projects and programs grouped to achieve a strategic objective. PMBOK 8 Portfolio Management is not about running the projects; it is about selecting the right projects, allocating resources strategically, and governing value delivery at the collection level.',
     concepts: [
       {
         term: 'Portfolio Governance',
@@ -85,7 +85,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     actions: [
       'Review avg progress across all projects; escalate any project below 50% at its halfway point',
       'Ensure each project in this portfolio has a documented charter with clear strategic objectives',
-      'Monitor open risks across contained projects — aggregate risk exposure should inform portfolio decisions',
+      'Monitor open risks across contained projects; aggregate risk exposure should inform portfolio decisions',
       'Conduct a quarterly portfolio review: continue, re-scope, or cancel projects based on value delivery',
     ],
   },
@@ -94,7 +94,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     domainColor: 'bg-indigo-500/15 text-indigo-400',
     title: 'Managing Multiple Portfolios',
     description:
-      'Multiple portfolios allow you to separate projects by strategic theme, client, business unit, or company. Each portfolio operates as an independent governance unit with its own projects, resources, and success criteria — giving you clear accountability at every level.',
+      'Multiple portfolios allow you to separate projects by strategic theme, client, business unit, or company. Each portfolio operates as an independent governance unit with its own projects, resources, and success criteria, giving you clear accountability at every level.',
     concepts: [
       {
         term: 'Portfolio Segmentation',
@@ -111,25 +111,25 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
       'Create one portfolio per distinct strategic theme, client, or business entity',
       'Assign every project to a portfolio before it enters execution; unassigned projects lack governance',
       'Compare portfolio health across entities to identify which areas need leadership attention',
-      'Conduct a bi-annual portfolio rationalisation — remove or merge portfolios that no longer have active projects',
+      'Conduct a bi-annual portfolio rationalisation: remove or merge portfolios that no longer have active projects',
     ],
   },
   program: {
     domain: 'Program Management',
     domainColor: 'bg-sky-500/15 text-sky-400',
-    title: 'Program Management — PMBOK 8',
+    title: 'Program Management: PMBOK 8',
     description:
       'A Program is a group of related projects managed in a coordinated way to obtain benefits not achievable from managing them individually. Programs exist between portfolios and projects, providing an intermediate coordination layer for complex, multi-project initiatives.',
     concepts: [
       {
         term: 'Program vs. Portfolio',
         definition:
-          'A Portfolio groups projects by strategic theme. A Program groups related projects that share a common outcome, interdependencies, or resources — and must be coordinated to deliver their collective benefit.',
+          'A Portfolio groups projects by strategic theme. A Program groups related projects that share a common outcome, interdependencies, or resources, and must be coordinated to deliver their collective benefit.',
       },
       {
         term: 'Benefits Management',
         definition:
-          "The Program Manager's primary responsibility. Benefits are the measurable improvements resulting from the program's outcomes — not simply the outputs of individual projects.",
+          "The Program Manager's primary responsibility. Benefits are the measurable improvements resulting from the program's outcomes, not simply the outputs of individual projects.",
       },
       {
         term: 'Program Governance',
@@ -139,7 +139,7 @@ const GUIDE: Record<PMBOKContext, GuideEntry> = {
     ],
     actions: [
       'Define the shared benefit this program delivers that no single project achieves alone',
-      'Map interdependencies between contained projects — a delay in one may cascade to others',
+      'Map interdependencies between contained projects; a delay in one may cascade to others',
       'Hold a monthly program review across all project managers to surface cross-project risks and blockers',
       'Track program-level milestones (not just project milestones) to measure collective progress toward the shared benefit',
     ],

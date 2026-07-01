@@ -44,8 +44,8 @@ export function WbsCompletenessBanner({ projectId, tasks, nudgeDismissed }: WbsC
       <p className="flex-1 text-xs text-amber-800 dark:text-amber-300">
         <span className="font-semibold">WBS not defined</span>
         {unassigned > 0
-          ? ` — ${unassigned} task${unassigned !== 1 ? 's' : ''} have no deliverable assigned. Scope may be incomplete.`
-          : ' — No deliverable structure defined for this project.'}
+          ? `: ${unassigned} task${unassigned !== 1 ? 's' : ''} have no deliverable assigned. Scope may be incomplete.`
+          : '. No deliverable structure defined for this project.'}
       </p>
       <div className="flex items-center gap-2 shrink-0">
         <Button

@@ -91,7 +91,7 @@ export function ProgramsClient({ programs, portfolios }: ProgramsClientProps) {
             <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
               {programs.length === 0
                 ? 'Group related projects into programs to coordinate toward a shared outcome.'
-                : `${programs.length} program${programs.length !== 1 ? 's' : ''} — coordinating related projects toward shared strategic outcomes.`}
+                : `${programs.length} program${programs.length !== 1 ? 's' : ''}, coordinating related projects toward shared strategic outcomes.`}
             </p>
           </div>
           <div className="flex items-center gap-2 pb-1">
@@ -129,13 +129,13 @@ export function ProgramsClient({ programs, portfolios }: ProgramsClientProps) {
                     <input
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Description — what shared outcome do these projects deliver? (optional)"
+                      placeholder="Description: what shared outcome do these projects deliver? (optional)"
                       className="w-full rounded-md border-2 border-border bg-background px-3 py-2 text-sm shadow-[2px_2px_0_0_var(--neo-shadow-color)] focus:outline-none focus:border-primary"
                     />
                     <textarea
                       value={objectives}
                       onChange={(e) => setObjectives(e.target.value)}
-                      placeholder="Program objectives — measurable benefits this program delivers (optional)"
+                      placeholder="Program objectives: measurable benefits this program delivers (optional)"
                       rows={2}
                       className="w-full rounded-md border-2 border-border bg-background px-3 py-2 text-sm shadow-[2px_2px_0_0_var(--neo-shadow-color)] focus:outline-none focus:border-primary resize-none"
                     />
@@ -143,7 +143,7 @@ export function ProgramsClient({ programs, portfolios }: ProgramsClientProps) {
                       <label className="block text-xs text-muted-foreground mb-1">
                         Portfolio (optional)
                         {portfolios.length === 0 && (
-                          <span className="ml-1 text-amber-500">— create a portfolio first to link one</span>
+                          <span className="ml-1 text-amber-500">(create a portfolio first to link one)</span>
                         )}
                       </label>
                       <select

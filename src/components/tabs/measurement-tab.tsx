@@ -379,28 +379,28 @@ export function MeasurementTab({
                 <MetricCard
                   label="SPI (Schedule Performance Index)"
                   value={fmtIndex(SPI)}
-                  description="Are you on schedule? ≥ 1.0 = ahead. 0.85–0.99 = slightly behind — review plan. < 0.85 = significantly behind — corrective action required."
+                  description="Are you on schedule? ≥ 1.0 = ahead. 0.85–0.99 = slightly behind; review plan. < 0.85 = significantly behind; take corrective action."
                   status={indexStatus(SPI)}
                   formula="SPI = EV ÷ PV"
                 />
                 <MetricCard
                   label="CPI (Cost Performance Index)"
                   value={fmtIndex(CPI)}
-                  description="Are you within budget? ≥ 1.0 = under budget (good). 0.80–0.99 = slight overrun — monitor closely. < 0.80 = critical overrun — escalate to sponsor."
+                  description="Are you within budget? ≥ 1.0 = under budget (good). 0.80–0.99 = slight overrun; monitor closely. < 0.80 = critical overrun; escalate to sponsor."
                   status={indexStatus(CPI)}
                   formula="CPI = EV ÷ AC"
                 />
                 <MetricCard
                   label="SV (Schedule Variance)"
                   value={isFinite(SV) ? fmt(SV, currency) : '—'}
-                  description="Budget value of being ahead or behind schedule. Positive = ahead of plan. Negative = behind — identify delayed tasks and recover."
+                  description="Budget value of being ahead or behind schedule. Positive = ahead of plan. Negative = behind; identify delayed tasks and recover."
                   status={varianceStatus(SV)}
                   formula="SV = EV − PV"
                 />
                 <MetricCard
                   label="CV (Cost Variance)"
                   value={isFinite(CV) ? fmt(CV, currency) : '—'}
-                  description="How much you are over or under budget for work completed. Positive = under budget. Negative = over budget — review actual spend."
+                  description="How much you are over or under budget for work completed. Positive = under budget. Negative = over budget; review actual spend."
                   status={varianceStatus(CV)}
                   formula="CV = EV − AC"
                 />

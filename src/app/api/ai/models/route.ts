@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
 
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'No API key — enter your key and save first, or type it in the key field before refreshing.' },
+      { error: 'No API key. Enter your key and save first, or type it in the key field before refreshing.' },
       { status: 400 },
     );
   }

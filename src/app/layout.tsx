@@ -27,7 +27,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: 'Project Tracker',
   description:
-    'Personal project portfolio hub with RAG AI assistant — PMBOK 8th Edition aligned',
+    'Personal project portfolio hub with RAG AI assistant, PMBOK 8th Edition aligned',
 };
 
 export default function RootLayout({

@@ -150,6 +150,7 @@ export async function POST(request: Request) {
     system: systemPrompt,
     messages: modelMessages,
     tools: allTools,
+    maxSteps: 5,
     onFinish: async ({ text, usage, finishReason }) => {
       // Log usage asynchronously
       const latencyMs = Date.now() - startTime;
@@ -198,9 +199,13 @@ export async function POST(request: Request) {
             .map((p) => (p as { type: 'text'; text: string }).text)
             .join(' ');
 
+          const titlePrompt = text.trim()
+            ? `Summarize this conversation in 4 to 6 words as a chat title. Reply with only the title — no quotes, no punctuation, no explanation.\n\nUser: ${userText.slice(0, 300)}\nAssistant: ${text.slice(0, 300)}`
+            : `Give this user message a 4 to 6 word topic title. Reply with only the title — no quotes, no punctuation, no explanation.\n\nUser: ${userText.slice(0, 300)}`;
+
           generateText({
             model,
-            prompt: `Summarize this conversation in 4 to 6 words as a chat title. Reply with only the title — no quotes, no punctuation, no explanation.\n\nUser: ${userText.slice(0, 300)}\nAssistant: ${text.slice(0, 300)}`,
+            prompt: titlePrompt,
             maxOutputTokens: 16,
           }).then(({ text: generatedTitle }) => {
             const clean = generatedTitle.trim().replace(/^["'`]|["'`]$/g, '');

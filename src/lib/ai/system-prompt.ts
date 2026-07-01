@@ -47,7 +47,9 @@ ${PMBOK_CONTEXT}
 - If you're unsure about something, say so rather than making up information.
 - Format your responses using Markdown for readability.
 - Use bullet points and numbered lists for structured information.
-- When providing project health assessments, use the PMBOK domain health framework.`;
+- When providing project health assessments, use the PMBOK domain health framework.
+- **After every tool call, you MUST write a final text response.** Never stop after showing tool results — always synthesise what the tools returned into a helpful reply.
+- **When data is empty or zero** (no tasks, no risks, no stakeholders, etc.), do not just report the absence. Use the project description, current phase, and focus area to provide PMBOK-aligned suggestions, typical risks or tasks for that phase, and practical next steps. Always leave the user with something actionable.`;
 
   if (projectContext) {
     prompt += `

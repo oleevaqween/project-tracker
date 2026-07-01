@@ -84,16 +84,31 @@ export function AiChatClient({
     transport,
   });
 
-  // Refresh session list when streaming ends so auto-generated title appears in sidebar
+  // Refresh session list when streaming ends.
+  // First refresh: immediate — adopts the newly created session ID so follow-up
+  // messages go to the same session instead of spawning a new one.
+  // Second refresh (delayed): picks up the async LLM-generated title once it lands in the DB.
   const prevStatusRef = React.useRef(status);
   React.useEffect(() => {
     const wasGenerating = prevStatusRef.current === 'streaming' || prevStatusRef.current === 'submitted';
     prevStatusRef.current = status;
     if (wasGenerating && status !== 'streaming' && status !== 'submitted') {
-      fetch('/api/chat/sessions')
-        .then((r) => r.json())
-        .then((data) => { if (Array.isArray(data)) setSessions(data); })
-        .catch(() => {});
+      const wasNewChat = activeSessionIdRef.current === null;
+
+      const refreshSessions = (adoptNewest: boolean) =>
+        fetch('/api/chat/sessions')
+          .then((r) => r.json())
+          .then((data) => {
+            if (!Array.isArray(data)) return;
+            setSessions(data);
+            if (adoptNewest && activeSessionIdRef.current === null && data.length > 0) {
+              setActiveSessionId(data[0].id);
+            }
+          })
+          .catch(() => {});
+
+      refreshSessions(wasNewChat);
+      setTimeout(() => refreshSessions(false), 4000);
     }
   }, [status]);
 

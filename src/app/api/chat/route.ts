@@ -200,8 +200,8 @@ export async function POST(request: Request) {
             .join(' ');
 
           const titlePrompt = text.trim()
-            ? `Summarize this conversation in 4 to 6 words as a chat title. Reply with only the title — no quotes, no punctuation, no explanation.\n\nUser: ${userText.slice(0, 300)}\nAssistant: ${text.slice(0, 300)}`
-            : `Give this user message a 4 to 6 word topic title. Reply with only the title — no quotes, no punctuation, no explanation.\n\nUser: ${userText.slice(0, 300)}`;
+            ? `Write a 4-6 word chat title. Output the title only — no quotes, no punctuation, no explanation.\n\nUser: ${userText.slice(0, 200)}\nAssistant: ${text.slice(0, 200)}\n\nTitle:`
+            : `Write a 4-6 word topic title. Output the title only — no quotes, no punctuation, no explanation.\n\nMessage: ${userText.slice(0, 200)}\n\nTitle:`;
 
           generateText({
             model,

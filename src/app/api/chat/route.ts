@@ -199,16 +199,36 @@ export async function POST(request: Request) {
             .map((p) => (p as { type: 'text'; text: string }).text)
             .join(' ');
 
-          const titlePrompt = text.trim()
-            ? `Write a 4-6 word chat title. Output the title only — no quotes, no punctuation, no explanation.\n\nUser: ${userText.slice(0, 200)}\nAssistant: ${text.slice(0, 200)}\n\nTitle:`
-            : `Write a 4-6 word topic title. Output the title only — no quotes, no punctuation, no explanation.\n\nMessage: ${userText.slice(0, 200)}\n\nTitle:`;
+          // Use few-shot examples so even weaker models understand the noun-phrase format.
+          const titlePrompt = `Summarize a user request as a 3-5 word noun phrase. Never use question form. Output ONLY the phrase.\n\nExamples:\n"What risks should I watch?" → Risk monitoring review\n"Can you summarize my project?" → Project status summary\n"Help me create a task for onboarding" → Onboarding task creation\n\nRequest: "${userText.slice(0, 150)}"`;
 
           generateText({
             model,
             prompt: titlePrompt,
-            maxOutputTokens: 16,
+            maxOutputTokens: 20,
           }).then(({ text: generatedTitle }) => {
-            const clean = generatedTitle.trim().replace(/^["'`]|["'`]$/g, '');
+            // Strip any prefix the model might echo, take first line, strip punctuation
+            let clean = generatedTitle.trim()
+              .replace(/^(Title|Summary|Topic|Label|Answer|Phrase|Name):\s*/i, '')
+              .split('\n')[0]
+              .replace(/^["'`«»""]|["'`«»""]$/g, '')
+              .replace(/→\s*/, '')
+              .replace(/[?!]+$/, '')
+              .trim();
+
+            // If the model echoed the question or produced nothing useful, fall back to
+            // a simple noun extraction from the user message.
+            const looksLikeQuestion = !clean || /^(what|how|can|could|please|help|why|when|is|are)\b/i.test(clean);
+            if (looksLikeQuestion) {
+              clean = userText
+                .replace(/^(what\s+|how\s+|can\s+(you\s+)?|could\s+(you\s+)?|please\s+|help\s+(me\s+)?|why\s+|when\s+|is\s+|are\s+)/i, '')
+                .split(/\s+/).slice(0, 5).join(' ')
+                .replace(/[?!.,;:]+$/, '');
+              clean = clean.charAt(0).toUpperCase() + clean.slice(1);
+            }
+
+            if (clean.length > 60) clean = clean.slice(0, 60).trim();
+
             if (clean) {
               return db
                 .update(chatSessions)

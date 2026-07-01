@@ -201,11 +201,6 @@ export function AiChatClient({
             >
               <MenuIcon className="size-4" />
             </Button>
-            <h2 className="text-sm font-medium">
-              {activeSessionId
-                ? sessions.find((s) => s.id === activeSessionId)?.title ?? 'Chat'
-                : 'New Chat'}
-            </h2>
           </div>
 
           <div className="flex items-center gap-2">

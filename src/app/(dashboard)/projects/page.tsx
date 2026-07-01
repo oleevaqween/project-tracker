@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
 import { eq, count, inArray } from 'drizzle-orm';
-import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbLink } from '@/components/ui/breadcrumb';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { profiles, projects, tasks, userPreferences } from '@/db/schema';
@@ -67,18 +65,6 @@ export default async function ProjectsPage() {
     <>
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 data-vertical:h-4 data-vertical:self-auto" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Projects</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
       </header>
 
       {/* ── PAGE HEADER BAND ─────────────────────────────────────────────────

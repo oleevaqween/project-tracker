@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
-import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbLink } from '@/components/ui/breadcrumb';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { profiles } from '@/db/schema';
@@ -32,18 +30,6 @@ export default async function ProfilePage() {
     <>
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 data-vertical:h-4 data-vertical:self-auto" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Profile</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
       </header>
 
       <div className="flex flex-1 flex-col gap-8 px-6 pt-8 pb-12 md:px-12 lg:px-16 max-w-2xl">

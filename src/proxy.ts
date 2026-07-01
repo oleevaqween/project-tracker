@@ -52,7 +52,8 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Gate check — runs before everything else.
-  if (ACCESS_SECRET && !pathname.startsWith('/api/unlock')) {
+  const isPublicFile = pathname.startsWith('/google') && pathname.endsWith('.html');
+  if (ACCESS_SECRET && !pathname.startsWith('/api/unlock') && !isPublicFile) {
     const cookie = request.cookies.get(ACCESS_COOKIE);
     if (!cookie || cookie.value !== ACCESS_SECRET) {
       return new NextResponse(

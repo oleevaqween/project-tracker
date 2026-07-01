@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages, generateText } from 'ai';
+import { streamText, convertToModelMessages, generateText, stepCountIs } from 'ai';
 import { getEffectiveConfig, isAIConfigured, getConfigLabel, type AIConfig } from '@/lib/ai/models';
 import { allTools } from '@/lib/ai/tools';
 import { logAIUsage, estimateCost } from '@/lib/ai/usage';
@@ -150,7 +150,7 @@ export async function POST(request: Request) {
     system: systemPrompt,
     messages: modelMessages,
     tools: allTools,
-    maxSteps: 5,
+    stopWhen: stepCountIs(5),
     onFinish: async ({ text, usage, finishReason }) => {
       // Log usage asynchronously
       const latencyMs = Date.now() - startTime;

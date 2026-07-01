@@ -12,7 +12,7 @@ No teammates required. You track the charter, the WBS, the risks, the stakeholde
 
 ![Project Detail](docs/screenshots/project-detail.png)
 
-<!-- chat screenshot coming soon -->
+![AI Chat](docs/screenshots/chat.png)
 
 ---
 

@@ -62,12 +62,21 @@ export function AiChatClient({
 
   const aiReady = isAIConfigured(aiConfig);
 
-  // AI SDK v6: transport only carries the API endpoint.
-  // sessionId and projectId are passed per-message via options.body because
-  // useChat's internal Chat instance caches the transport at creation time and
-  // does not pick up transport prop changes when selectedProjectId changes.
+  // Refs for sessionId and projectId so every request — including addToolResult
+  // continuations — carries the current context without needing per-call body overrides.
+  const activeSessionIdRef = React.useRef(activeSessionId);
+  const selectedProjectIdRef = React.useRef(selectedProjectId);
+  React.useEffect(() => { activeSessionIdRef.current = activeSessionId; }, [activeSessionId]);
+  React.useEffect(() => { selectedProjectIdRef.current = selectedProjectId; }, [selectedProjectId]);
+
   const transport = React.useMemo(
-    () => new DefaultChatTransport({ api: '/api/chat' }),
+    () => new DefaultChatTransport({
+      api: '/api/chat',
+      body: () => ({
+        sessionId: activeSessionIdRef.current,
+        projectId: selectedProjectIdRef.current,
+      }),
+    }),
     []
   );
 
@@ -88,19 +97,8 @@ export function AiChatClient({
     }
   }, [status]);
 
-  // Always send the latest sessionId + projectId with every message.
-  const activeSessionIdRef = React.useRef(activeSessionId);
-  const selectedProjectIdRef = React.useRef(selectedProjectId);
-  React.useEffect(() => { activeSessionIdRef.current = activeSessionId; }, [activeSessionId]);
-  React.useEffect(() => { selectedProjectIdRef.current = selectedProjectId; }, [selectedProjectId]);
-
   const sendMsgWithContext = React.useCallback(
-    (text: string) => {
-      sendMessage(
-        { text },
-        { body: { sessionId: activeSessionIdRef.current, projectId: selectedProjectIdRef.current } }
-      );
-    },
+    (text: string) => { sendMessage({ text }); },
     [sendMessage]
   );
 

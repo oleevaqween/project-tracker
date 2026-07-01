@@ -1,15 +1,27 @@
 # Project Tracker
 
-A PMBOK 8-aligned enterprise project management application. Manage your projects across a full Portfolio → Program → Project hierarchy, with AI-assisted planning, earned value tracking, risk and stakeholder registers, and a public portfolio showcase.
+Most project management tools are built for teams: assigning tasks, tracking who did what, and managing collaboration. **Project Tracker is built for you, the project manager.** It is a personal PM practice environment grounded in the **PMI PMBOK® Guide – Eighth Edition**, designed to help you internalise and apply the standard across everything you manage.
+
+No teammates required. You track the charter, the WBS, the risks, the stakeholders, the earned value — because understanding each of those is what makes you a better PM, not just a better task-assigner. Other tools help you delegate work. This one helps you master the discipline.
+
+---
+
+## Screenshots
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+![Project Detail](docs/screenshots/project-detail.png)
+
+<!-- chat screenshot coming soon -->
 
 ---
 
 ## Features
 
-- **PMBOK 8 Framework**: Life cycle phases (Initiating → Closing), 7 performance domains, 6 principles self-assessment
-- **Hierarchy**: Portfolio → Program → Project grouping
+- **PMBOK 8 Framework**: Life cycle phases (Initiating to Closing), 7 performance domains, 6 principles self-assessment
+- **Hierarchy**: Portfolio, Program, and Project grouping with governance at every level
 - **Project Artifacts**: Charter, WBS, Risk Register, Stakeholder Register, Issue Log, Change Request Log, Lessons Learned, Notes
-- **Earned Value Management**: PV, EV, AC → SPI, CPI, SV, CV, EAC, ETC, VAC with colour-coded indicators
+- **Earned Value Management**: PV, EV, AC with SPI, CPI, SV, CV, EAC, ETC, VAC and colour-coded indicators
 - **AI Chat**: Multi-provider AI assistant (OpenAI, Claude, Gemini, OpenRouter, Ollama) with session history
 - **Knowledge Base**: Upload PDFs and Word documents; AI searches them using RAG (pgvector)
 - **AI Reports**: Generate status reports, risk reports, and more with one click; export to PDF
@@ -45,7 +57,7 @@ A PMBOK 8-aligned enterprise project management application. Manage your project
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/project-tracker.git
+git clone https://github.com/oleevaqween/project-tracker.git
 cd project-tracker
 ```
 
@@ -86,7 +98,7 @@ This syncs the Drizzle schema to your Supabase database. Run this once on first 
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Sign up for an account and you're in.
+Open [http://localhost:3000](http://localhost:3000). Sign up for an account and you are in.
 
 ---
 
@@ -105,19 +117,19 @@ Open [http://localhost:3000](http://localhost:3000). Sign up for an account and 
 
 ### Google Sign-In
 
-1. Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials
+1. Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com) under APIs and Services, then Credentials
 2. Set the authorised redirect URI to: `https://[YOUR-PROJECT-REF].supabase.co/auth/v1/callback`
-3. In Supabase Dashboard → Authentication → Providers → Google: paste your Client ID and Secret
+3. In Supabase Dashboard, go to Authentication, then Providers, then Google, and paste your Client ID and Secret
 
 ### Password Reset Emails
 
-Requires a [Resend](https://resend.com) account and a verified sending domain. See **[SUPABASE_SETUP.md](./SUPABASE_SETUP.md) → Step 4**.
+Requires a [Resend](https://resend.com) account and a verified sending domain. See **[SUPABASE_SETUP.md](./SUPABASE_SETUP.md) Step 4**.
 
 ### Bot Protection (Cloudflare Turnstile)
 
 Recommended for public deployments. Leave `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` blank to disable it (default for local use).
 
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → Turnstile → Add site
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com), then Turnstile, then Add site
 2. Copy the Site Key and Secret Key into `.env.local`
 
 ### Local AI (Ollama)
@@ -126,32 +138,33 @@ To use local models with no API cost:
 
 1. Install [Ollama](https://ollama.com)
 2. Pull a model: `ollama pull llama3`
-3. In the app: Settings → AI Provider → select Ollama → set base URL to `http://localhost:11434`
+3. In the app: Settings, then AI Provider, select Ollama, and set base URL to `http://localhost:11434`
 
 ---
 
 ## Deploying to Vercel
 
 1. Push your repo to GitHub
-2. Go to [vercel.com](https://vercel.com) → New Project → import your repo
+2. Go to [vercel.com](https://vercel.com), click New Project, and import your repo
 3. Add all environment variables from `.env.local` in the Vercel dashboard
 4. Deploy
 
-After deploying, update your Supabase project's **Site URL** and **Redirect URLs** to your Vercel domain (see [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) → Step 5).
+After deploying, update your Supabase project's **Site URL** and **Redirect URLs** to your Vercel domain (see [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) Step 5).
 
 ---
 
 ## Contributing
 
-Contributions are welcome. If you've self-hosted this and found something broken, have an idea that fits the PMBOK 8 direction, or want to improve the setup experience, open an issue or a pull request.
+Contributions are welcome. If you have self-hosted this and found something broken, have an idea that fits the PMBOK 8 direction, or want to improve the setup experience, open an issue or a pull request.
 
 A few things that would be genuinely useful:
+
 - Bug reports with clear reproduction steps
 - Improvements to the self-hosting setup or documentation
 - New PMBOK 8 features or better alignment with the standard
 - UI/UX improvements
 
-If you're planning something significant, open an issue first so we can discuss the approach before you invest the time building it.
+If you are planning something significant, open an issue first so we can discuss the approach before you invest the time building it.
 
 ---
 
